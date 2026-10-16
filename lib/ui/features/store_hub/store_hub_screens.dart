@@ -46,25 +46,75 @@ class _StoreSettingsScreenState extends State<StoreSettingsScreen>{
  ]);
  }));
 }
-class StoreReadinessScreen extends StatefulWidget{
- const StoreReadinessScreen({super.key,required this.appState});final SellerAppState appState;
- @override State<StoreReadinessScreen> createState()=>_StoreReadinessScreenState();
+class StoreReadinessScreen extends StatefulWidget {
+  const StoreReadinessScreen({super.key, required this.appState});
+  final SellerAppState appState;
+  @override State<StoreReadinessScreen> createState() => _StoreReadinessScreenState();
 }
-class _StoreReadinessScreenState extends State<StoreReadinessScreen>{
- late Future<StoreSettings> future;bool busy=false;
- void load(){future=widget.appState.repository.fetchSettings(storeId:widget.appState.activeStore!.id,store:widget.appState.activeStore!);}
- @override void initState(){super.initState();load();}
- @override Widget build(BuildContext context)=>Scaffold(appBar:AppBar(title:const Text('Kesiapan toko')),body:FutureBuilder<StoreSettings>(future:future,builder:(context,s){
- if(s.connectionState!=ConnectionState.done)return const Center(child:CircularProgressIndicator());
- if(s.hasError)return Center(child:Text(s.error.toString()));
- final d=s.data!;final checks={'Metode pembayaran':d.hasPaymentConfigured,'Metode pemenuhan':d.hasFulfillmentConfigured,'Alamat pengambilan':d.hasValidPickupAddress,'Kontak pengiriman':d.hasValidDeliveryContact,'Kebijakan toko':d.hasPolicies,'Nomor kontak':d.hasContactPhone};
- final ready=checks.values.every((v)=>v);
- return ListView(padding:const EdgeInsets.all(20),children:[
- ...checks.entries.map((e)=>ListTile(leading:Icon(e.value?Icons.check_circle:Icons.error_outline,color:e.value?Colors.green:Colors.orange),title:Text(e.key))),
- const SizedBox(height:20),
- FilledButton(onPressed:busy||!ready||!widget.appState.activeRole.canManageSettings?null:()async{setState(()=>busy=true);try{await widget.appState.repository.setStorePublished(storeId:widget.appState.activeStore!.id,publish:!(widget.appState.activeStore?.isPublished??false),role:widget.appState.activeRole);await widget.appState.refreshStoresMetadata();if(mounted)context.pop();}catch(e){if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text(e.toString())));}finally{if(mounted)setState(()=>busy=false);}},child:Text(widget.appState.activeStore?.isPublished==true?'Tarik publikasi':'Publikasikan toko')),
- ]);
- }));
+class _StoreReadinessScreenState extends State<StoreReadinessScreen> {
+  late Future<({StoreSettings settings, List<Product> products})> future;
+  bool busy = false;
+  void load() {
+    final id = widget.appState.activeStore!.id, store = widget.appState.activeStore!;
+    future = () async {
+      final settings = await widget.appState.repository.fetchSettings(storeId: id, store: store);
+      final products = await widget.appState.repository.fetchProducts(id);
+      return (settings: settings, products: products);
+    }();
+  }
+  @override void initState() { super.initState(); load(); }
+  Future<void> publish(bool next) async {
+    final allowed = await showDialog<bool>(context: context, builder: (ctx) => AlertDialog(
+      title: Text(next ? 'Publikasikan toko?' : 'Jeda toko?'),
+      content: Text(next ? 'Toko akan dapat dikunjungi pembeli setelah semua persyaratan diverifikasi server.' : 'Toko tidak lagi menerima pesanan baru selama dijeda.'),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Kembali')),
+        FilledButton(onPressed: () => Navigator.pop(ctx, true), child: Text(next ? 'Publikasikan' : 'Jeda toko')),
+      ],
+    ));
+    if (allowed != true || !mounted || widget.appState.isOffline) return;
+    setState(() => busy = true);
+    try {
+      await widget.appState.repository.setStorePublished(storeId: widget.appState.activeStore!.id, publish: next, role: widget.appState.activeRole);
+      await widget.appState.refreshStoresMetadata();
+      if (mounted) { setState(load); ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Status toko diperbarui.'))); }
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Server menolak perubahan: $e')));
+    } finally { if (mounted) setState(() => busy = false); }
+  }
+  @override Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(title: const Text('Kesiapan toko'), actions: [IconButton(tooltip: 'Muat ulang', icon: const Icon(Icons.refresh), onPressed: () => setState(load))]),
+    body: FutureBuilder<({StoreSettings settings, List<Product> products})>(future: future, builder: (context, snap) {
+      if (snap.connectionState != ConnectionState.done) return const Center(child: CircularProgressIndicator());
+      if (snap.hasError) return Center(child: Text('Kesiapan belum dapat dimuat: ${snap.error}'));
+      final d = snap.data!.settings, products = snap.data!.products;
+      final checks = <String, bool>{
+        'Ada produk aktif dengan stok': products.any((p) => p.status == 'active' && p.totalAvailableStock > 0),
+        'Rekening atau QRIS': d.hasPaymentConfigured,
+        'Nomor kontak minimal 8 karakter': d.contactPhone.trim().length >= 8,
+        'Kebijakan toko minimal 20 karakter': d.policies.trim().length >= 20,
+        'Metode pengiriman atau pengambilan': d.hasFulfillmentConfigured,
+        'Alamat pengambilan jika diaktifkan': d.hasValidPickupAddress,
+        'Kontak pengiriman jika diaktifkan': d.hasValidDeliveryContact,
+      };
+      final ready = checks.values.every((v) => v);
+      final published = widget.appState.activeStore?.isPublished ?? false;
+      return ListView(padding: const EdgeInsets.all(20), children: [
+        Text(published ? 'Toko sedang terbit' : 'Siapkan toko sebelum terbit', style: Theme.of(context).textTheme.titleLarge),
+        const SizedBox(height: 12),
+        for (final check in checks.entries) ListTile(
+          contentPadding: EdgeInsets.zero, leading: Icon(check.value ? Icons.check_circle_outline : Icons.error_outline, color: check.value ? Colors.green.shade700 : Colors.orange.shade700),
+          title: Text(check.key),
+          onTap: check.value ? null : () => context.push(check.key.contains('produk') ? '/produk' : '/toko/settings'),
+        ),
+        const SizedBox(height: 8),
+        const Text('Pemeriksaan ini membantu persiapan. Server tetap memverifikasi izin, kuota, dan kelayakan final.'),
+        const SizedBox(height: 24),
+        FilledButton(onPressed: busy || widget.appState.isOffline || !widget.appState.activeRole.canManageSettings || (!published && !ready)
+          ? null : () => publish(!published), child: Text(busy ? 'Memproses...' : published ? 'Jeda publikasi' : 'Publikasikan toko')),
+      ]);
+    }),
+  );
 }
 class CustomersScreen extends StatefulWidget{
  const CustomersScreen({super.key,required this.appState});final SellerAppState appState;
