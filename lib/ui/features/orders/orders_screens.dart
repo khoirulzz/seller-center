@@ -35,6 +35,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen>{
  void load(){future=widget.appState.repository.fetchOrderDetail(storeId:widget.appState.activeStore!.id,orderId:widget.orderId);}
  @override void initState(){super.initState();load();}
  Future<void> act(String action)async{
+ final confirmed=await showDialog<bool>(context:context,builder:(dialog)=>AlertDialog(title:const Text('Konfirmasi tindakan'),content:Text('Yakin ingin menjalankan tindakan '+action+' untuk pesanan ini? Perubahan akan dikirim ke server.'),actions:[TextButton(onPressed:()=>Navigator.pop(dialog,false),child:const Text('Kembali')),FilledButton(onPressed:()=>Navigator.pop(dialog,true),child:const Text('Konfirmasi'))]));
+ if(confirmed!=true||!mounted)return;
  setState(()=>busy=true);
  try{
  final repo=widget.appState.repository,id=widget.appState.activeStore!.id,role=widget.appState.activeRole;
