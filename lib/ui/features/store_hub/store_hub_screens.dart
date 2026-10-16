@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/config/formatters.dart';
@@ -262,42 +263,145 @@ class _StoreReadinessScreenState extends State<StoreReadinessScreen> {
     }),
   );
 }
-class CustomersScreen extends StatefulWidget{
- const CustomersScreen({super.key,required this.appState});final SellerAppState appState;
- @override State<CustomersScreen> createState()=>_CustomersScreenState();
+class CustomersScreen extends StatefulWidget {
+  const CustomersScreen({super.key, required this.appState});
+  final SellerAppState appState;
+  @override State<CustomersScreen> createState() => _CustomersScreenState();
 }
-class _CustomersScreenState extends State<CustomersScreen>{
- late Future<({List<CustomerSummary> customers,bool hasMore})> future;
- @override void initState(){super.initState();future=widget.appState.repository.fetchCustomers(storeId:widget.appState.activeStore!.id);}
- @override Widget build(BuildContext context)=>Scaffold(appBar:AppBar(title:const Text('Pelanggan')),body:FutureBuilder<({List<CustomerSummary> customers,bool hasMore})>(future:future,builder:(context,s){
- if(s.connectionState!=ConnectionState.done)return const Center(child:CircularProgressIndicator());
- if(s.hasError)return Center(child:Text(s.error.toString()));
- if(!widget.appState.activeRole.canViewCustomersAndAnalytics)return const Center(child:Text('Akses tidak diizinkan.'));
- final customers=s.data?.customers??[];
- return ListView(children:customers.isEmpty?[const ListTile(title:Text('Belum ada pelanggan'))]:customers.map((c)=>ListTile(title:Text(c.name),subtitle:Text(c.email),trailing:Text(NsFormatters.rupiah(c.paidTotalIdr)))).toList());
- }));
+class _CustomersScreenState extends State<CustomersScreen> {
+  final search = TextEditingController();
+  List<CustomerSummary> customers = [];
+  int page = 0, epoch = 0;
+  bool busy = false, hasMore = true;
+  String? error;
+  String? storeId;
+  @override void initState() { super.initState(); reset(); widget.appState.addListener(onState); }
+  void onState() { if (widget.appState.activeStore?.id != storeId) reset(); }
+  void reset() {
+    epoch++;
+    storeId = widget.appState.activeStore?.id;
+    customers = [];
+    page = 0; busy = false; hasMore = true; error = null;
+    if (mounted) setState(() {});
+    load();
+  }
+  Future<void> load() async {
+    if (!hasMore || busy || storeId == null || !widget.appState.activeRole.canViewCustomersAndAnalytics) return;
+    final current = storeId!, marker = epoch, nextPage = page + 1;
+    setState(() { busy = true; error = null; });
+    try {
+      final result = await widget.appState.repository.fetchCustomers(storeId: current, query: search.text.trim(), page: nextPage);
+      if (mounted && marker == epoch && current == storeId) {
+        setState(() { customers = [...customers, ...result.customers]; hasMore = result.hasMore; page = nextPage; });
+      }
+    } catch (e) {
+      if (mounted && marker == epoch) setState(() => error = '$e');
+    } finally {
+      if (mounted && marker == epoch) setState(() => busy = false);
+    }
+  }
+  @override void dispose() { widget.appState.removeListener(onState); search.dispose(); super.dispose(); }
+  @override Widget build(BuildContext context) => Scaffold(appBar: AppBar(title: const Text('Pelanggan')),
+    body: !widget.appState.activeRole.canViewCustomersAndAnalytics
+      ? const Center(child: Text('Akun ini tidak memiliki akses ke data pelanggan.'))
+      : RefreshIndicator(onRefresh: () async { reset(); }, child: ListView(padding: const EdgeInsets.all(16), children: [
+        TextField(controller: search, textInputAction: TextInputAction.search,
+          decoration: InputDecoration(hintText: 'Cari nama, email, atau telepon', prefixIcon: const Icon(Icons.search),
+            suffixIcon: IconButton(tooltip: 'Cari pelanggan', icon: const Icon(Icons.arrow_forward), onPressed: reset)),
+          onSubmitted: (_) => reset()),
+        const SizedBox(height: 16),
+        for (final item in customers) ...[
+          ListTile(contentPadding: const EdgeInsets.symmetric(vertical: 4), title: Text(item.name),
+            subtitle: Text('${item.ordersCount} pesanan • Terakhir ${NsFormatters.shortDate(item.lastOrderAt)}'),
+            trailing: Text(NsFormatters.rupiah(item.paidTotalIdr)),
+            onTap: () => showModalBottomSheet<void>(context: context, showDragHandle: true, builder: (ctx) => SafeArea(
+              child: Padding(padding: const EdgeInsets.all(20), child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text(item.name, style: Theme.of(ctx).textTheme.titleLarge),
+                const SizedBox(height: 8), SelectableText(item.email), SelectableText(item.contactPhone),
+                const SizedBox(height: 12), Text('${item.ordersCount} pesanan • ${NsFormatters.rupiah(item.paidTotalIdr)} dibayar'),
+                const SizedBox(height: 12), const Text('Informasi kontak hanya ditampilkan saat Anda membuka pelanggan ini.'),
+              ])))),
+          ),
+          const Divider(height: 1),
+        ],
+        if (busy) const Padding(padding: EdgeInsets.all(24), child: Center(child: CircularProgressIndicator())),
+        if (!busy && customers.isEmpty && error == null) const Padding(padding: EdgeInsets.all(24), child: Text('Belum ada pelanggan yang sesuai.')),
+        if (error != null) ListTile(title: const Text('Pelanggan belum dapat dimuat'), subtitle: Text(error!), trailing: IconButton(icon: const Icon(Icons.refresh), onPressed: load)),
+        if (hasMore && customers.isNotEmpty) TextButton(onPressed: busy ? null : load, child: const Text('Muat pelanggan lainnya')),
+      ])),
+  );
 }
-class BillingScreen extends StatefulWidget{
- const BillingScreen({super.key,required this.appState});final SellerAppState appState;
- @override State<BillingScreen> createState()=>_BillingScreenState();
+class BillingScreen extends StatefulWidget {
+  const BillingScreen({super.key, required this.appState});
+  final SellerAppState appState;
+  @override State<BillingScreen> createState() => _BillingScreenState();
 }
-class _BillingScreenState extends State<BillingScreen>{
- late Future<BillingBundle> future;
- @override void initState(){super.initState();future=widget.appState.repository.fetchBilling(widget.appState.activeStore!.id);}
- @override Widget build(BuildContext context)=>Scaffold(appBar:AppBar(title:const Text('Paket & tagihan')),body:FutureBuilder<BillingBundle>(future:future,builder:(context,s){
- if(s.connectionState!=ConnectionState.done)return const Center(child:CircularProgressIndicator());
- if(s.hasError)return Center(child:Text(s.error.toString()));
- final d=s.data!;
- return ListView(padding:const EdgeInsets.all(20),children:[
- Text('Langganan',style:Theme.of(context).textTheme.titleLarge),
- ...d.subscriptions.map((v)=>ListTile(title:Text(v.name),subtitle:Text(v.status))),
- Text('Tagihan',style:Theme.of(context).textTheme.titleLarge),
- ...d.invoices.map((v)=>ListTile(title:Text(v.invoiceNumber),subtitle:Text(v.status),trailing:Text(NsFormatters.rupiah(v.amountIdr)))),
- Text('Paket tersedia',style:Theme.of(context).textTheme.titleLarge),
- ...d.publicPlans.map((p)=>ExpansionTile(title:Text(p.name),subtitle:Text(p.description),children:p.prices.map((price)=>ListTile(title:Text(NsFormatters.rupiah(price.amountIdr)),subtitle:Text(price.billingInterval),onTap:price.id==null||!widget.appState.activeRole.canChooseBillingPlan?null:()async{try{await widget.appState.repository.selectSubscriptionPlan(storeId:widget.appState.activeStore!.id,planPriceId:price.id!,role:widget.appState.activeRole);if(mounted)ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('Paket berhasil dipilih')));}catch(e){if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text(e.toString())));}})).toList())),
- if(d.paymentInstructions.isNotEmpty)Text(d.paymentInstructions),
- ]);
- }));
+class _BillingScreenState extends State<BillingScreen> {
+  late Future<BillingBundle> future;
+  bool choosing = false;
+  @override void initState() { super.initState(); load(); }
+  void load() { future = widget.appState.repository.fetchBilling(widget.appState.activeStore!.id); }
+  Future<void> choosePlan(PlanPrice price, String name) async {
+    if (!widget.appState.activeRole.canChooseBillingPlan || price.id == null || choosing || widget.appState.isOffline) return;
+    final consent = await showDialog<bool>(context: context, builder: (ctx) => AlertDialog(
+      title: Text('Pilih paket $name?'),
+      content: Text('Harga ${NsFormatters.rupiah(price.amountIdr)} / ${NsStatusDictionary.label(price.billingInterval)}. Aktivasi dan pembayaran mengikuti aturan server Nalaro Store.'),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Kembali')),
+        FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Lanjutkan')),
+      ]));
+    if (consent != true || !mounted) return;
+    setState(() => choosing = true);
+    try {
+      await widget.appState.repository.selectSubscriptionPlan(storeId: widget.appState.activeStore!.id, planPriceId: price.id!, role: widget.appState.activeRole);
+      if (mounted) {
+        setState(load);
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Permintaan paket diterima. Periksa status tagihan.')));
+      }
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Paket belum dapat dipilih: $e')));
+    } finally { if (mounted) setState(() => choosing = false); }
+  }
+  @override Widget build(BuildContext context) => Scaffold(appBar: AppBar(title: const Text('Langganan & tagihan'), actions: [
+    IconButton(tooltip: 'Segarkan', icon: const Icon(Icons.refresh), onPressed: () => setState(load)),
+  ]), body: FutureBuilder<BillingBundle>(future: future, builder: (context, snap) {
+    if (snap.connectionState != ConnectionState.done) return const Center(child: CircularProgressIndicator());
+    if (snap.hasError) return Center(child: Text('Tagihan belum dapat dibuka: ${snap.error}'));
+    final d = snap.data!;
+    return ListView(padding: const EdgeInsets.all(20), children: [
+      Text('Langganan aktif', style: Theme.of(context).textTheme.titleLarge),
+      if (d.subscriptions.isEmpty) const ListTile(title: Text('Belum ada langganan aktif.')),
+      for (final sub in d.subscriptions) ListTile(title: Text(sub.name), subtitle: Text('${NsStatusDictionary.label(sub.status)} • ${NsStatusDictionary.label(sub.billingInterval)}'), trailing: Text(NsFormatters.shortDate(sub.currentPeriodEnd))),
+      const SizedBox(height: 16), Text('Tagihan', style: Theme.of(context).textTheme.titleLarge),
+      if (d.invoices.isEmpty) const ListTile(title: Text('Belum ada tagihan.')),
+      for (final invoice in d.invoices) ListTile(
+        title: Text(invoice.invoiceNumber), subtitle: Text(NsStatusDictionary.label(invoice.status)),
+        trailing: Column(mainAxisAlignment: MainAxisAlignment.center, mainAxisSize: MainAxisSize.min, children: [
+          Text(NsFormatters.rupiah(invoice.amountIdr)),
+          Text(NsFormatters.shortDate(invoice.periodEnd), style: Theme.of(context).textTheme.bodySmall),
+        ]),
+        onTap: () async {
+          await Clipboard.setData(ClipboardData(text: invoice.invoiceNumber));
+          if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Nomor tagihan disalin.')));
+        }),
+      const SizedBox(height: 16), Text('Paket tersedia', style: Theme.of(context).textTheme.titleLarge),
+      if (d.publicPlans.isEmpty) const ListTile(title: Text('Pilihan paket belum tersedia.')),
+      for (final plan in d.publicPlans) ExpansionTile(title: Text(plan.name), subtitle: Text(plan.description),
+        children: [
+          for (final price in plan.prices) ListTile(title: Text(NsFormatters.rupiah(price.amountIdr)),
+            subtitle: Text(NsStatusDictionary.label(price.billingInterval)),
+            trailing: widget.appState.activeRole.canChooseBillingPlan ? const Icon(Icons.chevron_right) : null,
+            onTap: choosing ? null : () => choosePlan(price, plan.name)),
+        ]),
+      const SizedBox(height: 16), Text('Penggunaan', style: Theme.of(context).textTheme.titleLarge),
+      if (d.usage.isEmpty) const ListTile(title: Text('Belum ada catatan penggunaan.')),
+      for (final usage in d.usage) ListTile(title: Text(usage.featureCode), subtitle: Text(usage.periodKey), trailing: Text(NsFormatters.number(usage.value))),
+      if (d.paymentInstructions.trim().isNotEmpty) ...[
+        const SizedBox(height: 16), Text('Cara pembayaran', style: Theme.of(context).textTheme.titleLarge),
+        SelectableText(d.paymentInstructions),
+      ],
+    ]);
+  }));
 }
 class AccountSecurityScreen extends StatefulWidget{
  const AccountSecurityScreen({super.key,required this.appState});final SellerAppState appState;
