@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+
 import '../../core/errors/ns_error_mapper.dart';
 import '../../data/repositories/seller_repository.dart';
 import '../../domain/models/seller_models.dart';
@@ -16,9 +17,24 @@ enum AuthLifecycleState {
 /// sesuai `PRD` Bab 5.2 & `flutter-apply-architecture-best-practices.md`.
 class SellerAppState extends ChangeNotifier {
   SellerAppState({SellerRepository? repository})
-      : _repository = repository ?? SellerRepository();
+    : _repository = repository ?? SellerRepository();
 
   final SellerRepository _repository;
+  final ValueNotifier<AuthLifecycleState> routing = ValueNotifier(
+    AuthLifecycleState.initializing,
+  );
+
+  @override
+  void notifyListeners() {
+    routing.value = _lifecycle;
+    super.notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    routing.dispose();
+    super.dispose();
+  }
 
   AuthLifecycleState _lifecycle = AuthLifecycleState.initializing;
   UserIdentity? _user;
@@ -42,15 +58,14 @@ class SellerAppState extends ChangeNotifier {
   int get storeDataRevision => _storeDataRevision;
   bool get hasUnsavedFormDraft => _hasUnsavedFormDraft;
 
-  int get unreadNotificationCount => _repository
-      .getNotificationsForUser()
-      .where((n) => !n.isRead)
-      .length;
+  int get unreadNotificationCount =>
+      _repository.getNotificationsForUser().where((n) => !n.isRead).length;
 
   void setHasUnsavedFormDraft(bool dirty) {
     if (_hasUnsavedFormDraft == dirty) return;
+    // This flag is read when leaving a form, not rendered. Notifying the router
+    // or ancestors while a form is disposing can rebuild a locked widget tree.
     _hasUnsavedFormDraft = dirty;
-    notifyListeners();
   }
 
   void setOfflineStatus(bool offline) {
@@ -145,8 +160,7 @@ class SellerAppState extends ChangeNotifier {
         await _loadStoresAndSelectActive(updated.id);
         return true;
       }
-      _globalError =
-          'Email belum terverifikasi. Buka tautan pada inbox atau folder spam, lalu periksa kembali.';
+      _globalError = 'Email belum terverifikasi. Buka tautan pada inbox atau folder spam, lalu periksa kembali.';
       return false;
     } catch (e) {
       _globalError = NsErrorMapper.toUserMessage(e);
@@ -168,7 +182,8 @@ class SellerAppState extends ChangeNotifier {
     }
 
     final savedStoreId = await _repository.drafts.loadActiveStoreId(userId);
-    final matched = storesList.where((s) => s.id == savedStoreId).firstOrNull ??
+    final matched =
+        storesList.where((s) => s.id == savedStoreId).firstOrNull ??
         storesList.first;
     _activeStore = matched;
     await _repository.drafts.saveActiveStoreId(userId, matched.id);
@@ -184,6 +199,7 @@ class SellerAppState extends ChangeNotifier {
     if (target == null) return false;
     if (_activeStore?.id == target.id) return true;
 
+    _repository.clearMediaCache();
     _activeStore = target;
     _hasUnsavedFormDraft = false;
     _storeDataRevision++;
@@ -232,9 +248,8 @@ class SellerAppState extends ChangeNotifier {
       final updated = await _repository.fetchStores();
       _stores = updated;
       if (_activeStore != null) {
-        _activeStore = updated
-                .where((s) => s.id == _activeStore!.id)
-                .firstOrNull ??
+        _activeStore =
+            updated.where((s) => s.id == _activeStore!.id).firstOrNull ??
             updated.firstOrNull;
       }
       _storeDataRevision++;

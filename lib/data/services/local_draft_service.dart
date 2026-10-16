@@ -1,4 +1,5 @@
 import 'dart:convert';
+
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
@@ -112,7 +113,8 @@ class LocalDraftService {
       return LocalDraftEntry(
         key: key,
         schemaVersion: (decoded['schemaVersion'] as num?)?.toInt() ?? 1,
-        updatedAt: DateTime.tryParse((decoded['updatedAt'] ?? '').toString()) ??
+        updatedAt:
+            DateTime.tryParse((decoded['updatedAt'] ?? '').toString()) ??
             DateTime.now(),
         data: (decoded['data'] as Map<String, dynamic>?) ?? const {},
       );

@@ -1,7 +1,9 @@
 import 'dart:convert';
 import 'dart:typed_data';
+
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+
 import '../../core/config/app_config.dart';
 import '../../core/errors/api_exception.dart';
 import '../../domain/models/seller_models.dart';
@@ -16,6 +18,63 @@ class SellerApiService {
 
   final http.Client _http;
   final String baseUrl;
+
+  Uri resolveMediaUri(String source) {
+    final base = Uri.parse(baseUrl);
+    final uri = base.resolve(source.trim());
+    if (uri.scheme != 'https' || uri.userInfo.isNotEmpty) {
+      throw const ApiException(
+        message: 'Link foto tidak valid.',
+        statusCode: 400,
+      );
+    }
+    return uri;
+  }
+
+  bool isPrivateMedia(Uri uri) =>
+      uri.origin == Uri.parse(baseUrl).origin &&
+      uri.path.startsWith('/api/media/');
+
+  Future<Uint8List> fetchMediaBytes({
+    required Uri uri,
+    String? bearerToken,
+  }) async {
+    if (uri.scheme != 'https' || uri.userInfo.isNotEmpty) {
+      throw const ApiException(
+        message: 'Link foto tidak valid.',
+        statusCode: 400,
+      );
+    }
+    final request = http.Request('GET', uri);
+    // Never forward a token through a redirect or to an external image host.
+    request.followRedirects = false;
+    request.headers['Accept'] = 'image/*';
+    if (isPrivateMedia(uri) && bearerToken != null)
+      request.headers['Authorization'] = 'Bearer $bearerToken';
+    final response = await _http
+        .send(request)
+        .timeout(const Duration(seconds: 20));
+    if (response.statusCode != 200) {
+      await response.stream.drain<void>();
+      throw ApiException(
+        message: 'Foto belum dapat dimuat. Ketuk untuk mencoba lagi.',
+        statusCode: response.statusCode,
+      );
+    }
+    final bytes = BytesBuilder(copy: false);
+    await for (final chunk in response.stream.timeout(
+      const Duration(seconds: 20),
+    )) {
+      bytes.add(chunk);
+      if (bytes.length > AppConfig.maxMediaUploadBytes) {
+        throw const ApiException(
+          message: 'Ukuran foto melebihi 5 MB.',
+          statusCode: 413,
+        );
+      }
+    }
+    return bytes.takeBytes();
+  }
 
   Uri _buildUri(String path, [Map<String, String>? query]) {
     final base = Uri.parse(baseUrl);
@@ -100,8 +159,8 @@ class SellerApiService {
     }
 
     if (response.statusCode < 200 || response.statusCode >= 300) {
-      final errText =
-          (decoded['error'] ?? 'Layanan belum tersedia.').toString();
+      final errText = (decoded['error'] ?? 'Layanan belum tersedia.')
+          .toString();
       throw ApiException(
         message: errText,
         statusCode: response.statusCode,
@@ -234,10 +293,7 @@ class SellerApiService {
       path: '/api/merchant/stores/$storeId/orders/$orderId/payment',
       bearerToken: bearerToken,
       idempotencyKey: idempotencyKey,
-      body: {
-        'decision': decision,
-        'note': note.trim(),
-      },
+      body: {'decision': decision, 'note': note.trim()},
     );
   }
 
@@ -254,10 +310,7 @@ class SellerApiService {
       path: '/api/merchant/stores/$storeId/orders/$orderId/fulfillment',
       bearerToken: bearerToken,
       idempotencyKey: idempotencyKey,
-      body: {
-        'status': status,
-        'reference': reference.trim(),
-      },
+      body: {'status': status, 'reference': reference.trim()},
     );
   }
 
@@ -335,8 +388,7 @@ class SellerApiService {
   }) async {
     if (bytes.lengthInBytes > AppConfig.maxMediaUploadBytes) {
       throw const ApiException(
-        message:
-            'Ukuran foto terlalu besar. Pilih atau kecilkan gambar lalu coba lagi.',
+        message: 'Ukuran foto terlalu besar. Pilih atau kecilkan gambar lalu coba lagi.',
         statusCode: 413,
       );
     }
@@ -352,8 +404,8 @@ class SellerApiService {
     final decoded = jsonDecode(response.body) as Map<String, dynamic>;
     if (response.statusCode != 201 && response.statusCode != 200) {
       throw ApiException(
-        message:
-            (decoded['error'] ?? 'Foto belum berhasil diunggah.').toString(),
+        message: (decoded['error'] ?? 'Foto belum berhasil diunggah.')
+            .toString(),
         statusCode: response.statusCode,
       );
     }
@@ -426,8 +478,7 @@ class SellerApiService {
       path: '/api/merchant/stores/$storeId/settings',
       bearerToken: bearerToken,
     );
-    final settingsMap =
-        (json['settings'] as Map<String, dynamic>?) ?? const {};
+    final settingsMap = (json['settings'] as Map<String, dynamic>?) ?? const {};
     return StoreSettings.fromJson(
       settingsMap,
       fallbackStoreName: store.name,
@@ -502,9 +553,10 @@ class SellerApiService {
           .whereType<Map<String, dynamic>>()
           .map(SubscriptionPlan.fromJson)
           .toList(),
-      paymentInstructions: (billingJson['paymentInstructions'] ??
-              'Instruksi pembayaran belum ditetapkan admin.')
-          .toString(),
+      paymentInstructions:
+          (billingJson['paymentInstructions'] ??
+                  'Instruksi pembayaran belum ditetapkan admin.')
+              .toString(),
     );
   }
 
@@ -529,10 +581,10 @@ class SellerApiService {
     final parts = <String>[];
     var totalBytes = 0;
     for (var page = 1; page <= 20; page++) {
-      final uri = _buildUri(
-        '/api/merchant/stores/$storeId/export',
-        {'resource': resource, 'page': '$page'},
-      );
+      final uri = _buildUri('/api/merchant/stores/$storeId/export', {
+        'resource': resource,
+        'page': '$page',
+      });
       final response = await _http
           .get(uri, headers: _headers(bearerToken: bearerToken))
           .timeout(const Duration(seconds: 20));

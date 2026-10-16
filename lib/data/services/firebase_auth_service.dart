@@ -1,5 +1,7 @@
 import 'dart:convert';
+
 import 'package:http/http.dart' as http;
+
 import '../../core/config/app_config.dart';
 import '../../core/errors/api_exception.dart';
 
@@ -30,13 +32,13 @@ class FirebaseSession {
       DateTime.now().isAfter(expiresAt.subtract(const Duration(minutes: 2)));
 
   Map<String, dynamic> toJson() => {
-        'uid': uid,
-        'email': email,
-        'idToken': idToken,
-        'refreshToken': refreshToken,
-        'emailVerified': emailVerified,
-        'expiresAt': expiresAt.toIso8601String(),
-      };
+    'uid': uid,
+    'email': email,
+    'idToken': idToken,
+    'refreshToken': refreshToken,
+    'emailVerified': emailVerified,
+    'expiresAt': expiresAt.toIso8601String(),
+  };
 
   factory FirebaseSession.fromJson(Map<String, dynamic> json) {
     return FirebaseSession(
@@ -45,7 +47,8 @@ class FirebaseSession {
       idToken: (json['idToken'] ?? '').toString(),
       refreshToken: (json['refreshToken'] ?? '').toString(),
       emailVerified: json['emailVerified'] == true,
-      expiresAt: DateTime.tryParse((json['expiresAt'] ?? '').toString()) ??
+      expiresAt:
+          DateTime.tryParse((json['expiresAt'] ?? '').toString()) ??
           DateTime.now().add(const Duration(hours: 1)),
     );
   }
@@ -55,7 +58,7 @@ class FirebaseSession {
 /// menghasilkan Firebase ID Token RS256 resmi untuk diverifikasi Cloudflare Worker.
 class FirebaseAuthService {
   FirebaseAuthService({http.Client? httpClient})
-      : _http = httpClient ?? http.Client();
+    : _http = httpClient ?? http.Client();
 
   final http.Client _http;
 
@@ -181,10 +184,7 @@ class FirebaseAuthService {
     final response = await _http.post(
       _identityUri('accounts:sendOobCode'),
       headers: {'content-type': 'application/json'},
-      body: jsonEncode({
-        'requestType': 'VERIFY_EMAIL',
-        'idToken': idToken,
-      }),
+      body: jsonEncode({'requestType': 'VERIFY_EMAIL', 'idToken': idToken}),
     );
     if (response.statusCode != 200) {
       final body = _decodeJson(response);
