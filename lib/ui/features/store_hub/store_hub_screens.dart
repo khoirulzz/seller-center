@@ -17,7 +17,16 @@ class StoreHubScreen extends StatelessWidget{
  if(appState.activeRole.canViewCustomersAndAnalytics)ListTile(leading:const Icon(Icons.people_outline),title:const Text('Pelanggan'),onTap:()=>context.push('/toko/customers')),
  if(appState.activeRole.canChooseBillingPlan)ListTile(leading:const Icon(Icons.receipt_long_outlined),title:const Text('Paket & tagihan'),onTap:()=>context.push('/toko/billing')),
  ListTile(leading:const Icon(Icons.lock_outline),title:const Text('Keamanan akun'),onTap:()=>context.push('/toko/account')),
- const Divider(),ListTile(leading:const Icon(Icons.logout),title:const Text('Keluar'),onTap:appState.signOut),
+ const Divider(),ListTile(leading:const Icon(Icons.logout),title:const Text('Keluar'),onTap:() async {
+   final confirmed=await showDialog<bool>(context:context,builder:(d)=>AlertDialog(
+     title:const Text('Keluar dari akun?'),
+     content:Text(appState.hasUnsavedFormDraft
+       ? 'Masih ada perubahan formulir yang belum disimpan. Simpan sebagai draft sebelum keluar agar tidak kehilangan pekerjaan.'
+       : 'Sesi akan diakhiri pada perangkat ini.'),
+     actions:[TextButton(onPressed:()=>Navigator.pop(d,false),child:const Text('Kembali')),
+       FilledButton(onPressed:()=>Navigator.pop(d,true),child:const Text('Keluar'))]));
+   if(confirmed==true && context.mounted)await appState.signOut();
+ }),
  ]);
 }
 class StoreSettingsScreen extends StatefulWidget {
