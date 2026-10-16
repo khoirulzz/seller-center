@@ -130,6 +130,6 @@ class _HomeScreenState extends State<HomeScreen> {
     child: Padding(padding: const EdgeInsets.all(14), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Text(title, style: const TextStyle(fontSize: 13)),
       const SizedBox(height: 6),
-      Text(value, style: const TextStyle(fontWeight: FontWeight.w750, fontSize: 22)),
+      Text(value, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 22)),
     ])));
 }
