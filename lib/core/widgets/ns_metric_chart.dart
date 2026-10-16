@@ -158,6 +158,8 @@ class _NsMetricChartState extends State<NsMetricChart> {
                     ),
                   );
                 }),
+                  ),
+                ),
               ),
             ),
           ],
