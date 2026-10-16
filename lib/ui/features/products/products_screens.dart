@@ -311,34 +311,67 @@ class _ProductEditorScreenState extends State<ProductEditorScreen> {
     }
     return false;
   }
+  int uploadDone = 0, uploadTotal = 0;
   Future<void> choosePhoto({required bool primary}) async {
-    if (uploading) return;
-    final source = await showModalBottomSheet<ImageSource>(context: context, showDragHandle: true, builder: (ctx) => SafeArea(child: Column(mainAxisSize: MainAxisSize.min, children: [
-      ListTile(leading: const Icon(Icons.photo_library_outlined), title: const Text('Pilih dari galeri'), onTap: () => Navigator.pop(ctx, ImageSource.gallery)),
-      ListTile(leading: const Icon(Icons.camera_alt_outlined), title: const Text('Ambil foto'), onTap: () => Navigator.pop(ctx, ImageSource.camera)),
-    ])));
+    if (uploading || (gallery.length >= AppConfig.maxGalleryPhotos && !primary)) return;
+    final source = await showModalBottomSheet<ImageSource>(context: context, showDragHandle: true,
+      builder: (ctx) => SafeArea(child: Column(mainAxisSize: MainAxisSize.min, children: [
+        ListTile(leading: const Icon(Icons.photo_library_outlined), title: const Text('Pilih dari galeri'),
+          onTap: () => Navigator.pop(ctx, ImageSource.gallery)),
+        ListTile(leading: const Icon(Icons.camera_alt_outlined), title: const Text('Ambil foto'),
+          onTap: () => Navigator.pop(ctx, ImageSource.camera)),
+      ])));
     if (source == null || !mounted) return;
+    List<XFile> selected = [];
     try {
-      final XFile? file = await picker.pickImage(source: source, imageQuality: 82, maxWidth: 1800, maxHeight: 1800);
-      if (file == null || !mounted) return;
-      if (!primary && gallery.length >= AppConfig.maxGalleryPhotos) { setState(() => error = 'Maksimal 12 foto galeri.'); return; }
-      final Uint8List bytes = await file.readAsBytes();
-      if (bytes.length > AppConfig.maxMediaUploadBytes) { setState(() => error = 'Foto melebihi 5 MB. Pilih foto lain.'); return; }
-      setState(() => uploading = true);
-      String? mime;
-      if (bytes.length >= 3 && bytes[0] == 0xff && bytes[1] == 0xd8) {
-        mime = 'image/jpeg';
-      } else if (bytes.length >= 8 && bytes[0] == 0x89 && bytes[1] == 0x50 && bytes[2] == 0x4e && bytes[3] == 0x47) {
-        mime = 'image/png';
-      } else if (bytes.length >= 12 && String.fromCharCodes(bytes.sublist(0, 4)) == 'RIFF' && String.fromCharCodes(bytes.sublist(8, 12)) == 'WEBP') {
-        mime = 'image/webp';
+      if (!primary && source == ImageSource.gallery) {
+        selected = await picker.pickMultiImage(maxWidth: 1800, maxHeight: 1800, imageQuality: 82);
+      } else {
+        final file = await picker.pickImage(source: source, maxWidth: 1800, maxHeight: 1800, imageQuality: 82);
+        if (file != null) selected = [file];
       }
-      if (mime == null) throw const FormatException('Hanya JPG, PNG atau WebP yang didukung.');
-      final result = await widget.appState.repository.uploadMediaBytes(storeId: storeId, bytes: bytes, mimeType: mime);
-      if (!mounted) return;
-      setState(() { if (primary) { primaryImage = result.url; } else { gallery.add(GalleryPhoto(url: result.url)); } uploading = false; });
-      changed();
-    } catch (e) { if (mounted) setState(() { error = 'Foto gagal diunggah: $e'; uploading = false; }); }
+    } catch (e) {
+      if (mounted) setState(() => error = 'Tidak dapat membuka foto. Coba lagi.');
+      return;
+    }
+    if (selected.isEmpty || !mounted) return;
+    if (!primary && selected.length + gallery.length > AppConfig.maxGalleryPhotos) {
+      setState(() => error = 'Galeri maksimal 12 foto. Pilih lebih sedikit foto.');
+      return;
+    }
+    setState(() { uploading = true; error = null; uploadDone = 0; uploadTotal = selected.length; });
+    for (final file in selected) {
+      if (!mounted) break;
+      try {
+        final Uint8List bytes = await file.readAsBytes();
+        if (bytes.isEmpty || bytes.lengthInBytes > AppConfig.maxMediaUploadBytes) {
+          throw const FormatException('Foto harus berukuran kurang dari 5 MB.');
+        }
+        String? mime;
+        if (bytes.length >= 3 && bytes[0] == 0xff && bytes[1] == 0xd8) {
+          mime = 'image/jpeg';
+        } else if (bytes.length >= 8 && bytes[0] == 0x89 && bytes[1] == 0x50 && bytes[2] == 0x4e && bytes[3] == 0x47) {
+          mime = 'image/png';
+        } else if (bytes.length >= 12 && String.fromCharCodes(bytes.sublist(0, 4)) == 'RIFF' &&
+            String.fromCharCodes(bytes.sublist(8, 12)) == 'WEBP') {
+          mime = 'image/webp';
+        }
+        if (mime == null) throw const FormatException('Gunakan JPG, PNG, atau WebP.');
+        final result = await widget.appState.repository.uploadMediaBytes(
+          storeId: storeId, bytes: bytes, mimeType: mime);
+        if (!mounted) break;
+        setState(() {
+          if (primary) { primaryImage = result.url; }
+          else { gallery.add(GalleryPhoto(url: result.url)); }
+          uploadDone++;
+        });
+        changed();
+      } catch (e) {
+        if (mounted) setState(() => error = 'Foto ${uploadDone + 1} belum berhasil diunggah: $e. Foto lain yang berhasil tetap tersimpan dalam draft.');
+        break;
+      }
+    }
+    if (mounted) setState(() => uploading = false);
   }
   Future<void> editVariant([int? index]) async {
     final variant = index == null ? null : variants[index];
@@ -433,7 +466,7 @@ class _ProductEditorScreenState extends State<ProductEditorScreen> {
               ]),
             )),
           TextButton.icon(onPressed: uploading || gallery.length >= 12 ? null : () => choosePhoto(primary: false),
-            icon: const Icon(Icons.add_photo_alternate_outlined), label: Text(uploading ? 'Mengunggah...' : 'Tambah foto galeri')),
+            icon: const Icon(Icons.add_photo_alternate_outlined), label: Text(uploading ? 'Mengunggah ${uploadDone + 1} dari $uploadTotal…' : 'Tambah foto galeri')),
           const SizedBox(height: 24),
           Row(children: [Expanded(child: Text('Varian & stok', style: Theme.of(context).textTheme.titleLarge)),
             IconButton(tooltip: 'Tambah varian', icon: const Icon(Icons.add_circle_outline), onPressed: () => editVariant())]),
