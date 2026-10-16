@@ -479,7 +479,11 @@ class _ProductEditorScreenState extends State<ProductEditorScreen>
       if (widget.productId != null) {
         final all = await widget.appState.repository.fetchProducts(storeId);
         if (!mounted) return;
-        final p = all.firstWhere((p) => p.id == widget.productId);
+        final p = all.where((p) => p.id == widget.productId).firstOrNull;
+        if (p == null)
+          throw const FormatException(
+            'Produk sudah tidak tersedia. Kembali dan muat ulang katalog.',
+          );
         original = p;
         name.text = p.name;
         slug.text = p.slug;
@@ -677,7 +681,9 @@ class _ProductEditorScreenState extends State<ProductEditorScreen>
   }
 
   Future<void> choosePhoto({required bool primary}) async {
-    if (busy || (!primary && gallery.length >= AppConfig.maxGalleryPhotos))
+    if (!widget.appState.activeRole.canManageCatalog ||
+        busy ||
+        (!primary && gallery.length >= AppConfig.maxGalleryPhotos))
       return;
     FocusManager.instance.primaryFocus?.unfocus();
     final source = await showModalBottomSheet<ImageSource>(
@@ -742,7 +748,7 @@ class _ProductEditorScreenState extends State<ProductEditorScreen>
   }
 
   Future<void> editPhoto({String? galleryUrl}) async {
-    if (busy) return;
+    if (busy || !widget.appState.activeRole.canManageCatalog) return;
     final url = galleryUrl ?? primaryImage;
     if (url == null) return;
     setState(() => editingPhoto = true);
@@ -1054,6 +1060,8 @@ class _ProductEditorScreenState extends State<ProductEditorScreen>
                       [
                         TextFormField(
                           controller: name,
+                          readOnly:
+                              !widget.appState.activeRole.canManageCatalog,
                           maxLength: 160,
                           textCapitalization: TextCapitalization.words,
                           textInputAction: TextInputAction.next,
@@ -1072,6 +1080,8 @@ class _ProductEditorScreenState extends State<ProductEditorScreen>
                         const SizedBox(height: 18),
                         TextFormField(
                           controller: slug,
+                          readOnly:
+                              !widget.appState.activeRole.canManageCatalog,
                           textInputAction: TextInputAction.next,
                           onChanged: (_) => slugEdited = true,
                           decoration: const InputDecoration(
@@ -1087,6 +1097,8 @@ class _ProductEditorScreenState extends State<ProductEditorScreen>
                         const SizedBox(height: 18),
                         TextFormField(
                           controller: description,
+                          readOnly:
+                              !widget.appState.activeRole.canManageCatalog,
                           maxLength: 10000,
                           maxLines: 4,
                           textCapitalization: TextCapitalization.sentences,
@@ -1099,6 +1111,8 @@ class _ProductEditorScreenState extends State<ProductEditorScreen>
                         const SizedBox(height: 18),
                         TextFormField(
                           controller: category,
+                          readOnly:
+                              !widget.appState.activeRole.canManageCatalog,
                           maxLength: 80,
                           textInputAction: TextInputAction.next,
                           decoration: const InputDecoration(
@@ -1112,6 +1126,8 @@ class _ProductEditorScreenState extends State<ProductEditorScreen>
                         const SizedBox(height: 18),
                         TextFormField(
                           controller: price,
+                          readOnly:
+                              !widget.appState.activeRole.canManageCatalog,
                           keyboardType: TextInputType.number,
                           textInputAction: TextInputAction.done,
                           inputFormatters: [

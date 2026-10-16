@@ -548,10 +548,13 @@ class _StoreSettingsScreenState extends State<StoreSettingsScreen> {
                   ),
                   if (qrisKey != null)
                     TextButton(
-                      onPressed: () {
-                        setState(() => qrisKey = null);
-                        onDirty();
-                      },
+                      onPressed:
+                          busy || !widget.appState.activeRole.canManageSettings
+                          ? null
+                          : () {
+                              setState(() => qrisKey = null);
+                              onDirty();
+                            },
                       child: const Text('Hapus QRIS dari pengaturan'),
                     ),
                 ]),
