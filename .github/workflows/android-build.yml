@@ -18,9 +18,11 @@ jobs:
           cache: true
       - name: Generate native Android project
         run: |
+          cp android/app/src/main/AndroidManifest.xml /tmp/nalaro-AndroidManifest.xml
           flutter create --platforms=android --org digital.nalaro --project-name nalaro_seller_center .
+          cp /tmp/nalaro-AndroidManifest.xml android/app/src/main/AndroidManifest.xml
       - run: flutter pub get
-      - name: Format available Dart sources
+      - name: Format Dart sources
         run: dart format lib test
       - run: flutter analyze
       - run: flutter test
