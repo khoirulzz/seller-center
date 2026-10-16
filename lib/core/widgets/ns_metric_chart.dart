@@ -101,7 +101,11 @@ class _NsMetricChartState extends State<NsMetricChart> {
             const SizedBox(height: NsSpacing.md),
             SizedBox(
               height: 150,
-              child: Row(
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: SizedBox(
+                  width: widget.points.length > 10 ? widget.points.length * 32.0 : MediaQuery.sizeOf(context).width - 72,
+                  child: Row(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: List.generate(widget.points.length, (index) {
                   final point = widget.points[index];
