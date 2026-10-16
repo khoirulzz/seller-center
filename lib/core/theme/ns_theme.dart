@@ -27,6 +27,31 @@ abstract final class NsTheme {
       dividerColor: NsColors.borderDefault,
       splashColor: NsColors.surfacePressed,
       highlightColor: NsColors.surfacePressed,
+      filledButtonTheme: FilledButtonThemeData(
+        style: FilledButton.styleFrom(
+          backgroundColor: NsColors.brandAction,
+          foregroundColor: NsColors.brandOnPrimary,
+          disabledBackgroundColor: NsColors.borderDefault,
+          disabledForegroundColor: NsColors.textSecondary,
+          minimumSize: const Size(48, 48),
+          shape: const RoundedRectangleBorder(borderRadius: NsRadius.control),
+          elevation: 0,
+        ),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          foregroundColor: NsColors.brandAction,
+          minimumSize: const Size(48, 48),
+        ),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: NsColors.textPrimary,
+          minimumSize: const Size(48, 48),
+          side: const BorderSide(color: NsColors.borderDefault),
+          shape: const RoundedRectangleBorder(borderRadius: NsRadius.control),
+        ),
+      ),
       appBarTheme: const AppBarTheme(
         backgroundColor: NsColors.surfaceCanvas,
         foregroundColor: NsColors.textPrimary,
