@@ -272,7 +272,7 @@ class _ProductEditorScreenState extends State<ProductEditorScreen> {
   }
   void changed() {
     if (loading || !mounted) return;
-    dirty = true;
+    if (!dirty) setState(() => dirty = true);
     widget.appState.setHasUnsavedFormDraft(true);
     autosave?.cancel();
     autosave = Timer(const Duration(milliseconds: 850), saveDraft);
@@ -284,7 +284,7 @@ class _ProductEditorScreenState extends State<ProductEditorScreen> {
         'name': name.text, 'slug': slug.text, 'description': description.text,
         'category': category.text, 'price': price.text, 'status': status,
         'primary': primaryImage, 'gallery': gallery.map((g) => g.toJson()).toList(),
-        'variants': variants.map((v) => v.toJson()).toList(),
+        'variants': variants.map((v) => {...v.toJson(), 'reserved_qty': v.reservedQty}).toList(),
       });
   }
   @override void dispose() {
@@ -304,10 +304,10 @@ class _ProductEditorScreenState extends State<ProductEditorScreen> {
         TextButton(onPressed: () => Navigator.pop(ctx, 'discard'), child: const Text('Buang')),
         FilledButton(onPressed: () => Navigator.pop(ctx, 'draft'), child: const Text('Simpan draft')),
       ]));
-    if (result == 'draft') { await saveDraft(); dirty = false; return true; }
+    if (result == 'draft') { await saveDraft(); if (mounted) setState(() => dirty = false); return true; }
     if (result == 'discard') {
       await widget.appState.repository.drafts.deleteDraft(userId: userId, storeId: storeId, resourceType: 'product', resourceId: resourceId);
-      dirty = false; return true;
+      if (mounted) setState(() => dirty = false); return true;
     }
     return false;
   }
@@ -325,7 +325,16 @@ class _ProductEditorScreenState extends State<ProductEditorScreen> {
       final Uint8List bytes = await file.readAsBytes();
       if (bytes.length > AppConfig.maxMediaUploadBytes) { setState(() => error = 'Foto melebihi 5 MB. Pilih foto lain.'); return; }
       setState(() => uploading = true);
-      final result = await widget.appState.repository.uploadMediaBytes(storeId: storeId, bytes: bytes, mimeType: 'image/jpeg');
+      String? mime;
+      if (bytes.length >= 3 && bytes[0] == 0xff && bytes[1] == 0xd8) {
+        mime = 'image/jpeg';
+      } else if (bytes.length >= 8 && bytes[0] == 0x89 && bytes[1] == 0x50 && bytes[2] == 0x4e && bytes[3] == 0x47) {
+        mime = 'image/png';
+      } else if (bytes.length >= 12 && String.fromCharCodes(bytes.sublist(0, 4)) == 'RIFF' && String.fromCharCodes(bytes.sublist(8, 12)) == 'WEBP') {
+        mime = 'image/webp';
+      }
+      if (mime == null) throw const FormatException('Hanya JPG, PNG atau WebP yang didukung.');
+      final result = await widget.appState.repository.uploadMediaBytes(storeId: storeId, bytes: bytes, mimeType: mime);
       if (!mounted) return;
       setState(() { if (primary) { primaryImage = result.url; } else { gallery.add(GalleryPhoto(url: result.url)); } uploading = false; });
       changed();
