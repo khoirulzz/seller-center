@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 /// Penyimpanan draft lokal terisolasi per `(userId, storeId, resourceType, resourceId)`
 /// sesuai `PRD` Bab 9.3. Tidak pernah dianggap sebagai commit server.
@@ -20,7 +21,8 @@ class LocalDraftEntry {
 class LocalDraftService {
   static const String _activeStorePrefix = 'ns_active_store_';
   static const String _draftPrefix = 'ns_draft_v1_';
-  static const String _sessionKey = 'ns_firebase_session_v1';
+  static const String _sessionKey = 'ns_firebase_session_v2_secure';
+  static const FlutterSecureStorage _secure = FlutterSecureStorage();
   static const String _biometricLockKey = 'ns_biometric_lock_enabled';
 
   String buildDraftKey({
@@ -43,13 +45,17 @@ class LocalDraftService {
   }
 
   Future<void> saveSessionJson(Map<String, dynamic> sessionJson) async {
+    await _secure.write(key: _sessionKey, value: jsonEncode(sessionJson));
+    // Remove legacy unencrypted token material on first successful write.
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_sessionKey, jsonEncode(sessionJson));
+    await prefs.remove('ns_firebase_session_v1');
   }
 
   Future<Map<String, dynamic>?> loadSessionJson() async {
+    // Do not silently restore tokens from legacy plaintext preferences.
     final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getString(_sessionKey);
+    await prefs.remove('ns_firebase_session_v1');
+    final raw = await _secure.read(key: _sessionKey);
     if (raw == null || raw.isEmpty) return null;
     try {
       return jsonDecode(raw) as Map<String, dynamic>;
@@ -60,7 +66,8 @@ class LocalDraftService {
 
   Future<void> clearSession() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_sessionKey);
+    await prefs.remove('ns_firebase_session_v1');
+    await _secure.delete(key: _sessionKey);
   }
 
   Future<void> saveDraft({

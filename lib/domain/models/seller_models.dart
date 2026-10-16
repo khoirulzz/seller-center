@@ -46,7 +46,8 @@ enum StoreRole {
       case 'fulfillment':
         return StoreRole.fulfillment;
       default:
-        return StoreRole.owner;
+        // Fail closed: unknown roles never inherit owner permissions.
+        return StoreRole.fulfillment;
     }
   }
 
