@@ -22,6 +22,7 @@ abstract final class NsTheme {
 
     return ThemeData(
       useMaterial3: true,
+      fontFamily: NsTypography.bodyFamily,
       colorScheme: colorScheme,
       scaffoldBackgroundColor: NsColors.surfaceCanvas,
       canvasColor: NsColors.surfaceCanvas,

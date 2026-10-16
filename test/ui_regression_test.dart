@@ -6,6 +6,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:nalaro_seller_center/app/router.dart';
@@ -38,6 +39,36 @@ const product = Product(
 
 class UiRepository extends SellerRepository {
   int saves = 0, imageReads = 0;
+  bool delayOrders = false;
+  final queries =
+      <String, Completer<({List<OrderModel> orders, bool hasMore})>>{};
+  @override
+  Future<({List<OrderModel> orders, bool hasMore})> fetchOrders({
+    required String storeId,
+    String status = 'all',
+    String query = '',
+    int page = 1,
+    String? fromDate,
+    String? toDate,
+  }) async {
+    if (!delayOrders) return (orders: <OrderModel>[], hasMore: false);
+    final result = Completer<({List<OrderModel> orders, bool hasMore})>();
+    queries[query] = result;
+    return result.future;
+  }
+
+  @override
+  Future<StoreSettings> fetchSettings({
+    required String storeId,
+    required MerchantStore store,
+  }) async => StoreSettings.fromJson({
+    'store_name': store.name,
+    'contact_phone': '081234567890',
+    'pickup_address': 'Jalan Batik 1',
+    'bank_details': 'BCA 123',
+    'policies': 'Pengiriman dilakukan setiap hari kerja.',
+    'accent': '#FF154F',
+  });
   Completer<Product>? saving;
   @override
   Future<UserIdentity?> restoreSession() async => const UserIdentity(
@@ -90,6 +121,17 @@ Future<({SellerAppState state, UiRepository repository})> setup() async {
 }
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+  setUpAll(() async {
+    for (final font in [
+      (name: 'Manrope', file: 'Manrope'),
+      (name: 'DM Sans', file: 'DMSans'),
+    ]) {
+      await (FontLoader(
+        font.name,
+      )..addFont(rootBundle.load('assets/fonts/${font.file}.ttf'))).load();
+    }
+  });
   testWidgets(
     'variant dialogs own controllers through dismissal and enforce reserved stock',
     (tester) async {
@@ -243,6 +285,90 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(InteractiveViewer), findsOneWidget);
     expect(tester.takeException(), isNull);
+  });
+  testWidgets(
+    'settings back guard preserves edits until discard is confirmed',
+    (tester) async {
+      final fixture = await setup();
+      final router = createSellerRouter(fixture.state);
+      await tester.pumpWidget(
+        MaterialApp.router(theme: NsTheme.light, routerConfig: router),
+      );
+      await tester.pumpAndSettle();
+      router.go('/toko');
+      await tester.pumpAndSettle();
+      router.push('/toko/settings');
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.byType(TextFormField).first,
+        'Nama toko baru',
+      );
+      await tester.pump();
+      expect(fixture.state.hasUnsavedFormDraft, true);
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      expect(find.text('Perubahan belum disimpan'), findsOneWidget);
+      await tester.tap(find.text('Tetap edit'));
+      await tester.pumpAndSettle();
+      expect(find.text('Nama toko baru'), findsOneWidget);
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Buang perubahan'));
+      await tester.pumpAndSettle();
+      expect(router.routeInformationProvider.value.uri.path, '/toko');
+      expect(fixture.state.hasUnsavedFormDraft, false);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox());
+      router.dispose();
+      fixture.state.dispose();
+    },
+  );
+  testWidgets('slow older search cannot overwrite newer order results', (
+    tester,
+  ) async {
+    final fixture = await setup();
+    fixture.repository.delayOrders = true;
+    final router = createSellerRouter(fixture.state);
+    await tester.pumpWidget(
+      MaterialApp.router(theme: NsTheme.light, routerConfig: router),
+    );
+    await tester.pumpAndSettle();
+    router.go('/pesanan');
+    await tester.pump();
+    fixture.repository.queries['']!.complete((
+      orders: <OrderModel>[],
+      hasMore: false,
+    ));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField).first, 'lama');
+    await tester.pump(const Duration(milliseconds: 350));
+    await tester.enterText(find.byType(TextField).first, 'baru');
+    await tester.pump(const Duration(milliseconds: 350));
+    fixture.repository.queries['baru']!.complete((
+      orders: [
+        OrderModel.fromJson({
+          'id': 'new',
+          'order_number': 'BARU',
+          'customer_name': 'Pembeli baru',
+        }),
+      ],
+      hasMore: false,
+    ));
+    await tester.pumpAndSettle();
+    expect(find.text('BARU'), findsOneWidget);
+    fixture.repository.queries['lama']!.complete((
+      orders: [
+        OrderModel.fromJson({'id': 'old', 'order_number': 'LAMA'}),
+      ],
+      hasMore: false,
+    ));
+    await tester.pumpAndSettle();
+    expect(find.text('BARU'), findsOneWidget);
+    expect(find.text('LAMA'), findsNothing);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+    router.dispose();
+    fixture.state.dispose();
   });
   for (final width in [320.0, 360.0, 390.0, 430.0, 600.0]) {
     for (final scale in [1.0, 1.6]) {

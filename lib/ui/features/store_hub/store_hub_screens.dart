@@ -289,7 +289,11 @@ class _StoreSettingsScreenState extends State<StoreSettingsScreen> {
       });
       onDirty();
     } catch (e) {
-      if (mounted) setState(() => error = 'Gambar gagal diunggah: $e');
+      if (mounted)
+        setState(
+          () => error =
+              'Gambar gagal diunggah. ${NsErrorMapper.toUserMessage(e)}',
+        );
     } finally {
       if (mounted) setState(() => busy = false);
     }
@@ -387,7 +391,7 @@ class _StoreSettingsScreenState extends State<StoreSettingsScreen> {
       child: TextFormField(
         controller: names[id],
         maxLines: lines,
-        readOnly: !widget.appState.activeRole.canManageSettings,
+        readOnly: busy || !widget.appState.activeRole.canManageSettings,
         keyboardType: type,
         textInputAction: lines == 1
             ? TextInputAction.next
@@ -509,18 +513,24 @@ class _StoreSettingsScreenState extends State<StoreSettingsScreen> {
                   SwitchListTile(
                     title: const Text('Ambil di tempat'),
                     value: pickup,
-                    onChanged: (v) {
-                      setState(() => pickup = v);
-                      onDirty();
-                    },
+                    onChanged:
+                        busy || !widget.appState.activeRole.canManageSettings
+                        ? null
+                        : (v) {
+                            setState(() => pickup = v);
+                            onDirty();
+                          },
                   ),
                   SwitchListTile(
                     title: const Text('Kurir toko'),
                     value: delivery,
-                    onChanged: (v) {
-                      setState(() => delivery = v);
-                      onDirty();
-                    },
+                    onChanged:
+                        busy || !widget.appState.activeRole.canManageSettings
+                        ? null
+                        : (v) {
+                            setState(() => delivery = v);
+                            onDirty();
+                          },
                   ),
                   field('address', 'Alamat pengambilan', lines: 3),
                   field(
@@ -1136,16 +1146,26 @@ class _AccountSecurityScreenState extends State<AccountSecurityScreen> {
       padding: const EdgeInsets.all(20),
       children: [
         Text(widget.appState.user?.email ?? ''),
+        const SizedBox(height: 20),
         TextField(
           controller: current,
           obscureText: true,
+          autofillHints: const [AutofillHints.password],
+          textInputAction: TextInputAction.next,
           decoration: const InputDecoration(labelText: 'Kata sandi saat ini'),
         ),
+        const SizedBox(height: 18),
         TextField(
           controller: next,
           obscureText: true,
-          decoration: const InputDecoration(labelText: 'Kata sandi baru'),
+          autofillHints: const [AutofillHints.newPassword],
+          decoration: const InputDecoration(
+            labelText: 'Kata sandi baru',
+            helperText:
+                'Minimal 8 karakter, huruf besar, huruf kecil, dan angka.',
+          ),
         ),
+        const SizedBox(height: 20),
         if (message != null) Text(message!),
         FilledButton(
           onPressed: busy
@@ -1159,7 +1179,8 @@ class _AccountSecurityScreenState extends State<AccountSecurityScreen> {
                     );
                     await widget.appState.signOut();
                   } catch (e) {
-                    if (mounted) setState(() => message = e.toString());
+                    if (mounted)
+                      setState(() => message = NsErrorMapper.toUserMessage(e));
                   } finally {
                     if (mounted) setState(() => busy = false);
                   }
