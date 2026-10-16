@@ -2,6 +2,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:nalaro_seller_center/domain/models/seller_models.dart';
 
 void main() {
+  test('missing merchant role never grants owner permissions', () {
+    final store = MerchantStore.fromJson({'id': 's', 'name': 'Toko'});
+    expect(store.storeRole, StoreRole.unknown);
+    expect(store.storeRole.canManageCatalog, false);
+    expect(store.storeRole.canVerifyPayment, false);
+  });
+
   group('Tenant roles', () {
     test('owner and manager can verify payments, fulfillment cannot', () {
       expect(StoreRole.owner.canVerifyPayment, true);

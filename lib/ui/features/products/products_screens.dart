@@ -10,6 +10,7 @@ import '../../../core/widgets/ns_widgets.dart';
 import '../../../core/errors/ns_error_mapper.dart';
 import '../../../core/theme/ns_colors.dart';
 import 'product_variant_dialog.dart';
+import 'photo_review_screen.dart';
 
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
@@ -442,6 +443,8 @@ class _ProductEditorScreenState extends State<ProductEditorScreen>
   Uint8List? pendingPreview;
   List<XFile> retryFiles = [];
   bool retryPrimary = false;
+  String? retryReplaceUrl;
+  bool editingPhoto = false;
   String status = 'draft';
   bool initializing = true,
       saving = false,
@@ -451,7 +454,7 @@ class _ProductEditorScreenState extends State<ProductEditorScreen>
   DateTime? draftSavedAt;
   int uploadDone = 0, uploadTotal = 0, editRevision = 0;
   String get resourceId => widget.productId ?? 'new';
-  bool get busy => initializing || saving || uploading;
+  bool get busy => initializing || saving || uploading || editingPhoto;
   @override
   void initState() {
     super.initState();
@@ -738,7 +741,37 @@ class _ProductEditorScreenState extends State<ProductEditorScreen>
     }
   }
 
-  Future<void> uploadPhotos(List<XFile> files, {required bool primary}) async {
+  Future<void> editPhoto({String? galleryUrl}) async {
+    if (busy) return;
+    final url = galleryUrl ?? primaryImage;
+    if (url == null) return;
+    setState(() => editingPhoto = true);
+    try {
+      final bytes =
+          previews[url] ??
+          await widget.appState.repository.fetchMediaBytes(url);
+      if (!mounted) return;
+      final edited = await Navigator.of(context).push<Uint8List>(
+        MaterialPageRoute(builder: (_) => PhotoReviewScreen(bytes: bytes)),
+      );
+      if (edited == null || !mounted || identical(edited, bytes)) return;
+      await uploadPhotos(
+        [XFile.fromData(edited, name: 'product-photo')],
+        primary: galleryUrl == null,
+        replaceUrl: galleryUrl,
+      );
+    } catch (e) {
+      if (mounted) setState(() => error = NsErrorMapper.toUserMessage(e));
+    } finally {
+      if (mounted) setState(() => editingPhoto = false);
+    }
+  }
+
+  Future<void> uploadPhotos(
+    List<XFile> files, {
+    required bool primary,
+    String? replaceUrl,
+  }) async {
     setState(() {
       uploading = true;
       error = null;
@@ -784,7 +817,15 @@ class _ProductEditorScreenState extends State<ProductEditorScreen>
             previews.remove(primaryImage);
             primaryImage = result.url;
           } else {
-            gallery.add(GalleryPhoto(url: result.url));
+            if (replaceUrl == null) {
+              gallery.add(GalleryPhoto(url: result.url));
+            } else {
+              final index = gallery.indexWhere((g) => g.url == replaceUrl);
+              if (index >= 0) {
+                gallery[index] = gallery[index].copyWith(url: result.url);
+                previews.remove(replaceUrl);
+              }
+            }
           }
           previews[result.url] = bytes;
           uploadDone++;
@@ -796,6 +837,7 @@ class _ProductEditorScreenState extends State<ProductEditorScreen>
           setState(() {
             retryFiles = files.sublist(i);
             retryPrimary = primary;
+            retryReplaceUrl = replaceUrl;
             error =
                 'Foto ${i + 1} belum diunggah. ${NsErrorMapper.toUserMessage(e)} Foto yang berhasil tetap ada.';
           });
@@ -1115,6 +1157,12 @@ class _ProductEditorScreenState extends State<ProductEditorScreen>
                               ),
                             ),
                             if (primaryImage != null)
+                              TextButton.icon(
+                                onPressed: busy ? null : () => editPhoto(),
+                                icon: const Icon(Icons.crop_rotate),
+                                label: const Text('Putar / potong'),
+                              ),
+                            if (primaryImage != null)
                               TextButton(
                                 onPressed: busy
                                     ? null
@@ -1178,6 +1226,10 @@ class _ProductEditorScreenState extends State<ProductEditorScreen>
                               enabled: !busy,
                               tooltip: 'Atur foto ${i + 1}',
                               onSelected: (action) {
+                                if (action == 'edit-photo') {
+                                  editPhoto(galleryUrl: gallery[i].url);
+                                  return;
+                                }
                                 setState(() {
                                   if (action == 'remove') {
                                     previews.remove(gallery[i].url);
@@ -1195,6 +1247,10 @@ class _ProductEditorScreenState extends State<ProductEditorScreen>
                                 changed();
                               },
                               itemBuilder: (_) => [
+                                const PopupMenuItem(
+                                  value: 'edit-photo',
+                                  child: Text('Putar / potong'),
+                                ),
                                 if (i > 0)
                                   const PopupMenuItem(
                                     value: 'up',
@@ -1242,9 +1298,11 @@ class _ProductEditorScreenState extends State<ProductEditorScreen>
                         ],
                         if (retryFiles.isNotEmpty && !uploading)
                           OutlinedButton.icon(
-                            onPressed: () => uploadPhotos([
-                              ...retryFiles,
-                            ], primary: retryPrimary),
+                            onPressed: () => uploadPhotos(
+                              [...retryFiles],
+                              primary: retryPrimary,
+                              replaceUrl: retryReplaceUrl,
+                            ),
                             icon: const Icon(Icons.refresh),
                             label: Text('Coba lagi ${retryFiles.length} foto'),
                           ),

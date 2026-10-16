@@ -24,11 +24,11 @@ class UserIdentity {
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'email': email,
-        'verified': verified,
-        'admin': admin,
-      };
+    'id': id,
+    'email': email,
+    'verified': verified,
+    'admin': admin,
+  };
 }
 
 /// Hak akses peran per toko (`PRD` Bab 5.3).
@@ -52,10 +52,14 @@ enum StoreRole {
     }
   }
 
-  bool get canVerifyPayment => this == StoreRole.owner || this == StoreRole.manager;
-  bool get canCancelOrder => this == StoreRole.owner || this == StoreRole.manager;
-  bool get canManageCatalog => this == StoreRole.owner || this == StoreRole.manager;
-  bool get canManageSettings => this == StoreRole.owner || this == StoreRole.manager;
+  bool get canVerifyPayment =>
+      this == StoreRole.owner || this == StoreRole.manager;
+  bool get canCancelOrder =>
+      this == StoreRole.owner || this == StoreRole.manager;
+  bool get canManageCatalog =>
+      this == StoreRole.owner || this == StoreRole.manager;
+  bool get canManageSettings =>
+      this == StoreRole.owner || this == StoreRole.manager;
   bool get canViewCustomersAndAnalytics =>
       this == StoreRole.owner || this == StoreRole.manager;
   bool get canChooseBillingPlan => this == StoreRole.owner;
@@ -92,20 +96,20 @@ class MerchantStore {
       name: (json['name'] ?? '').toString(),
       status: (json['status'] ?? 'draft').toString(),
       description: (json['description'] ?? '').toString(),
-      role: (json['role'] ?? 'owner').toString(),
+      role: (json['role'] ?? 'unknown').toString(),
       pilotUntil: json['pilot_until']?.toString(),
     );
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'slug': slug,
-        'name': name,
-        'status': status,
-        'description': description,
-        'role': role,
-        if (pilotUntil != null) 'pilot_until': pilotUntil,
-      };
+    'id': id,
+    'slug': slug,
+    'name': name,
+    'status': status,
+    'description': description,
+    'role': role,
+    if (pilotUntil != null) 'pilot_until': pilotUntil,
+  };
 
   MerchantStore copyWith({
     String? name,
@@ -181,10 +185,7 @@ class StoreOverview {
 
 /// Foto tambahan galeri produk.
 class GalleryPhoto {
-  const GalleryPhoto({
-    required this.url,
-    this.alt = '',
-  });
+  const GalleryPhoto({required this.url, this.alt = ''});
 
   final String url;
   final String alt;
@@ -196,16 +197,10 @@ class GalleryPhoto {
     );
   }
 
-  Map<String, dynamic> toJson() => {
-        'url': url,
-        'alt': alt,
-      };
+  Map<String, dynamic> toJson() => {'url': url, 'alt': alt};
 
   GalleryPhoto copyWith({String? url, String? alt}) {
-    return GalleryPhoto(
-      url: url ?? this.url,
-      alt: alt ?? this.alt,
-    );
+    return GalleryPhoto(url: url ?? this.url, alt: alt ?? this.alt);
   }
 }
 
@@ -238,7 +233,9 @@ class ProductVariant {
       id: json['id']?.toString(),
       sku: (json['sku'] ?? '').toString(),
       optionLabel: (json['option_label'] ?? 'Default').toString(),
-      priceOverrideIdr: json['price_override_idr'] == null ? null : int.tryParse(json['price_override_idr'].toString()),
+      priceOverrideIdr: json['price_override_idr'] == null
+          ? null
+          : int.tryParse(json['price_override_idr'].toString()),
       stockQty: (json['stock_qty'] as num?)?.toInt() ?? 0,
       reservedQty: (json['reserved_qty'] as num?)?.toInt() ?? 0,
       status: (json['status'] ?? 'active').toString(),
@@ -247,14 +244,14 @@ class ProductVariant {
   }
 
   Map<String, dynamic> toJson() => {
-        if (id != null && id!.isNotEmpty) 'id': id,
-        'sku': sku.trim(),
-        'option_label': optionLabel.trim(),
-        'price_override_idr': priceOverrideIdr,
-        'stock_qty': stockQty,
-        'status': status,
-        if (imageUrl != null && imageUrl!.isNotEmpty) 'image_url': imageUrl,
-      };
+    if (id != null && id!.isNotEmpty) 'id': id,
+    'sku': sku.trim(),
+    'option_label': optionLabel.trim(),
+    'price_override_idr': priceOverrideIdr,
+    'stock_qty': stockQty,
+    'status': status,
+    if (imageUrl != null && imageUrl!.isNotEmpty) 'image_url': imageUrl,
+  };
 
   ProductVariant copyWith({
     String? id,
@@ -272,8 +269,9 @@ class ProductVariant {
       id: id ?? this.id,
       sku: sku ?? this.sku,
       optionLabel: optionLabel ?? this.optionLabel,
-      priceOverrideIdr:
-          clearPriceOverride ? null : (priceOverrideIdr ?? this.priceOverrideIdr),
+      priceOverrideIdr: clearPriceOverride
+          ? null
+          : (priceOverrideIdr ?? this.priceOverrideIdr),
       stockQty: stockQty ?? this.stockQty,
       reservedQty: reservedQty ?? this.reservedQty,
       status: status ?? this.status,
@@ -352,19 +350,18 @@ class Product {
   }
 
   Map<String, dynamic> toPayloadJson() => {
-        'slug': slug,
-        'name': name,
-        'description': description,
-        'price_idr': priceIdr,
-        'category': category,
-        'primary_image_url':
-            (primaryImageUrl == null || primaryImageUrl!.isEmpty)
-                ? null
-                : primaryImageUrl,
-        'gallery': gallery.map((g) => g.toJson()).toList(),
-        'status': status,
-        'variants': variants.map((v) => v.toJson()).toList(),
-      };
+    'slug': slug,
+    'name': name,
+    'description': description,
+    'price_idr': priceIdr,
+    'category': category,
+    'primary_image_url': (primaryImageUrl == null || primaryImageUrl!.isEmpty)
+        ? null
+        : primaryImageUrl,
+    'gallery': gallery.map((g) => g.toJson()).toList(),
+    'status': status,
+    'variants': variants.map((v) => v.toJson()).toList(),
+  };
 
   Product copyWith({
     String? slug,
@@ -396,10 +393,7 @@ class Product {
 List<Product> parseProductsIsolate(String responseBody) {
   final decoded = jsonDecode(responseBody) as Map<String, dynamic>;
   final list = (decoded['products'] as List<dynamic>?) ?? const [];
-  return list
-      .whereType<Map<String, dynamic>>()
-      .map(Product.fromJson)
-      .toList();
+  return list.whereType<Map<String, dynamic>>().map(Product.fromJson).toList();
 }
 
 /// Item pada detail pesanan.
@@ -439,10 +433,7 @@ class OrderItem {
 
 /// Riwayat audit / timeline pesanan.
 class OrderTimelineEvent {
-  const OrderTimelineEvent({
-    required this.action,
-    required this.createdAt,
-  });
+  const OrderTimelineEvent({required this.action, required this.createdAt});
 
   final String action;
   final String createdAt;
@@ -567,7 +558,7 @@ class OrderModel {
     final total = int.tryParse((json['total_idr'] ?? '0').toString()) ?? 0;
     final subtotal =
         int.tryParse((json['subtotal_idr'] ?? total.toString()).toString()) ??
-            total;
+        total;
     final shipping =
         int.tryParse((json['shipping_idr'] ?? '0').toString()) ?? 0;
 
@@ -582,7 +573,8 @@ class OrderModel {
       shippingIdr: shipping,
       orderStatus: (json['order_status'] ?? 'pending').toString(),
       paymentStatus: (json['payment_status'] ?? 'unpaid').toString(),
-      fulfillmentStatus: (json['fulfillment_status'] ?? 'unfulfilled').toString(),
+      fulfillmentStatus: (json['fulfillment_status'] ?? 'unfulfilled')
+          .toString(),
       shippingMethod: (json['shipping_method'] ?? 'pickup').toString(),
       createdAt: (json['created_at'] ?? '').toString(),
       updatedAt: (json['updated_at'] ?? '').toString(),
@@ -808,8 +800,8 @@ class StoreSettings {
   }) {
     return StoreSettings(
       storeName: (json['store_name'] ?? fallbackStoreName).toString(),
-      storeDescription:
-          (json['store_description'] ?? fallbackStoreDescription).toString(),
+      storeDescription: (json['store_description'] ?? fallbackStoreDescription)
+          .toString(),
       contactPhone: (json['contact_phone'] ?? '').toString(),
       pickupAddress: (json['pickup_address'] ?? '').toString(),
       shippingFeeIdr:
@@ -824,31 +816,32 @@ class StoreSettings {
       heroImageUrl: json['hero_image_url']?.toString(),
       logoUrl: json['logo_url']?.toString(),
       openingHours: (json['opening_hours'] ?? '').toString(),
-      lowStockThreshold:
-          (json['low_stock_threshold'] as num?)?.toInt() ?? 5,
+      lowStockThreshold: (json['low_stock_threshold'] as num?)?.toInt() ?? 5,
     );
   }
 
   Map<String, dynamic> toJson() => {
-        if (storeName.trim().isNotEmpty) 'store_name': storeName.trim(),
-        'store_description': storeDescription,
-        'contact_phone': contactPhone.trim(),
-        'pickup_address': pickupAddress.trim(),
-        'shipping_fee_idr': shippingFeeIdr,
-        'pickup_enabled': pickupEnabled,
-        'delivery_enabled': deliveryEnabled,
-        'bank_details': bankDetails.trim(),
-        'qris_media_key':
-            (qrisMediaKey == null || qrisMediaKey!.isEmpty) ? null : qrisMediaKey,
-        'policies': policies.trim(),
-        'accent': accent,
-        'hero_title': heroTitle.trim(),
-        'hero_image_url':
-            (heroImageUrl == null || heroImageUrl!.isEmpty) ? null : heroImageUrl,
-        'logo_url': (logoUrl == null || logoUrl!.isEmpty) ? null : logoUrl,
-        'opening_hours': openingHours.trim(),
-        'low_stock_threshold': lowStockThreshold,
-      };
+    if (storeName.trim().isNotEmpty) 'store_name': storeName.trim(),
+    'store_description': storeDescription,
+    'contact_phone': contactPhone.trim(),
+    'pickup_address': pickupAddress.trim(),
+    'shipping_fee_idr': shippingFeeIdr,
+    'pickup_enabled': pickupEnabled,
+    'delivery_enabled': deliveryEnabled,
+    'bank_details': bankDetails.trim(),
+    'qris_media_key': (qrisMediaKey == null || qrisMediaKey!.isEmpty)
+        ? null
+        : qrisMediaKey,
+    'policies': policies.trim(),
+    'accent': accent,
+    'hero_title': heroTitle.trim(),
+    'hero_image_url': (heroImageUrl == null || heroImageUrl!.isEmpty)
+        ? null
+        : heroImageUrl,
+    'logo_url': (logoUrl == null || logoUrl!.isEmpty) ? null : logoUrl,
+    'opening_hours': openingHours.trim(),
+    'low_stock_threshold': lowStockThreshold,
+  };
 
   StoreSettings copyWith({
     String? storeName,

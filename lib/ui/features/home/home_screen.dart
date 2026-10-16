@@ -185,7 +185,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           children: [
                             NsIcon('chart', color: NsColors.brandAction),
                             SizedBox(width: 10),
-                            Text('Omzet terverifikasi'),
+                            Expanded(child: Text('Omzet terverifikasi')),
                           ],
                         ),
                         const SizedBox(height: 12),
