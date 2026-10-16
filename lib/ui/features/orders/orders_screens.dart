@@ -434,6 +434,67 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
         ),
       ],
     ),
+    bottomNavigationBar: FutureBuilder<OrderDetailBundle>(
+      future: future,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done ||
+            !snapshot.hasData)
+          return const SizedBox.shrink();
+        final order = snapshot.data!.order, role = widget.appState.activeRole;
+        final actions = order.allowedNextFulfillmentStates(role);
+        final verify = order.canVerifyPayment(role),
+            cancel = order.canCancel(role);
+        if (!verify && !cancel && actions.isEmpty)
+          return const SizedBox.shrink();
+        final disabled = submitting || confirming || widget.appState.isOffline;
+        return SafeArea(
+          minimum: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (verify)
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton(
+                    onPressed: disabled ? null : () => act(order, 'verified'),
+                    child: Text(
+                      submitting ? 'Memproses…' : 'Verifikasi pembayaran',
+                    ),
+                  ),
+                ),
+              for (final action in actions)
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton(
+                    onPressed: disabled ? null : () => act(order, action),
+                    child: Text(
+                      submitting
+                          ? 'Memproses…'
+                          : 'Tandai: ${NsStatusDictionary.label(action)}',
+                    ),
+                  ),
+                ),
+              Wrap(
+                alignment: WrapAlignment.center,
+                spacing: 8,
+                children: [
+                  if (verify)
+                    TextButton(
+                      onPressed: disabled ? null : () => act(order, 'rejected'),
+                      child: const Text('Bukti belum sesuai'),
+                    ),
+                  if (cancel)
+                    TextButton(
+                      onPressed: disabled ? null : () => act(order, 'cancel'),
+                      child: const Text('Batalkan pesanan'),
+                    ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    ),
     body: FutureBuilder<OrderDetailBundle>(
       future: future,
       builder: (context, snap) {
@@ -459,9 +520,6 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           );
         final bundle = snap.data!;
         final order = bundle.order;
-        final actions = order.allowedNextFulfillmentStates(
-          widget.appState.activeRole,
-        );
         return ListView(
           padding: const EdgeInsets.all(20),
           children: [
@@ -523,34 +581,6 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
             const SizedBox(height: 18),
             if (widget.appState.isOffline)
               const Text('Tidak ada koneksi. Tindakan pesanan dinonaktifkan.'),
-            if (order.canVerifyPayment(widget.appState.activeRole)) ...[
-              FilledButton(
-                onPressed: submitting || widget.appState.isOffline
-                    ? null
-                    : () => act(order, 'verified'),
-                child: const Text('Verifikasi pembayaran'),
-              ),
-              TextButton(
-                onPressed: submitting || widget.appState.isOffline
-                    ? null
-                    : () => act(order, 'rejected'),
-                child: const Text('Bukti belum sesuai'),
-              ),
-            ],
-            for (final action in actions)
-              OutlinedButton(
-                onPressed: submitting || widget.appState.isOffline
-                    ? null
-                    : () => act(order, action),
-                child: Text('Tandai: ${NsStatusDictionary.label(action)}'),
-              ),
-            if (order.canCancel(widget.appState.activeRole))
-              TextButton(
-                onPressed: submitting || widget.appState.isOffline
-                    ? null
-                    : () => act(order, 'cancel'),
-                child: const Text('Batalkan pesanan'),
-              ),
             const SizedBox(height: 20),
             Text('Riwayat', style: Theme.of(context).textTheme.titleLarge),
             for (final e in bundle.timeline)

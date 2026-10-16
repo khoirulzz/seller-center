@@ -14,8 +14,6 @@ import 'package:nalaro_seller_center/core/widgets/ns_product_image.dart';
 import 'package:nalaro_seller_center/data/repositories/seller_repository.dart';
 import 'package:nalaro_seller_center/domain/models/seller_models.dart';
 import 'package:nalaro_seller_center/ui/features/products/product_variant_dialog.dart';
-import 'package:nalaro_seller_center/ui/features/home/home_screen.dart';
-import 'package:nalaro_seller_center/ui/features/products/products_screens.dart';
 import 'package:nalaro_seller_center/ui/state/seller_app_state.dart';
 
 const store = MerchantStore(
@@ -257,54 +255,41 @@ void main() {
         addTearDown(tester.view.resetDevicePixelRatio);
         final fixture = await setup();
         final key = GlobalKey();
+        final router = createSellerRouter(fixture.state);
         await tester.pumpWidget(
-          MaterialApp(
+          MaterialApp.router(
             theme: NsTheme.light,
-            home: MediaQuery(
-              data: MediaQueryData(
-                size: Size(width, 920),
-                textScaler: TextScaler.linear(scale),
-              ),
-              child: Scaffold(
-                body: RepaintBoundary(
-                  key: key,
-                  child: HomeScreen(appState: fixture.state),
-                ),
-              ),
+            routerConfig: router,
+            builder: (context, child) => MediaQuery(
+              data: MediaQuery.of(context)
+                  .copyWith(textScaler: TextScaler.linear(scale)),
+              child: RepaintBoundary(key: key, child: child!),
             ),
           ),
         );
         await tester.pumpAndSettle();
         expect(tester.takeException(), isNull);
-        final boundary =
-            key.currentContext!.findRenderObject()! as RenderRepaintBoundary;
-        final image = await boundary.toImage();
-        final png = await image.toByteData(format: ui.ImageByteFormat.png);
         await tester.runAsync(() async {
+          final boundary =
+              key.currentContext!.findRenderObject()! as RenderRepaintBoundary;
+          final image = await boundary.toImage();
+          final png = await image.toByteData(format: ui.ImageByteFormat.png);
           final directory = Directory('build/ui-qa');
           await directory.create(recursive: true);
           await File('${directory.path}/home-${width.toInt()}-$scale.png')
               .writeAsBytes(png!.buffer.asUint8List());
+          image.dispose();
         });
-        image.dispose();
-        await tester.pumpWidget(
-          MaterialApp(
-            theme: NsTheme.light,
-            home: MediaQuery(
-              data: MediaQueryData(
-                size: Size(width, 920),
-                textScaler: TextScaler.linear(scale),
-              ),
-              child: ProductEditorScreen(appState: fixture.state),
-            ),
-          ),
-        );
+        router.go('/produk');
+        await tester.pumpAndSettle();
+        router.push('/produk/editor');
         await tester.pumpAndSettle();
         expect(tester.takeException(), isNull);
         await tester.drag(find.byType(ListView).first, const Offset(0, -550));
         await tester.pumpAndSettle();
         expect(tester.takeException(), isNull);
         await tester.pumpWidget(const SizedBox());
+        router.dispose();
         fixture.state.dispose();
       });
     }

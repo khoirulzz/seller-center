@@ -354,7 +354,7 @@ class _StoreSettingsScreenState extends State<StoreSettingsScreen> {
           context,
         ).showSnackBar(const SnackBar(content: Text('Pengaturan tersimpan.')));
     } catch (e) {
-      if (mounted) setState(() => error = '$e');
+      if (mounted) setState(() => error = NsErrorMapper.toUserMessage(e));
     } finally {
       if (mounted) setState(() => busy = false);
     }
@@ -804,7 +804,8 @@ class _CustomersScreenState extends State<CustomersScreen> {
         });
       }
     } catch (e) {
-      if (mounted && marker == epoch) setState(() => error = '$e');
+      if (mounted && marker == epoch)
+        setState(() => error = NsErrorMapper.toUserMessage(e));
     } finally {
       if (mounted && marker == epoch) setState(() => busy = false);
     }

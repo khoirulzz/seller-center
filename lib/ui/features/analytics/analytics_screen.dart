@@ -40,7 +40,9 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     store = widget.appState.activeStore?.id;
     revision = widget.appState.storeDataRevision;
     final dates = range;
-    future = store == null
+    future =
+        store == null ||
+            !widget.appState.activeRole.canViewCustomersAndAnalytics
         ? null
         : widget.appState.repository.fetchAnalytics(
             storeId: store!,

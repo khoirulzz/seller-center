@@ -152,7 +152,11 @@ class _HomeScreenState extends State<HomeScreen> {
           FutureBuilder<StoreOverview>(
             future: future,
             builder: (ctx, snap) {
-              final data = cached ?? snap.data;
+              final data =
+                  cached ??
+                  (snap.connectionState == ConnectionState.done
+                      ? snap.data
+                      : null);
               if (data == null && snap.connectionState != ConnectionState.done)
                 return const NsSkeleton(height: 180);
               if (data == null && snap.hasError)

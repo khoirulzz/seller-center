@@ -49,7 +49,7 @@ class _ProductsAndInventoryScreenState
     products = store == null
         ? null
         : widget.appState.repository.fetchProducts(store!);
-    ledger = store == null
+    ledger = store == null || tab != 'stock'
         ? null
         : widget.appState.repository.fetchInventoryLedger(store!);
   }
@@ -73,9 +73,10 @@ class _ProductsAndInventoryScreenState
   void didUpdateWidget(covariant ProductsAndInventoryScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.initialSubTab != widget.initialSubTab) {
-      setState(
-        () => tab = widget.initialSubTab == 'stock' ? 'stock' : 'catalog',
-      );
+      setState(() {
+        tab = widget.initialSubTab == 'stock' ? 'stock' : 'catalog';
+        load();
+      });
     }
   }
 
@@ -208,7 +209,10 @@ class _ProductsAndInventoryScreenState
             ButtonSegment(value: 'stock', label: Text('Stok & riwayat')),
           ],
           selected: {tab},
-          onSelectionChanged: (value) => setState(() => tab = value.first),
+          onSelectionChanged: (value) => setState(() {
+            tab = value.first;
+            load();
+          }),
         ),
         const SizedBox(height: 14),
         TextField(
@@ -445,7 +449,7 @@ class _ProductEditorScreenState extends State<ProductEditorScreen>
       uploading = false,
       slugEdited = false;
   DateTime? draftSavedAt;
-  int uploadDone = 0, uploadTotal = 0;
+  int uploadDone = 0, uploadTotal = 0, editRevision = 0;
   String get resourceId => widget.productId ?? 'new';
   bool get busy => initializing || saving || uploading;
   @override
@@ -549,6 +553,7 @@ class _ProductEditorScreenState extends State<ProductEditorScreen>
     if (initializing || !mounted) return;
     setState(() {
       dirty = true;
+      editRevision++;
       draftSavedAt = null;
     });
     widget.appState.setHasUnsavedFormDraft(true);
@@ -562,6 +567,7 @@ class _ProductEditorScreenState extends State<ProductEditorScreen>
   Future<void> saveDraft() async {
     autosave?.cancel();
     if (!dirty) return;
+    final savedRevision = editRevision;
     final payload = <String, dynamic>{
       'name': name.text,
       'slug': slug.text,
@@ -587,7 +593,8 @@ class _ProductEditorScreenState extends State<ProductEditorScreen>
     );
     try {
       await draftWrite;
-      if (mounted) setState(() => draftSavedAt = DateTime.now());
+      if (mounted && editRevision == savedRevision)
+        setState(() => draftSavedAt = DateTime.now());
     } catch (_) {
       draftWrite = Future.value();
       if (mounted)
