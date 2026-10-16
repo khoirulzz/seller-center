@@ -238,7 +238,7 @@ class ProductVariant {
       id: json['id']?.toString(),
       sku: (json['sku'] ?? '').toString(),
       optionLabel: (json['option_label'] ?? 'Default').toString(),
-      priceOverrideIdr: (json['price_override_idr'] as num?)?.toInt(),
+      priceOverrideIdr: json['price_override_idr'] == null ? null : int.tryParse(json['price_override_idr'].toString()),
       stockQty: (json['stock_qty'] as num?)?.toInt() ?? 0,
       reservedQty: (json['reserved_qty'] as num?)?.toInt() ?? 0,
       status: (json['status'] ?? 'active').toString(),
