@@ -460,10 +460,29 @@ class _ProductEditorScreenState extends State<ProductEditorScreen> {
               setState(() { if (next > old) next--; final entry = gallery.removeAt(old); gallery.insert(next, entry); }); changed();
             }, itemBuilder: (context, i) => ListTile(
               key: ValueKey(gallery[i].url), leading: _ProductThumb(url: gallery[i].url),
-              title: Text('Foto ${i + 1}'), trailing: Row(mainAxisSize: MainAxisSize.min, children: [
-                IconButton(tooltip: 'Hapus foto', icon: const Icon(Icons.delete_outline), onPressed: () { setState(() => gallery.removeAt(i)); changed(); }),
-                const Icon(Icons.drag_handle),
-              ]),
+              title: Text('Foto ${i + 1} dari ${gallery.length}'),
+              trailing: PopupMenuButton<String>(
+                tooltip: 'Atur urutan atau hapus foto',
+                onSelected: (action) {
+                  setState(() {
+                    if (action == 'remove') {
+                      gallery.removeAt(i);
+                    } else if (action == 'up' && i > 0) {
+                      final item = gallery.removeAt(i);
+                      gallery.insert(i - 1, item);
+                    } else if (action == 'down' && i < gallery.length - 1) {
+                      final item = gallery.removeAt(i);
+                      gallery.insert(i + 1, item);
+                    }
+                  });
+                  changed();
+                },
+                itemBuilder: (ctx) => [
+                  if (i > 0) const PopupMenuItem(value: 'up', child: Text('Pindahkan ke atas')),
+                  if (i < gallery.length - 1) const PopupMenuItem(value: 'down', child: Text('Pindahkan ke bawah')),
+                  const PopupMenuItem(value: 'remove', child: Text('Hapus dari galeri')),
+                ],
+              ),
             )),
           TextButton.icon(onPressed: uploading || gallery.length >= 12 ? null : () => choosePhoto(primary: false),
             icon: const Icon(Icons.add_photo_alternate_outlined), label: Text(uploading ? 'Mengunggah ${uploadDone + 1} dari $uploadTotal…' : 'Tambah foto galeri')),
@@ -472,7 +491,22 @@ class _ProductEditorScreenState extends State<ProductEditorScreen> {
             IconButton(tooltip: 'Tambah varian', icon: const Icon(Icons.add_circle_outline), onPressed: () => editVariant())]),
           for (var i = 0; i < variants.length; i++) ListTile(
             title: Text(variants[i].optionLabel), subtitle: Text('${variants[i].sku} • Stok ${variants[i].stockQty} • Dipesan ${variants[i].reservedQty}'),
-            trailing: const Icon(Icons.edit_outlined), onTap: () => editVariant(i),
+            trailing: PopupMenuButton<String>(
+              tooltip: 'Opsi varian',
+              onSelected: (action) {
+                if (action == 'edit') {
+                  editVariant(i);
+                } else if (action == 'remove' && variants.length > 1 && variants[i].reservedQty == 0) {
+                  setState(() => variants.removeAt(i));
+                  changed();
+                }
+              },
+              itemBuilder: (_) => [
+                const PopupMenuItem(value: 'edit', child: Text('Edit varian')),
+                if (variants.length > 1 && variants[i].reservedQty == 0)
+                  const PopupMenuItem(value: 'remove', child: Text('Nonaktifkan/hapus varian')),
+              ],
+            ), onTap: () => editVariant(i),
           ),
           const SizedBox(height: 16), Text('Publikasi', style: Theme.of(context).textTheme.titleLarge),
           DropdownButtonFormField<String>(value: status, items: const [
