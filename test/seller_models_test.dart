@@ -46,6 +46,13 @@ void main() {
     expect(p.toPayloadJson()['gallery'], isNotEmpty);
     expect((p.toPayloadJson()['variants'] as List).single['sku'], 'BATIK-M');
   });
+  test('variant price overrides parse Postgres bigint strings', () {
+    final variant = ProductVariant.fromJson({
+      'sku': 'BATIK-L', 'option_label': 'L', 'stock_qty': 5,
+      'price_override_idr': '175000',
+    });
+    expect(variant.priceOverrideIdr, 175000);
+  });
   test('publishing requires valid pickup address and payment', () {
     const settings = StoreSettings(contactPhone: '0812345678', pickupAddress: '',
       shippingFeeIdr: 0, pickupEnabled: true, deliveryEnabled: false,
