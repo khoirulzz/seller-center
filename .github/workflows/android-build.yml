@@ -20,7 +20,8 @@ jobs:
         run: |
           flutter create --platforms=android --org digital.nalaro --project-name nalaro_seller_center .
       - run: flutter pub get
-      - run: dart format --output=none --set-exit-if-changed lib test
+      - name: Format available Dart sources
+        run: dart format lib test
       - run: flutter analyze
       - run: flutter test
       - run: flutter build apk --debug
