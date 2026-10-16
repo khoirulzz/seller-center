@@ -7,8 +7,9 @@ import '../../../domain/models/seller_models.dart';
 import '../../state/seller_app_state.dart';
 
 class OrdersListScreen extends StatefulWidget {
-  const OrdersListScreen({super.key, required this.appState});
+  const OrdersListScreen({super.key, required this.appState, this.initialFilter = 'all'});
   final SellerAppState appState;
+  final String initialFilter;
   @override State<OrdersListScreen> createState() => _OrdersListScreenState();
 }
 class _OrdersListScreenState extends State<OrdersListScreen> {
@@ -20,7 +21,8 @@ class _OrdersListScreenState extends State<OrdersListScreen> {
   List<OrderModel> orders = [];
   DateTimeRange? range;
   final search = TextEditingController();
-  @override void initState() { super.initState(); widget.appState.addListener(onState); reset(); }
+  @override void initState() { super.initState(); filter = widget.initialFilter; widget.appState.addListener(onState); reset(); }
+  @override void didUpdateWidget(covariant OrdersListScreen oldWidget) { super.didUpdateWidget(oldWidget); if (oldWidget.initialFilter != widget.initialFilter) { filter = widget.initialFilter; reset(); } }
   void onState() {
     if (storeId != widget.appState.activeStore?.id || revision != widget.appState.storeDataRevision) {
       reset();

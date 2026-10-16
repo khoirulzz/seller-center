@@ -100,8 +100,7 @@ GoRouter createSellerRouter(SellerAppState appState) {
             routes: [
               GoRoute(
                 path: '/pesanan',
-                builder: (context, state) =>
-                    OrdersListScreen(appState: appState),
+                builder: (context, state) => OrdersListScreen(appState: appState, initialFilter: state.uri.queryParameters['status'] ?? 'all'),
                 routes: [
                   GoRoute(
                     path: ':orderId',
