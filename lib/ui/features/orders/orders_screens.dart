@@ -159,7 +159,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
             Expanded(child: FilledButton(onPressed: () => Navigator.pop(sheet, true), child: Text(action == 'verified' ? 'Verifikasi' : action == 'rejected' ? 'Tolak' : isCancel ? 'Batalkan' : 'Simpan'))),
           ]),
         ]))),
-      ));
+      );
     if (accepted != true || !mounted) { note.dispose(); tracking.dispose(); return; }
     setState(() => submitting = true);
     try {
