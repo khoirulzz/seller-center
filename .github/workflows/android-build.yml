@@ -24,6 +24,8 @@ jobs:
       - name: Remove generated Flutter demo test
         run: rm -f test/widget_test.dart
       - run: flutter pub get
+      - name: Generate launcher icon from official Nalaro Store asset
+        run: dart run flutter_launcher_icons
       - name: Format Dart sources
         run: dart format lib test
       - run: flutter analyze --no-fatal-infos

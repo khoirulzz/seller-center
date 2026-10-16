@@ -56,23 +56,13 @@ class NsBrandMark extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final badge = Container(
+    final badge = Image.asset(
+      'assets/brand/nalarostore-mark.png',
       width: size,
       height: size,
-      decoration: BoxDecoration(
-        color: NsColors.brandPrimary,
-        borderRadius: BorderRadius.circular(size * 0.28),
-      ),
-      alignment: Alignment.center,
-      child: Text(
-        'N',
-        style: NsTypography.titleMd.copyWith(
-          color: NsColors.textPrimary,
-          fontSize: size * 0.56,
-          fontWeight: FontWeight.w900,
-          height: 1.0,
-        ),
-      ),
+      fit: BoxFit.contain,
+      semanticLabel: 'Nalaro Store',
+      filterQuality: FilterQuality.medium,
     );
     if (!showLabel) return badge;
     return Row(
