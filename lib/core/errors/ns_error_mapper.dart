@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'api_exception.dart';
 
 /// Penerjemah pesan teknis/error internal menjadi copy produksi ramah pengguna
@@ -10,7 +12,8 @@ abstract final class NsErrorMapper {
     'auth/invalid-credential': 'Email atau kata sandi tidak cocok.',
     'auth/wrong-password': 'Email atau kata sandi tidak cocok.',
     'auth/user-not-found': 'Email atau kata sandi tidak cocok.',
-    'EMAIL_EXISTS': 'Email belum dapat digunakan. Coba masuk atau pulihkan kata sandi.',
+    'EMAIL_EXISTS':
+        'Email belum dapat digunakan. Coba masuk atau pulihkan kata sandi.',
     'auth/email-already-in-use':
         'Email belum dapat digunakan. Coba masuk atau pulihkan kata sandi.',
     'INVALID_EMAIL': 'Periksa kembali alamat emailmu.',
@@ -37,10 +40,19 @@ abstract final class NsErrorMapper {
           _firebaseMessages.containsKey(error.machineCode)) {
         return _firebaseMessages[error.machineCode]!;
       }
-      return _mapStatusAndMessage(error.message, error.statusCode ?? statusCode);
+      return _mapStatusAndMessage(
+        error.message,
+        error.statusCode ?? statusCode,
+      );
     }
 
-    final raw = error.toString().replaceFirst('Exception: ', '').trim();
+    if (error is TimeoutException)
+      return 'Koneksi terlalu lama. Periksa jaringan lalu coba lagi.';
+    final raw = error
+        .toString()
+        .replaceFirst('FormatException: ', '')
+        .replaceFirst('Exception: ', '')
+        .trim();
     for (final entry in _firebaseMessages.entries) {
       if (raw.contains(entry.key)) {
         return entry.value;
@@ -84,7 +96,9 @@ abstract final class NsErrorMapper {
           ? raw
           : 'Data sudah berubah. Periksa versi terbaru sebelum melanjutkan.';
     }
-    if (statusCode == 413 || lower.contains('5 mb') || lower.contains('terlalu besar')) {
+    if (statusCode == 413 ||
+        lower.contains('5 mb') ||
+        lower.contains('terlalu besar')) {
       return 'Ukuran foto terlalu besar. Pilih atau kecilkan gambar lalu coba lagi.';
     }
     if (statusCode == 429) {

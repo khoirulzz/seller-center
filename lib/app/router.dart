@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+
 import '../ui/features/analytics/analytics_screen.dart';
 import '../ui/features/auth/auth_screens.dart';
 import '../ui/features/home/home_screen.dart';
@@ -13,15 +14,16 @@ import '../ui/state/seller_app_state.dart';
 /// Konfigurasi `GoRouter` dengan `StatefulShellRoute.indexedStack` 5 tab tetap
 /// dan redirect guard sesuai status sesi (`flutter-setup-declarative-routing.md` & `PRD` Bab 6.3).
 GoRouter createSellerRouter(SellerAppState appState) {
+  final rootNavigatorKey = GlobalKey<NavigatorState>();
   return GoRouter(
+    navigatorKey: rootNavigatorKey,
     initialLocation: '/launch',
-    refreshListenable: appState,
+    refreshListenable: appState.routing,
     redirect: (BuildContext context, GoRouterState state) {
       final lifecycle = appState.lifecycle;
       final path = state.uri.path;
-      final isAuthRoute = path == '/login' ||
-          path == '/register' ||
-          path == '/forgot-password';
+      final isAuthRoute =
+          path == '/login' || path == '/register' || path == '/forgot-password';
 
       if (lifecycle == AuthLifecycleState.initializing) {
         return path == '/launch' ? null : '/launch';
@@ -49,17 +51,13 @@ GoRouter createSellerRouter(SellerAppState appState) {
       ),
       GoRoute(
         path: '/login',
-        builder: (context, state) => LoginRegisterScreen(
-          appState: appState,
-          isRegister: false,
-        ),
+        builder: (context, state) =>
+            LoginRegisterScreen(appState: appState, isRegister: false),
       ),
       GoRoute(
         path: '/register',
-        builder: (context, state) => LoginRegisterScreen(
-          appState: appState,
-          isRegister: true,
-        ),
+        builder: (context, state) =>
+            LoginRegisterScreen(appState: appState, isRegister: true),
       ),
       GoRoute(
         path: '/verify',
@@ -83,6 +81,7 @@ GoRouter createSellerRouter(SellerAppState appState) {
           return SellerAppShell(
             navigationShell: navigationShell,
             appState: appState,
+            location: state.uri.path,
           );
         },
         branches: [
@@ -100,10 +99,14 @@ GoRouter createSellerRouter(SellerAppState appState) {
             routes: [
               GoRoute(
                 path: '/pesanan',
-                builder: (context, state) => OrdersListScreen(appState: appState, initialFilter: state.uri.queryParameters['status'] ?? 'all'),
+                builder: (context, state) => OrdersListScreen(
+                  appState: appState,
+                  initialFilter: state.uri.queryParameters['status'] ?? 'all',
+                ),
                 routes: [
                   GoRoute(
                     path: ':orderId',
+                    parentNavigatorKey: rootNavigatorKey,
                     builder: (context, state) => OrderDetailScreen(
                       appState: appState,
                       orderId: state.pathParameters['orderId'] ?? '',
@@ -120,12 +123,12 @@ GoRouter createSellerRouter(SellerAppState appState) {
                 path: '/produk',
                 builder: (context, state) => ProductsAndInventoryScreen(
                   appState: appState,
-                  initialSubTab:
-                      state.uri.queryParameters['tab'] ?? 'catalog',
+                  initialSubTab: state.uri.queryParameters['tab'] ?? 'catalog',
                 ),
                 routes: [
                   GoRoute(
                     path: 'editor',
+                    parentNavigatorKey: rootNavigatorKey,
                     builder: (context, state) => ProductEditorScreen(
                       appState: appState,
                       productId: state.uri.queryParameters['id'],
@@ -154,26 +157,31 @@ GoRouter createSellerRouter(SellerAppState appState) {
                 routes: [
                   GoRoute(
                     path: 'settings',
+                    parentNavigatorKey: rootNavigatorKey,
                     builder: (context, state) =>
                         StoreSettingsScreen(appState: appState),
                   ),
                   GoRoute(
                     path: 'readiness',
+                    parentNavigatorKey: rootNavigatorKey,
                     builder: (context, state) =>
                         StoreReadinessScreen(appState: appState),
                   ),
                   GoRoute(
                     path: 'customers',
+                    parentNavigatorKey: rootNavigatorKey,
                     builder: (context, state) =>
                         CustomersScreen(appState: appState),
                   ),
                   GoRoute(
                     path: 'billing',
+                    parentNavigatorKey: rootNavigatorKey,
                     builder: (context, state) =>
                         BillingScreen(appState: appState),
                   ),
                   GoRoute(
                     path: 'account',
+                    parentNavigatorKey: rootNavigatorKey,
                     builder: (context, state) =>
                         AccountSecurityScreen(appState: appState),
                   ),

@@ -1,6 +1,8 @@
 /// Normalisasi dan validasi slug link toko/produk selaras dengan `src/live/Merchant.tsx`.
 abstract final class NsSlugUtils {
-  static final RegExp _validSlugRegex = RegExp(r'^[a-z0-9][a-z0-9-]{1,46}[a-z0-9]$');
+  static final RegExp _validSlugRegex = RegExp(
+    r'^[a-z0-9][a-z0-9-]{1,46}[a-z0-9]$',
+  );
 
   static const Set<String> reservedSlugs = {
     'admin',
@@ -16,6 +18,9 @@ abstract final class NsSlugUtils {
     'login',
     'register',
     'verify',
+    'store',
+    'support',
+    'checkout',
   };
 
   /// Mengubah input nama/link menjadi slug bersih (huruf kecil, angka, tanda hubung, maks 48 karakter).

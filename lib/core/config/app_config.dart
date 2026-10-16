@@ -2,7 +2,7 @@
 /// Selaras dengan `.env.production` pada `khoirulzz/nalarostore`.
 abstract final class AppConfig {
   static const String appName = 'Nalaro Seller';
-  static const String appVersion = '1.0.0';
+  static const String appVersion = '1.0.1';
   static const String defaultApiBaseUrl = String.fromEnvironment(
     'NALARO_API_BASE_URL',
     defaultValue: 'https://store.nalaro.digital',

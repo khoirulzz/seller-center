@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
 import 'ns_colors.dart';
 import 'ns_radius.dart';
 import 'ns_typography.dart';
@@ -21,6 +22,7 @@ abstract final class NsTheme {
 
     return ThemeData(
       useMaterial3: true,
+      fontFamily: NsTypography.bodyFamily,
       colorScheme: colorScheme,
       scaffoldBackgroundColor: NsColors.surfaceCanvas,
       canvasColor: NsColors.surfaceCanvas,
@@ -79,9 +81,15 @@ abstract final class NsTheme {
         labelSmall: NsTypography.caption,
       ),
       inputDecorationTheme: InputDecorationTheme(
+        floatingLabelBehavior: FloatingLabelBehavior.always,
+        helperMaxLines: 3,
+        errorMaxLines: 3,
         filled: true,
-        fillColor: NsColors.surfaceCanvas,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+        fillColor: NsColors.surfaceSubtle,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 14,
+          vertical: 13,
+        ),
         hintStyle: NsTypography.bodyMd.copyWith(color: NsColors.textMuted),
         errorStyle: NsTypography.bodySm.copyWith(
           color: NsColors.statusDangerText,
@@ -101,11 +109,17 @@ abstract final class NsTheme {
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: NsRadius.control,
-          borderSide: const BorderSide(color: NsColors.statusDangerText, width: 1.3),
+          borderSide: const BorderSide(
+            color: NsColors.statusDangerText,
+            width: 1.3,
+          ),
         ),
         focusedErrorBorder: OutlineInputBorder(
           borderRadius: NsRadius.control,
-          borderSide: const BorderSide(color: NsColors.statusDangerText, width: 1.6),
+          borderSide: const BorderSide(
+            color: NsColors.statusDangerText,
+            width: 1.6,
+          ),
         ),
       ),
       bottomSheetTheme: const BottomSheetThemeData(
@@ -115,6 +129,19 @@ abstract final class NsTheme {
         modalBarrierColor: NsColors.overlayScrim,
         shape: RoundedRectangleBorder(borderRadius: NsRadius.sheetTop),
         showDragHandle: false,
+      ),
+      cardTheme: CardThemeData(
+        color: NsColors.surfaceSubtle,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14),
+          side: const BorderSide(color: NsColors.borderDefault),
+        ),
+      ),
+      dialogTheme: const DialogThemeData(
+        backgroundColor: NsColors.surfaceCanvas,
+        surfaceTintColor: Colors.transparent,
       ),
       dividerTheme: const DividerThemeData(
         color: NsColors.borderDefault,
