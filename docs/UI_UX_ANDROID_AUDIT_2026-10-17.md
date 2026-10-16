@@ -30,7 +30,7 @@ Screenshot hanya menampilkan assertion `_dependents.isEmpty`, tanpa stack trace 
 - Flutter stable dipin ke 3.47.7 di Actions.
 - Analyzer tetap menggagalkan error/warning; lint informasional lama bukan gerbang fatal.
 - Tes model/API, media privat, keamanan role, transform foto, dialog, draft, back, save, settings dan stale order search.
-- Layout shell/beranda/editor pada 320/360/390/430/600 dp, skala teks 1.0/1.6; capture di artifact `seller-ui-qa` dan review visual font nyata.
+- Layout shell/beranda/editor pada 320/360/390/430/600 dp, skala teks konten 1.0/1.6 (label navigasi ringkas maksimal 1.2 dengan tinggi bar adaptif); capture di artifact `seller-ui-qa` dan review visual font nyata.
 - APK debug dibangun oleh Actions setelah tes; build akhir harus dirujuk pada commit merge main.
 
 ## Kesenjangan yang tetap memerlukan pekerjaan terpisah

@@ -181,28 +181,36 @@ class SellerAppShell extends StatelessWidget {
                             top: BorderSide(color: NsColors.borderDefault),
                           ),
                         ),
-                        child: NavigationBar(
-                          height: 64,
-                          backgroundColor: NsColors.surfaceCanvas,
-                          surfaceTintColor: Colors.transparent,
-                          indicatorColor: NsColors.surfacePressed,
-                          selectedIndex: navigationShell.currentIndex,
-                          onDestinationSelected: _onSelectTab,
-                          destinations: _tabs.map((tab) {
-                            return NavigationDestination(
-                              icon: NsIcon(
-                                tab.icon,
-                                size: 22,
-                                color: NsColors.textSecondary,
-                              ),
-                              selectedIcon: NsIcon(
-                                tab.icon,
-                                size: 22,
-                                color: NsColors.brandAction,
-                              ),
-                              label: tab.label,
-                            );
-                          }).toList(),
+                        // Navigation labels stay legible in a compact five-tab
+                        // bar; content retains the user's full text scale.
+                        child: MediaQuery.withClampedTextScaling(
+                          maxScaleFactor: 1.2,
+                          child: NavigationBar(
+                            height:
+                                MediaQuery.textScalerOf(context).scale(1) > 1.3
+                                ? 76
+                                : 64,
+                            backgroundColor: NsColors.surfaceCanvas,
+                            surfaceTintColor: Colors.transparent,
+                            indicatorColor: NsColors.surfacePressed,
+                            selectedIndex: navigationShell.currentIndex,
+                            onDestinationSelected: _onSelectTab,
+                            destinations: _tabs.map((tab) {
+                              return NavigationDestination(
+                                icon: NsIcon(
+                                  tab.icon,
+                                  size: 22,
+                                  color: NsColors.textSecondary,
+                                ),
+                                selectedIcon: NsIcon(
+                                  tab.icon,
+                                  size: 22,
+                                  color: NsColors.brandAction,
+                                ),
+                                label: tab.label,
+                              );
+                            }).toList(),
+                          ),
                         ),
                       ),
               ),

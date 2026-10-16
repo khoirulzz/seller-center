@@ -395,25 +395,32 @@ void main() {
         );
         await tester.pumpAndSettle();
         expect(tester.takeException(), isNull);
-        await tester.runAsync(() async {
-          final boundary =
-              key.currentContext!.findRenderObject()! as RenderRepaintBoundary;
-          final image = await boundary.toImage();
-          final png = await image.toByteData(format: ui.ImageByteFormat.png);
-          final directory = Directory('build/ui-qa');
-          await directory.create(recursive: true);
-          await File('${directory.path}/home-${width.toInt()}-$scale.png')
-              .writeAsBytes(png!.buffer.asUint8List());
-          image.dispose();
-        });
+        Future<void> capture(String screen) async {
+          await tester.runAsync(() async {
+            final boundary =
+                key.currentContext!.findRenderObject()!
+                    as RenderRepaintBoundary;
+            final image = await boundary.toImage();
+            final png = await image.toByteData(format: ui.ImageByteFormat.png);
+            final directory = Directory('build/ui-qa');
+            await directory.create(recursive: true);
+            await File('${directory.path}/$screen-${width.toInt()}-$scale.png')
+                .writeAsBytes(png!.buffer.asUint8List());
+            image.dispose();
+          });
+        }
+
+        await capture('home');
         router.go('/produk');
         await tester.pumpAndSettle();
         router.push('/produk/editor');
         await tester.pumpAndSettle();
         expect(tester.takeException(), isNull);
+        await capture('editor');
         await tester.drag(find.byType(ListView).first, const Offset(0, -550));
         await tester.pumpAndSettle();
         expect(tester.takeException(), isNull);
+        await capture('editor-scrolled');
         await tester.pumpWidget(const SizedBox());
         router.dispose();
         fixture.state.dispose();
