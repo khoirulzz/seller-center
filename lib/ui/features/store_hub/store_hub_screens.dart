@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/config/formatters.dart';
+import '../../../core/config/status_dictionary.dart';
 import '../../../domain/models/seller_models.dart';
 import '../../state/seller_app_state.dart';
 
