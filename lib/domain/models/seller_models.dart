@@ -35,7 +35,8 @@ class UserIdentity {
 enum StoreRole {
   owner,
   manager,
-  fulfillment;
+  fulfillment,
+  unknown;
 
   static StoreRole fromString(String? raw) {
     switch (raw?.toLowerCase()) {
@@ -47,7 +48,7 @@ enum StoreRole {
         return StoreRole.fulfillment;
       default:
         // Fail closed: unknown roles never inherit owner permissions.
-        return StoreRole.fulfillment;
+        return StoreRole.unknown;
     }
   }
 
@@ -58,7 +59,7 @@ enum StoreRole {
   bool get canViewCustomersAndAnalytics =>
       this == StoreRole.owner || this == StoreRole.manager;
   bool get canChooseBillingPlan => this == StoreRole.owner;
-  bool get canProcessFulfillment => true;
+  bool get canProcessFulfillment => this != StoreRole.unknown;
 }
 
 /// Data toko tenant (`/api/merchant/stores`).

@@ -35,7 +35,7 @@ class SellerAppState extends ChangeNotifier {
   UserIdentity? get user => _user;
   List<MerchantStore> get stores => _stores;
   MerchantStore? get activeStore => _activeStore;
-  StoreRole get activeRole => _activeStore?.storeRole ?? StoreRole.owner;
+  StoreRole get activeRole => _activeStore?.storeRole ?? StoreRole.unknown;
   String? get globalError => _globalError;
   bool get isBusy => _isBusy;
   bool get isOffline => _isOffline;

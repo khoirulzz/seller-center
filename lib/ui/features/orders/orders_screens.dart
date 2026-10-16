@@ -29,6 +29,8 @@ class _OrdersListScreenState extends State<OrdersListScreen> {
   void reset() {
     storeId = widget.appState.activeStore?.id;
     revision = widget.appState.storeDataRevision;
+    // Invalidate in-flight pagination when switching store/filter.
+    loading = false;
     page = 0; orders = []; hasMore = true; error = null;
     if (mounted) setState(() {});
     load();

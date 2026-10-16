@@ -12,6 +12,7 @@ void main() {
     test('unknown roles must not grant owner privileges', () {
       expect(StoreRole.fromString('unknown').canChooseBillingPlan, false);
       expect(StoreRole.fromString(null).canManageSettings, false);
+      expect(StoreRole.fromString('unrecognized').canProcessFulfillment, false);
     });
   });
   group('Orders state machine', () {
