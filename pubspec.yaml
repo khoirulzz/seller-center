@@ -1,0 +1,28 @@
+name: nalaro_seller_center
+description: Nalaro Seller Center — Aplikasi operasional toko multi-tenant untuk seller Nalaro Store (Android-first, iOS-ready).
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.4.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  flutter_svg: ^2.0.10+1
+  go_router: ^14.2.7
+  http: ^1.2.2
+  intl: any
+  shared_preferences: ^2.3.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: any
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/icons/
