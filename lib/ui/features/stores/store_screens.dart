@@ -28,7 +28,7 @@ class _CreateStoreWizardScreenState extends State<CreateStoreWizardScreen>{
  if(error!=null)Text(error!,style:const TextStyle(color:Colors.red)),
  const SizedBox(height:20),FilledButton(onPressed:busy?null:save,child:Text(busy?'Menyimpan...':'Buat toko')),
  if(widget.appState.stores.isNotEmpty)TextButton(onPressed:()=>context.go('/beranda'),child:const Text('Kembali')),
- ]))));
+ ])));
 }
 Future<void> showNsStoreSwitcherSheet({required BuildContext context,required SellerAppState appState})async{
  await showModalBottomSheet<void>(context:context,showDragHandle:true,builder:(sheet)=>SafeArea(child:ListView(shrinkWrap:true,children:[
