@@ -33,7 +33,7 @@ class _CreateStoreWizardScreenState extends State<CreateStoreWizardScreen>{
 Future<void> showNsStoreSwitcherSheet({required BuildContext context,required SellerAppState appState})async{
  await showModalBottomSheet<void>(context:context,showDragHandle:true,builder:(sheet)=>SafeArea(child:ListView(shrinkWrap:true,children:[
  const ListTile(title:Text('Pilih toko')),
- ...appState.stores.map((store)=>ListTile(title:Text(store.name),subtitle:Text(store.slug),trailing:appState.activeStore?.id==store.id?const Icon(Icons.check_circle):null,onTap:()async{await appState.selectActiveStore(store.id);if(sheet.mounted)Navigator.pop(sheet);})),
+ ...appState.stores.map((store)=>ListTile(title:Text(store.name),subtitle:Text(store.slug),trailing:appState.activeStore?.id==store.id?const Icon(Icons.check_circle):null,onTap:()async{if(appState.hasUnsavedFormDraft){final discard=await showDialog<bool>(context:sheet,builder:(d)=>AlertDialog(title:const Text('Ada perubahan belum disimpan'),content:const Text('Berpindah toko akan membuang perubahan formulir yang belum disimpan. Tetap pindah?'),actions:[TextButton(onPressed:()=>Navigator.pop(d,false),child:const Text('Tetap di toko ini')),FilledButton(onPressed:()=>Navigator.pop(d,true),child:const Text('Buang dan pindah'))]));if(discard!=true)return;}await appState.selectActiveStore(store.id);if(sheet.mounted)Navigator.pop(sheet);})),
  ListTile(leading:const Icon(Icons.add),title:const Text('Buat toko baru'),onTap:(){Navigator.pop(sheet);context.push('/stores/create');}),
   ])));
 }
