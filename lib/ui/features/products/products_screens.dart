@@ -1054,6 +1054,7 @@ class _ProductEditorScreenState extends State<ProductEditorScreen>
                       [
                         TextFormField(
                           controller: name,
+                          maxLength: 160,
                           textCapitalization: TextCapitalization.words,
                           textInputAction: TextInputAction.next,
                           decoration: const InputDecoration(
@@ -1086,6 +1087,7 @@ class _ProductEditorScreenState extends State<ProductEditorScreen>
                         const SizedBox(height: 18),
                         TextFormField(
                           controller: description,
+                          maxLength: 10000,
                           maxLines: 4,
                           textCapitalization: TextCapitalization.sentences,
                           decoration: const InputDecoration(
@@ -1097,6 +1099,7 @@ class _ProductEditorScreenState extends State<ProductEditorScreen>
                         const SizedBox(height: 18),
                         TextFormField(
                           controller: category,
+                          maxLength: 80,
                           textInputAction: TextInputAction.next,
                           decoration: const InputDecoration(
                             labelText: 'Kategori *',
@@ -1349,7 +1352,9 @@ class _ProductEditorScreenState extends State<ProductEditorScreen>
                             ),
                           ),
                         OutlinedButton.icon(
-                          onPressed: busy ? null : () => editVariant(),
+                          onPressed: busy || variants.length >= 100
+                              ? null
+                              : () => editVariant(),
                           icon: const Icon(Icons.add),
                           label: const Text('Tambah varian'),
                         ),

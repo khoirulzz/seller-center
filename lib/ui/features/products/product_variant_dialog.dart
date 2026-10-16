@@ -69,6 +69,7 @@ class _ProductVariantDialogState extends State<ProductVariantDialog> {
         children: [
           TextFormField(
             controller: label,
+            maxLength: 120,
             textInputAction: TextInputAction.next,
             decoration: const InputDecoration(
               labelText: 'Nama pilihan *',
@@ -81,6 +82,7 @@ class _ProductVariantDialogState extends State<ProductVariantDialog> {
           const SizedBox(height: 16),
           TextFormField(
             controller: sku,
+            maxLength: 80,
             textInputAction: TextInputAction.next,
             decoration: const InputDecoration(
               labelText: 'Kode SKU *',
@@ -108,6 +110,8 @@ class _ProductVariantDialogState extends State<ProductVariantDialog> {
                 (int.tryParse(v ?? '') ?? -1) <
                     (widget.variant?.reservedQty ?? 0)
                 ? 'Stok minimal ${widget.variant?.reservedQty ?? 0}.'
+                : int.parse(v!) > 100000
+                ? 'Stok maksimal 100.000.'
                 : null,
           ),
           const SizedBox(height: 16),
@@ -195,6 +199,8 @@ class _StockAmountDialogState extends State<StockAmountDialog> {
             validator: (v) =>
                 (int.tryParse(v ?? '') ?? -1) < widget.variant.reservedQty
                 ? 'Stok minimal ${widget.variant.reservedQty}.'
+                : int.parse(v!) > 100000
+                ? 'Stok maksimal 100.000.'
                 : null,
           ),
         ],

@@ -18,7 +18,11 @@ Aplikasi Flutter Android-first untuk mengelola toko pada **Nalaro Store**. Backe
 - Pengaturan toko, upload logo/hero/QRIS, checklist publikasi, billing/invoice/penggunaan, dan keamanan akun.
 - Logo asli Nalaro Store pada aplikasi dan ikon launcher Android.
 
-**Tidak tersedia atau belum tervalidasi:** push FCM dan notification center server, deep link verifikasi email yang terbukti melalui Android App Links, crop/rotate editor media, quick stock adjust transaksional dengan reason dan expected-version, persistensi foto varian di Worker, hasil domain verification, notifikasi latar, QA perangkat/visual, signing release. Lihat audit.
+**Tidak tersedia atau belum tervalidasi:** push FCM dan notification center server, deep link verifikasi email yang terbukti melalui Android App Links, crop bebas (drag area), quick stock adjust transaksional dengan reason dan expected-version, persistensi foto varian di Worker, hasil domain verification, notifikasi latar, QA perangkat/visual, signing release. Lihat audit.
+
+## Perbaikan UI/UX Android 1.0.1
+
+Lihat [audit UI/UX dan Android](docs/UI_UX_ANDROID_AUDIT_2026-10-17.md) untuk temuan, perubahan, dan batas verifikasi. Foto toko draft dimuat terautentikasi, editor memiliki preview besar/zoom/retry/putar/crop tengah, draft dan kembali Android dilindungi, detail tidak bertumpuk dengan tab global, serta font Manrope/DM Sans dibundel. Tes regresi dan capture layout berjalan di CI.
 
 ## Konfigurasi
 
