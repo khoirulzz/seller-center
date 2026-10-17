@@ -23,9 +23,10 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   DateTimeRange? custom;
   bool exporting = false;
   String? error;
+  String timezone='Asia/Jakarta';
   DateTimeRange get range {
     if (custom != null) return custom!;
-    final now = DateTime.now();
+    final now = DateTime.now().toUtc().add(Duration(hours:timezone=='Asia/Makassar'?8:timezone=='Asia/Jayapura'?9:timezone=='UTC'?0:7));
     return DateTimeRange(
       start: DateTime(
         now.year,
@@ -48,6 +49,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
             storeId: store!,
             fromDate: NsFormatters.calendarDate(dates.start),
             toDate: NsFormatters.calendarDate(dates.end),
+            timezone:timezone,
           );
   }
 
@@ -148,6 +150,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
             title: Text('Akses analitik tidak tersedia untuk peran ini.'),
           ),
         if (widget.appState.activeRole.canViewCustomersAndAnalytics) ...[
+          DropdownButtonFormField<String>(initialValue:timezone,decoration:const InputDecoration(labelText:'Zona waktu laporan'),items:const [DropdownMenuItem(value:'Asia/Jakarta',child:Text('WIB')),DropdownMenuItem(value:'Asia/Makassar',child:Text('WITA')),DropdownMenuItem(value:'Asia/Jayapura',child:Text('WIT')),DropdownMenuItem(value:'UTC',child:Text('UTC'))],onChanged:(value){if(value!=null)setState((){timezone=value;load();});}),
           Wrap(
             spacing: 8,
             children: [
@@ -184,7 +187,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Laporan: ${NsFormatters.calendarDate(range.start)} s.d. ${NsFormatters.calendarDate(range.end)} • WIB (Asia/Jakarta).',
+            'Laporan: ${NsFormatters.calendarDate(range.start)} s.d. ${NsFormatters.calendarDate(range.end)} • $timezone.',
             style: Theme.of(context).textTheme.bodySmall,
           ),
           FutureBuilder<SalesAnalyticsBundle>(

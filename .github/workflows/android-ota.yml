@@ -76,6 +76,7 @@ jobs:
           python3 tool/prepare_ota.py
       - run: flutter pub get --enforce-lockfile
       - run: dart run flutter_launcher_icons
+      - run: python3 tool/configure_launcher.py
       - run: flutter analyze --no-fatal-infos
       - run: flutter test
       - name: Configure and verify persistent release signing

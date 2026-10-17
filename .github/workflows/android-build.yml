@@ -31,7 +31,9 @@ jobs:
         run: rm -f test/widget_test.dart
       - run: flutter pub get --enforce-lockfile
       - name: Generate launcher icon from official Nalaro Store asset
-        run: dart run flutter_launcher_icons
+        run: |
+          dart run flutter_launcher_icons
+          python3 tool/configure_launcher.py
       - name: Format Dart sources
         run: dart format lib test
       - run: flutter analyze --no-fatal-infos

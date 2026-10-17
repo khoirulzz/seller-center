@@ -437,12 +437,13 @@ class SellerApiService {
     required String storeId,
     required String fromDate,
     required String toDate,
+    String timezone='Asia/Jakarta',
   }) async {
     final json = await _requestJson(
       method: 'GET',
       path: '/api/merchant/stores/$storeId/analytics',
       bearerToken: bearerToken,
-      query: {'from': fromDate, 'to': toDate},
+      query: {'from': fromDate, 'to': toDate,'timezone':timezone},
     );
     return SalesAnalyticsBundle.fromJson(json);
   }

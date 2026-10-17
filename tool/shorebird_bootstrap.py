@@ -17,6 +17,11 @@ if not config.exists():
     envelope = json.loads(response.stdout)
     data = envelope.get('data', {})
     apps = data if isinstance(data, list) else data.get('apps', [])
+    # These app IDs and display names are public runtime configuration, never credentials.
+    print('Accessible registered apps: ' + json.dumps([
+        {'id': a.get('id') or a.get('app_id'), 'display_name': a.get('display_name') or a.get('displayName') or a.get('name')}
+        for a in apps
+    ]), flush=True)
     matches = [a for a in apps if a.get('display_name') == 'Nalaro Seller Center']
     if len(matches) > 1:
         raise SystemExit('Several registered apps share this display name; select the intended app ID.')

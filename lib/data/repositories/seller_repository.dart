@@ -521,11 +521,13 @@ class SellerRepository {
     required String storeId,
     required String fromDate,
     required String toDate,
+    String timezone='Asia/Jakarta',
   }) async => _api.fetchAnalytics(
     bearerToken: await _validBearerToken(),
     storeId: storeId,
     fromDate: fromDate,
     toDate: toDate,
+    timezone:timezone,
   );
 
   Future<({List<CustomerSummary> customers, bool hasMore})> fetchCustomers({

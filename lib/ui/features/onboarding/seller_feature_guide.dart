@@ -211,7 +211,7 @@ class _SellerGuideOverlayState extends State<SellerGuideOverlay> {
     const _GuideStep(
       SellerGuideTarget.shop,
       'Pengaturan ada di Toko',
-      'Kelola pengaturan toko dan akun sesuai aksesmu. Untuk melihat panduan ini lagi, buka Toko → Panduan fitur.',
+      'Buka chat pelanggan, isi penanggung jawab, dan kelola pengaturan sesuai aksesmu. Untuk mengulang panduan ini, buka Toko → Panduan fitur.',
     ),
   ];
 
