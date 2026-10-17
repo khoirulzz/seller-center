@@ -40,16 +40,15 @@ class _NsProductImageState extends State<NsProductImage> {
     super.didUpdateWidget(old);
     if (old.url != widget.url ||
         old.bytes != widget.bytes ||
-        old.repository != widget.repository)
-      load();
+        old.repository != widget.repository) load();
   }
 
   void load({bool retry = false}) {
     future = widget.bytes != null
         ? Future.value(widget.bytes)
         : (widget.url?.isNotEmpty ?? false)
-        ? widget.repository.fetchMediaBytes(widget.url!, refresh: retry)
-        : null;
+            ? widget.repository.fetchMediaBytes(widget.url!, refresh: retry)
+            : null;
   }
 
   void open() {
@@ -79,53 +78,55 @@ class _NsProductImageState extends State<NsProductImage> {
 
   @override
   Widget build(BuildContext context) => ClipRRect(
-    borderRadius: BorderRadius.circular(12),
-    child: ColoredBox(
-      color: NsColors.surfaceSubtle,
-      child: future == null
-          ? const Center(
-              child: Icon(Icons.image_outlined, color: NsColors.textSecondary),
-            )
-          : FutureBuilder<Uint8List>(
-              future: future,
-              builder: (context, snapshot) {
-                if (snapshot.hasError)
-                  return Center(
-                    child: IconButton(
-                      tooltip: 'Foto belum dimuat. Ketuk untuk mencoba lagi',
-                      onPressed: () => setState(() => load(retry: true)),
-                      icon: const Icon(Icons.refresh),
-                    ),
-                  );
-                if (!snapshot.hasData)
-                  return const Center(
-                    child: SizedBox(
-                      width: 22,
-                      height: 22,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    ),
-                  );
-                return Semantics(
-                  button: widget.preview,
-                  label:
-                      '${widget.label}${widget.preview ? ', ketuk untuk memperbesar' : ''}',
-                  child: InkWell(
-                    onTap: widget.preview ? open : null,
-                    child: Image.memory(
-                      snapshot.data!,
-                      width: double.infinity,
-                      height: double.infinity,
-                      fit: widget.fit,
-                      cacheWidth: widget.preview ? 700 : null,
-                      excludeFromSemantics: true,
-                      errorBuilder: (_, __, ___) => const Center(
-                        child: Text('Format foto tidak dapat dibuka.'),
+        borderRadius: BorderRadius.circular(12),
+        child: ColoredBox(
+          color: NsColors.surfaceSubtle,
+          child: future == null
+              ? const Center(
+                  child:
+                      Icon(Icons.image_outlined, color: NsColors.textSecondary),
+                )
+              : FutureBuilder<Uint8List>(
+                  future: future,
+                  builder: (context, snapshot) {
+                    if (snapshot.hasError)
+                      return Center(
+                        child: IconButton(
+                          tooltip:
+                              'Foto belum dimuat. Ketuk untuk mencoba lagi',
+                          onPressed: () => setState(() => load(retry: true)),
+                          icon: const Icon(Icons.refresh),
+                        ),
+                      );
+                    if (!snapshot.hasData)
+                      return const Center(
+                        child: SizedBox(
+                          width: 22,
+                          height: 22,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      );
+                    return Semantics(
+                      button: widget.preview,
+                      label:
+                          '${widget.label}${widget.preview ? ', ketuk untuk memperbesar' : ''}',
+                      child: InkWell(
+                        onTap: widget.preview ? open : null,
+                        child: Image.memory(
+                          snapshot.data!,
+                          width: double.infinity,
+                          height: double.infinity,
+                          fit: widget.fit,
+                          cacheWidth: widget.preview ? 700 : null,
+                          excludeFromSemantics: true,
+                          errorBuilder: (_, __, ___) => const Center(
+                            child: Text('Format foto tidak dapat dibuka.'),
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
-                );
-              },
-            ),
-    ),
-  );
+                    );
+                  },
+                ),
+        ),
+      );
 }

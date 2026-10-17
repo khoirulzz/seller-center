@@ -104,60 +104,65 @@ class _NsMetricChartState extends State<NsMetricChart> {
               child: SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: SizedBox(
-                  width: widget.points.length > 10 ? widget.points.length * 32.0 : MediaQuery.sizeOf(context).width - 72,
+                  width: widget.points.length > 10
+                      ? widget.points.length * 32.0
+                      : MediaQuery.sizeOf(context).width - 72,
                   child: Row(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: List.generate(widget.points.length, (index) {
-                  final point = widget.points[index];
-                  final ratio = (point.revenueIdr / maxRevenue).clamp(0.08, 1.0);
-                  final isSelected = index == safeIndex;
-                  return Expanded(
-                    child: GestureDetector(
-                      behavior: HitTestBehavior.opaque,
-                      onTap: () => setState(() => _selectedIndex = index),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 3),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            Expanded(
-                              child: Align(
-                                alignment: Alignment.bottomCenter,
-                                child: FractionallySizedBox(
-                                  heightFactor: ratio,
-                                  widthFactor: 0.72,
-                                  child: AnimatedContainer(
-                                    duration: const Duration(milliseconds: 160),
-                                    decoration: BoxDecoration(
-                                      color: isSelected
-                                          ? NsColors.brandPrimary
-                                          : NsColors.borderDefault,
-                                      borderRadius: BorderRadius.circular(6),
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: List.generate(widget.points.length, (index) {
+                      final point = widget.points[index];
+                      final ratio =
+                          (point.revenueIdr / maxRevenue).clamp(0.08, 1.0);
+                      final isSelected = index == safeIndex;
+                      return Expanded(
+                        child: GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onTap: () => setState(() => _selectedIndex = index),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 3),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                Expanded(
+                                  child: Align(
+                                    alignment: Alignment.bottomCenter,
+                                    child: FractionallySizedBox(
+                                      heightFactor: ratio,
+                                      widthFactor: 0.72,
+                                      child: AnimatedContainer(
+                                        duration:
+                                            const Duration(milliseconds: 160),
+                                        decoration: BoxDecoration(
+                                          color: isSelected
+                                              ? NsColors.brandPrimary
+                                              : NsColors.borderDefault,
+                                          borderRadius:
+                                              BorderRadius.circular(6),
+                                        ),
+                                      ),
                                     ),
                                   ),
                                 ),
-                              ),
+                                const SizedBox(height: 6),
+                                Text(
+                                  point.day.length >= 10
+                                      ? point.day.substring(8, 10)
+                                      : point.day,
+                                  style: NsTypography.caption.copyWith(
+                                    color: isSelected
+                                        ? NsColors.textPrimary
+                                        : NsColors.textMuted,
+                                    fontWeight: isSelected
+                                        ? FontWeight.w800
+                                        : FontWeight.w500,
+                                  ),
+                                ),
+                              ],
                             ),
-                            const SizedBox(height: 6),
-                            Text(
-                              point.day.length >= 10
-                                  ? point.day.substring(8, 10)
-                                  : point.day,
-                              style: NsTypography.caption.copyWith(
-                                color: isSelected
-                                    ? NsColors.textPrimary
-                                    : NsColors.textMuted,
-                                fontWeight: isSelected
-                                    ? FontWeight.w800
-                                    : FontWeight.w500,
-                              ),
-                            ),
-                          ],
+                          ),
                         ),
-                      ),
-                    ),
-                  );
-                }),
+                      );
+                    }),
                   ),
                 ),
               ),

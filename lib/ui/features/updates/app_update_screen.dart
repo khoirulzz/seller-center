@@ -88,8 +88,8 @@ class AppUpdateScreen extends StatelessWidget {
           Icons.task_alt,
         ),
       AppUpdatePhase.unavailable => (
-          'Gunakan APK yang mendukung pembaruan otomatis',
-          'Versi yang terpasang belum bisa menerima pembaruan otomatis. Pasang APK terbaru yang mendukung fitur ini.',
+          'Pembaruan melalui APK resmi',
+          'Pembaruan otomatis belum aktif pada versi ini. Gunakan file APK resmi dari Nalaro untuk memperbarui aplikasi.',
           Icons.install_mobile,
         ),
       AppUpdatePhase.failed => (

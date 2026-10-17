@@ -24,11 +24,11 @@ class UserIdentity {
   }
 
   Map<String, dynamic> toJson() => {
-    'id': id,
-    'email': email,
-    'verified': verified,
-    'admin': admin,
-  };
+        'id': id,
+        'email': email,
+        'verified': verified,
+        'admin': admin,
+      };
 }
 
 /// Hak akses peran per toko (`PRD` Bab 5.3).
@@ -102,14 +102,14 @@ class MerchantStore {
   }
 
   Map<String, dynamic> toJson() => {
-    'id': id,
-    'slug': slug,
-    'name': name,
-    'status': status,
-    'description': description,
-    'role': role,
-    if (pilotUntil != null) 'pilot_until': pilotUntil,
-  };
+        'id': id,
+        'slug': slug,
+        'name': name,
+        'status': status,
+        'description': description,
+        'role': role,
+        if (pilotUntil != null) 'pilot_until': pilotUntil,
+      };
 
   MerchantStore copyWith({
     String? name,
@@ -244,14 +244,14 @@ class ProductVariant {
   }
 
   Map<String, dynamic> toJson() => {
-    if (id != null && id!.isNotEmpty) 'id': id,
-    'sku': sku.trim(),
-    'option_label': optionLabel.trim(),
-    'price_override_idr': priceOverrideIdr,
-    'stock_qty': stockQty,
-    'status': status,
-    if (imageUrl != null && imageUrl!.isNotEmpty) 'image_url': imageUrl,
-  };
+        if (id != null && id!.isNotEmpty) 'id': id,
+        'sku': sku.trim(),
+        'option_label': optionLabel.trim(),
+        'price_override_idr': priceOverrideIdr,
+        'stock_qty': stockQty,
+        'status': status,
+        if (imageUrl != null && imageUrl!.isNotEmpty) 'image_url': imageUrl,
+      };
 
   ProductVariant copyWith({
     String? id,
@@ -350,18 +350,19 @@ class Product {
   }
 
   Map<String, dynamic> toPayloadJson() => {
-    'slug': slug,
-    'name': name,
-    'description': description,
-    'price_idr': priceIdr,
-    'category': category,
-    'primary_image_url': (primaryImageUrl == null || primaryImageUrl!.isEmpty)
-        ? null
-        : primaryImageUrl,
-    'gallery': gallery.map((g) => g.toJson()).toList(),
-    'status': status,
-    'variants': variants.map((v) => v.toJson()).toList(),
-  };
+        'slug': slug,
+        'name': name,
+        'description': description,
+        'price_idr': priceIdr,
+        'category': category,
+        'primary_image_url':
+            (primaryImageUrl == null || primaryImageUrl!.isEmpty)
+                ? null
+                : primaryImageUrl,
+        'gallery': gallery.map((g) => g.toJson()).toList(),
+        'status': status,
+        'variants': variants.map((v) => v.toJson()).toList(),
+      };
 
   Product copyWith({
     String? slug,
@@ -558,7 +559,7 @@ class OrderModel {
     final total = int.tryParse((json['total_idr'] ?? '0').toString()) ?? 0;
     final subtotal =
         int.tryParse((json['subtotal_idr'] ?? total.toString()).toString()) ??
-        total;
+            total;
     final shipping =
         int.tryParse((json['shipping_idr'] ?? '0').toString()) ?? 0;
 
@@ -573,8 +574,8 @@ class OrderModel {
       shippingIdr: shipping,
       orderStatus: (json['order_status'] ?? 'pending').toString(),
       paymentStatus: (json['payment_status'] ?? 'unpaid').toString(),
-      fulfillmentStatus: (json['fulfillment_status'] ?? 'unfulfilled')
-          .toString(),
+      fulfillmentStatus:
+          (json['fulfillment_status'] ?? 'unfulfilled').toString(),
       shippingMethod: (json['shipping_method'] ?? 'pickup').toString(),
       createdAt: (json['created_at'] ?? '').toString(),
       updatedAt: (json['updated_at'] ?? '').toString(),
@@ -681,6 +682,15 @@ class SalesAnalyticsBundle {
     required this.canceledOrders,
     required this.verifiedRevenueIdr,
     required this.dailyPoints,
+    this.unitsSold = 0,
+    this.shippingRevenueIdr = 0,
+    this.totalCollectedIdr = 0,
+    this.returningCustomers = 0,
+    this.purchasingCustomers = 0,
+    this.previousRevenueIdr = 0,
+    this.topProducts = const [],
+    this.topVariants = const [],
+    this.timezone = 'Asia/Jakarta',
   });
 
   final int totalOrders;
@@ -688,6 +698,14 @@ class SalesAnalyticsBundle {
   final int canceledOrders;
   final int verifiedRevenueIdr;
   final List<DailySalesPoint> dailyPoints;
+  final int unitsSold,
+      shippingRevenueIdr,
+      totalCollectedIdr,
+      returningCustomers,
+      purchasingCustomers,
+      previousRevenueIdr;
+  final List<SalesRanking> topProducts, topVariants;
+  final String timezone;
 
   int get averagePaidOrderIdr =>
       paidOrders > 0 ? (verifiedRevenueIdr / paidOrders).round() : 0;
@@ -701,6 +719,17 @@ class SalesAnalyticsBundle {
       canceledOrders: (summary['canceled_orders'] as num?)?.toInt() ?? 0,
       verifiedRevenueIdr:
           int.tryParse((summary['revenue'] ?? '0').toString()) ?? 0,
+      unitsSold: jsonInt(summary['units_sold']),
+      shippingRevenueIdr: jsonInt(summary['shipping_revenue']),
+      totalCollectedIdr: jsonInt(summary['total_collected']),
+      returningCustomers: jsonInt(summary['returning_customers']),
+      purchasingCustomers: jsonInt(summary['purchasing_customers']),
+      previousRevenueIdr: jsonInt((json['previous'] as Map?)?['revenue']),
+      timezone: (json['timezone'] ?? 'Asia/Jakarta').toString(),
+      topProducts:
+          jsonRecords(json['top_products']).map(SalesRanking.fromJson).toList(),
+      topVariants:
+          jsonRecords(json['top_variants']).map(SalesRanking.fromJson).toList(),
       dailyPoints: rawDaily
           .whereType<Map<String, dynamic>>()
           .map(DailySalesPoint.fromJson)
@@ -800,8 +829,8 @@ class StoreSettings {
   }) {
     return StoreSettings(
       storeName: (json['store_name'] ?? fallbackStoreName).toString(),
-      storeDescription: (json['store_description'] ?? fallbackStoreDescription)
-          .toString(),
+      storeDescription:
+          (json['store_description'] ?? fallbackStoreDescription).toString(),
       contactPhone: (json['contact_phone'] ?? '').toString(),
       pickupAddress: (json['pickup_address'] ?? '').toString(),
       shippingFeeIdr:
@@ -821,27 +850,27 @@ class StoreSettings {
   }
 
   Map<String, dynamic> toJson() => {
-    if (storeName.trim().isNotEmpty) 'store_name': storeName.trim(),
-    'store_description': storeDescription,
-    'contact_phone': contactPhone.trim(),
-    'pickup_address': pickupAddress.trim(),
-    'shipping_fee_idr': shippingFeeIdr,
-    'pickup_enabled': pickupEnabled,
-    'delivery_enabled': deliveryEnabled,
-    'bank_details': bankDetails.trim(),
-    'qris_media_key': (qrisMediaKey == null || qrisMediaKey!.isEmpty)
-        ? null
-        : qrisMediaKey,
-    'policies': policies.trim(),
-    'accent': accent,
-    'hero_title': heroTitle.trim(),
-    'hero_image_url': (heroImageUrl == null || heroImageUrl!.isEmpty)
-        ? null
-        : heroImageUrl,
-    'logo_url': (logoUrl == null || logoUrl!.isEmpty) ? null : logoUrl,
-    'opening_hours': openingHours.trim(),
-    'low_stock_threshold': lowStockThreshold,
-  };
+        if (storeName.trim().isNotEmpty) 'store_name': storeName.trim(),
+        'store_description': storeDescription,
+        'contact_phone': contactPhone.trim(),
+        'pickup_address': pickupAddress.trim(),
+        'shipping_fee_idr': shippingFeeIdr,
+        'pickup_enabled': pickupEnabled,
+        'delivery_enabled': deliveryEnabled,
+        'bank_details': bankDetails.trim(),
+        'qris_media_key': (qrisMediaKey == null || qrisMediaKey!.isEmpty)
+            ? null
+            : qrisMediaKey,
+        'policies': policies.trim(),
+        'accent': accent,
+        'hero_title': heroTitle.trim(),
+        'hero_image_url': (heroImageUrl == null || heroImageUrl!.isEmpty)
+            ? null
+            : heroImageUrl,
+        'logo_url': (logoUrl == null || logoUrl!.isEmpty) ? null : logoUrl,
+        'opening_hours': openingHours.trim(),
+        'low_stock_threshold': lowStockThreshold,
+      };
 
   StoreSettings copyWith({
     String? storeName,
@@ -1101,4 +1130,108 @@ class SellerNotification {
       isRead: isRead ?? this.isRead,
     );
   }
+}
+
+int jsonInt(Object? value) => int.tryParse((value ?? 0).toString()) ?? 0;
+List<Map<String, dynamic>> jsonRecords(Object? value) =>
+    value is List ? value.whereType<Map<String, dynamic>>().toList() : const [];
+
+class SalesRanking {
+  const SalesRanking({
+    required this.name,
+    required this.variant,
+    required this.units,
+    required this.revenueIdr,
+  });
+  final String name, variant;
+  final int units, revenueIdr;
+  factory SalesRanking.fromJson(Map<String, dynamic> j) => SalesRanking(
+        name: (j['name'] ?? '').toString(),
+        variant: (j['variant'] ?? '').toString(),
+        units: jsonInt(j['units']),
+        revenueIdr: jsonInt(j['revenue']),
+      );
+}
+
+class ResponsibleProfile {
+  const ResponsibleProfile({
+    this.fullName = '',
+    this.position = 'Pemilik',
+    this.phone = '',
+    this.email = '',
+    this.birthDate,
+    this.address = '',
+    this.age,
+  });
+  final String fullName, position, phone, email, address;
+  final String? birthDate;
+  final int? age;
+  factory ResponsibleProfile.fromJson(Map<String, dynamic> j) =>
+      ResponsibleProfile(
+        fullName: (j['full_name'] ?? '').toString(),
+        position: (j['position'] ?? 'Pemilik').toString(),
+        phone: (j['contact_phone'] ?? '').toString(),
+        email: (j['contact_email'] ?? '').toString(),
+        birthDate: j['birth_date']?.toString(),
+        address: (j['operational_address'] ?? '').toString(),
+        age: j['age'] == null ? null : jsonInt(j['age']),
+      );
+  Map<String, dynamic> toJson() => {
+        'full_name': fullName,
+        'position': position,
+        'contact_phone': phone,
+        'contact_email': email,
+        'birth_date': birthDate,
+        'operational_address': address,
+      };
+}
+
+class CustomerConversation {
+  const CustomerConversation({
+    required this.id,
+    required this.customerName,
+    required this.lastMessage,
+    required this.updatedAt,
+    this.productName = '',
+    this.unread = 0,
+  });
+  final String id, customerName, lastMessage, updatedAt, productName;
+  final int unread;
+  factory CustomerConversation.fromJson(Map<String, dynamic> j) =>
+      CustomerConversation(
+        id: j['id'].toString(),
+        customerName: (j['customer_name'] ?? 'Pelanggan').toString(),
+        lastMessage: (j['last_message'] ?? 'Percakapan baru').toString(),
+        updatedAt: (j['updated_at'] ?? '').toString(),
+        productName: (j['product_name'] ?? '').toString(),
+        unread: jsonInt(j['unread']),
+      );
+}
+
+class CustomerMessage {
+  const CustomerMessage({
+    required this.id,
+    required this.body,
+    required this.senderKind,
+    required this.createdAt,
+  });
+  final String id, body, senderKind, createdAt;
+  factory CustomerMessage.fromJson(Map<String, dynamic> j) => CustomerMessage(
+        id: j['id'].toString(),
+        body: (j['body'] ?? '').toString(),
+        senderKind: (j['sender_kind'] ?? '').toString(),
+        createdAt: (j['created_at'] ?? '').toString(),
+      );
+}
+
+class ChatMessagesBundle {
+  const ChatMessagesBundle({required this.messages, required this.hasMore});
+  final List<CustomerMessage> messages;
+  final bool hasMore;
+  factory ChatMessagesBundle.fromJson(Map<String, dynamic> j) =>
+      ChatMessagesBundle(
+        messages:
+            jsonRecords(j['messages']).map(CustomerMessage.fromJson).toList(),
+        hasMore: j['hasMore'] == true,
+      );
 }

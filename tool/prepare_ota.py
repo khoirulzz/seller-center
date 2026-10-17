@@ -3,9 +3,13 @@
 import os
 from pathlib import Path
 import uuid
+import re
 
 
 def prepare(root: Path, app_id: str) -> None:
+    if not app_id and (root / "shorebird.yaml").exists():
+        match = re.search(r"^app_id:\s*([a-fA-F0-9-]+)\s*$", (root / "shorebird.yaml").read_text(), re.MULTILINE)
+        app_id = match.group(1) if match else ""
     try:
         parsed = uuid.UUID(app_id)
     except (ValueError, AttributeError) as error:

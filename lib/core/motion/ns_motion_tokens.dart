@@ -14,7 +14,8 @@ abstract final class NsMotion {
 
   /// Menghormati pengaturan aksesibilitas OS (`MediaQuery.disableAnimations`).
   static Duration resolve(BuildContext context, Duration normal) {
-    final reduceMotion = MediaQuery.maybeOf(context)?.disableAnimations ?? false;
+    final reduceMotion =
+        MediaQuery.maybeOf(context)?.disableAnimations ?? false;
     return reduceMotion ? Duration.zero : normal;
   }
 

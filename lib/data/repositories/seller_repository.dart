@@ -15,9 +15,9 @@ class SellerRepository {
     FirebaseAuthService? authService,
     SellerApiService? apiService,
     LocalDraftService? draftService,
-  }) : _auth = authService ?? FirebaseAuthService(),
-       _api = apiService ?? SellerApiService(),
-       _drafts = draftService ?? LocalDraftService();
+  })  : _auth = authService ?? FirebaseAuthService(),
+        _api = apiService ?? SellerApiService(),
+        _drafts = draftService ?? LocalDraftService();
 
   final FirebaseAuthService _auth;
   final SellerApiService _api;
@@ -52,30 +52,67 @@ class SellerRepository {
 
   FirebaseSession? _session;
   UserIdentity? _currentUser;
+  int _sessionEpoch = 0;
+  Future<FirebaseSession>? _refreshInFlight;
+  Future<void> _sessionWrites = Future<void>.value();
+  Future<void> _persistSession(FirebaseSession session, int epoch) {
+    final next = _sessionWrites.then((_) async {
+      if (epoch == _sessionEpoch)
+        await _drafts.saveSessionJson(session.toJson());
+    });
+    _sessionWrites = next.catchError((Object _) {});
+    return next;
+  }
+  Future<void> _clearPersistedSession() {
+    final next = _sessionWrites.then((_) => _drafts.clearSession());
+    _sessionWrites = next.catchError((Object _) {});
+    return next;
+  }
+
+  void _checkSession(int epoch) {
+    if (epoch != _sessionEpoch)
+      throw const ApiException(
+        message: 'Akun berubah. Muat ulang data akun aktif.',
+        statusCode: 401,
+      );
+  }
+
+  void _checkIdentity(FirebaseSession session, UserIdentity user) {
+    if (session.email.toLowerCase() != user.email.toLowerCase())
+      throw const ApiException(
+        message: 'Identitas sesi tidak sesuai. Masuk kembali.',
+        statusCode: 401,
+      );
+  }
 
   UserIdentity? get currentUser => _currentUser;
   FirebaseSession? get currentSession => _session;
   LocalDraftService get drafts => _drafts;
 
   Future<UserIdentity?> restoreSession() async {
+    final epoch = ++_sessionEpoch;
     final saved = await _drafts.loadSessionJson();
+    _checkSession(epoch);
     if (saved == null) return null;
     try {
       var session = FirebaseSession.fromJson(saved);
       if (session.isExpired) {
         session = await _auth.refreshSession(session);
-        await _drafts.saveSessionJson(session.toJson());
+        _checkSession(epoch);
+        await _persistSession(session, epoch);
       }
       final user = await _api.fetchCurrentUser(session.idToken);
+      _checkSession(epoch);
       if (user == null) {
         await signOut();
         return null;
       }
+      _checkIdentity(session, user);
       _session = session;
       _currentUser = user;
       return user;
     } catch (_) {
-      await signOut();
+      if (epoch == _sessionEpoch) await signOut();
       return null;
     }
   }
@@ -84,20 +121,31 @@ class SellerRepository {
     required String email,
     required String password,
   }) async {
+    final epoch = ++_sessionEpoch;
+    _session = null;
+    _currentUser = null;
+    clearMediaCache();
+    clearNotifications();
+    await _clearPersistedSession();
+    _checkSession(epoch);
     final session = await _auth.signInWithPassword(
       email: email.trim().toLowerCase(),
       password: password,
     );
+    _checkSession(epoch);
     final user = await _api.fetchCurrentUser(session.idToken);
+    _checkSession(epoch);
     if (user == null) {
       throw const ApiException(
         message: 'Akun belum tersedia di server.',
         statusCode: 503,
       );
     }
+    _checkIdentity(session, user);
     _session = session;
     _currentUser = user;
-    await _drafts.saveSessionJson(session.toJson());
+    await _persistSession(session, epoch);
+    _checkSession(epoch);
     return user;
   }
 
@@ -105,10 +153,14 @@ class SellerRepository {
     required String email,
     required String password,
   }) async {
+    final epoch = ++_sessionEpoch;
+    _session=null;_currentUser=null;clearMediaCache();clearNotifications();
+    await _clearPersistedSession();_checkSession(epoch);
     final session = await _auth.signUpWithPassword(
       email: email.trim().toLowerCase(),
       password: password,
     );
+    _checkSession(epoch);
     final user = UserIdentity(
       id: session.uid,
       email: session.email,
@@ -117,7 +169,8 @@ class SellerRepository {
     );
     _session = session;
     _currentUser = user;
-    await _drafts.saveSessionJson(session.toJson());
+    await _persistSession(session, epoch);
+    _checkSession(epoch);
     return user;
   }
 
@@ -127,14 +180,18 @@ class SellerRepository {
   }
 
   Future<UserIdentity?> refreshVerificationStatus() async {
+    final epoch = _sessionEpoch;
     final current = _session;
     if (current == null) return null;
     final session = await _auth.refreshSession(current);
+    _checkSession(epoch);
     _session = session;
-    await _drafts.saveSessionJson(session.toJson());
+    await _persistSession(session, epoch);
+    _checkSession(epoch);
     final remoteUser = await _api.fetchCurrentUser(session.idToken);
-    final updated =
-        remoteUser ??
+    _checkSession(epoch);
+    if (remoteUser != null) _checkIdentity(session, remoteUser);
+    final updated = remoteUser ??
         UserIdentity(
           id: session.uid,
           email: session.email,
@@ -168,10 +225,14 @@ class SellerRepository {
   }
 
   Future<void> signOut() async {
+    _sessionEpoch++;
+    _refreshInFlight = null;
     clearMediaCache();
     _session = null;
     _currentUser = null;
-    await _drafts.clearSession();
+    _notifications = const [];
+    _notificationStore = null;
+    await _clearPersistedSession();
   }
 
   Future<String> _validBearerToken() async {
@@ -183,14 +244,27 @@ class SellerRepository {
       );
     }
     if (!session.isExpired) return session.idToken;
-    final refreshed = await _auth.refreshSession(session);
+    final epoch = _sessionEpoch;
+    final request = _refreshInFlight ??= _auth.refreshSession(session);
+    FirebaseSession refreshed;
+    try {
+      refreshed = await request;
+    } finally {
+      if (identical(_refreshInFlight, request)) _refreshInFlight = null;
+    }
+    _checkSession(epoch);
     _session = refreshed;
-    await _drafts.saveSessionJson(refreshed.toJson());
+    await _persistSession(refreshed, epoch);
+    _checkSession(epoch);
     return refreshed.idToken;
   }
 
-  Future<List<MerchantStore>> fetchStores() async =>
-      _api.fetchStores(await _validBearerToken());
+  Future<List<MerchantStore>> fetchStores() async {
+    final epoch = _sessionEpoch;
+    final result = await _api.fetchStores(await _validBearerToken());
+    _checkSession(epoch);
+    return result;
+  }
 
   Future<bool> checkSlugAvailable(String slug) async {
     if (!NsSlugUtils.isValid(slug)) return false;
@@ -237,24 +311,26 @@ class SellerRepository {
     int page = 1,
     String? fromDate,
     String? toDate,
-  }) async => _api.fetchOrders(
-    bearerToken: await _validBearerToken(),
-    storeId: storeId,
-    status: status,
-    query: query,
-    page: page,
-    fromDate: fromDate,
-    toDate: toDate,
-  );
+  }) async =>
+      _api.fetchOrders(
+        bearerToken: await _validBearerToken(),
+        storeId: storeId,
+        status: status,
+        query: query,
+        page: page,
+        fromDate: fromDate,
+        toDate: toDate,
+      );
 
   Future<OrderDetailBundle> fetchOrderDetail({
     required String storeId,
     required String orderId,
-  }) async => _api.fetchOrderDetail(
-    bearerToken: await _validBearerToken(),
-    storeId: storeId,
-    orderId: orderId,
-  );
+  }) async =>
+      _api.fetchOrderDetail(
+        bearerToken: await _validBearerToken(),
+        storeId: storeId,
+        orderId: orderId,
+      );
 
   Future<void> reviewOrderPayment({
     required String storeId,
@@ -341,9 +417,8 @@ class SellerRepository {
     if (validation != null)
       throw ApiException(message: validation, statusCode: 400);
     final updated = product.copyWith(slug: slug);
-    final skus = updated.variants
-        .map((v) => v.sku.trim().toUpperCase())
-        .toList();
+    final skus =
+        updated.variants.map((v) => v.sku.trim().toUpperCase()).toList();
     if (skus.any((s) => s.isEmpty) || skus.toSet().length != skus.length) {
       throw const ApiException(
         message: 'SKU tidak boleh kosong atau duplikat.',
@@ -417,9 +492,8 @@ class SellerRepository {
         statusCode: 404,
       );
     }
-    final variant = product.variants
-        .where((v) => v.sku == variantSku)
-        .firstOrNull;
+    final variant =
+        product.variants.where((v) => v.sku == variantSku).firstOrNull;
     if (variant == null) {
       throw const ApiException(
         message: 'Varian tidak ditemukan.',
@@ -454,32 +528,37 @@ class SellerRepository {
     required String storeId,
     required String fromDate,
     required String toDate,
-  }) async => _api.fetchAnalytics(
-    bearerToken: await _validBearerToken(),
-    storeId: storeId,
-    fromDate: fromDate,
-    toDate: toDate,
-  );
+    String timezone = 'Asia/Jakarta',
+  }) async =>
+      _api.fetchAnalytics(
+        bearerToken: await _validBearerToken(),
+        storeId: storeId,
+        fromDate: fromDate,
+        toDate: toDate,
+        timezone: timezone,
+      );
 
   Future<({List<CustomerSummary> customers, bool hasMore})> fetchCustomers({
     required String storeId,
     String query = '',
     int page = 1,
-  }) async => _api.fetchCustomers(
-    bearerToken: await _validBearerToken(),
-    storeId: storeId,
-    query: query,
-    page: page,
-  );
+  }) async =>
+      _api.fetchCustomers(
+        bearerToken: await _validBearerToken(),
+        storeId: storeId,
+        query: query,
+        page: page,
+      );
 
   Future<StoreSettings> fetchSettings({
     required String storeId,
     required MerchantStore store,
-  }) async => _api.fetchSettings(
-    bearerToken: await _validBearerToken(),
-    storeId: storeId,
-    store: store,
-  );
+  }) async =>
+      _api.fetchSettings(
+        bearerToken: await _validBearerToken(),
+        storeId: storeId,
+        store: store,
+      );
 
   Future<void> saveSettings({
     required String storeId,
@@ -518,9 +597,9 @@ class SellerRepository {
   }
 
   Future<BillingBundle> fetchBilling(String storeId) async => _api.fetchBilling(
-    bearerToken: await _validBearerToken(),
-    storeId: storeId,
-  );
+        bearerToken: await _validBearerToken(),
+        storeId: storeId,
+      );
 
   Future<void> selectSubscriptionPlan({
     required String storeId,
@@ -579,7 +658,149 @@ class SellerRepository {
     );
   }
 
-  List<SellerNotification> getNotificationsForUser() => const [];
-  void markNotificationRead(String notificationId) {}
-  void markAllNotificationsRead() {}
+  List<SellerNotification> _notifications = const [];
+  String? _notificationStore;
+  int _notificationEpoch = 0;
+  List<SellerNotification> getNotificationsForUser() => _notifications;
+  Future<List<SellerNotification>> fetchNotifications(String sid) async {
+    final epoch = _sessionEpoch;
+    final notificationEpoch = ++_notificationEpoch;
+    final j = await _api.workspaceResource(
+      bearerToken: await _validBearerToken(),
+      storeId: sid,
+      resource: 'notifications',
+    );
+    _checkSession(epoch);
+    final result = jsonRecords(j['notifications'])
+        .map(
+          (n) => SellerNotification(
+            id: n['key'].toString(),
+            storeId: sid,
+            storeName: '',
+            eventType: (n['route'] ?? '').toString(),
+            title: (n['title'] ?? '').toString(),
+            summary: (n['body'] ?? '').toString(),
+            resourceType: (n['route'] ?? '').toString(),
+            resourceId: '',
+            createdAt: (n['created_at'] ?? '').toString(),
+            isRead: n['is_read'] == true,
+          ),
+        )
+        .toList();
+    if (notificationEpoch == _notificationEpoch) {
+      _notificationStore = sid;
+      _notifications = result;
+    }
+    return result;
+  }
+
+  void clearNotifications() {
+    _notificationEpoch++;
+    _notifications = const [];
+    _notificationStore = null;
+  }
+
+  Future<void> markNotificationRead(String notificationId) async {
+    final epoch=_sessionEpoch;
+    final sid = _notificationStore;
+    if (sid == null) return;
+    await _api.workspaceResource(
+      bearerToken: await _validBearerToken(),
+      storeId: sid,
+      resource: 'notifications/read',
+      method: 'POST',
+      body: {
+        'keys': [notificationId],
+      },
+    );
+    if (_notificationStore == sid && epoch==_sessionEpoch)
+      _notifications = _notifications
+          .map((n) => n.id == notificationId ? n.copyWith(isRead: true) : n)
+          .toList();
+  }
+
+  Future<void> markAllNotificationsRead() async {
+    final epoch=_sessionEpoch;
+    final keys=_notifications.map((n)=>n.id).toSet();
+    final sid = _notificationStore;
+    if (sid == null) return;
+    await _api.workspaceResource(
+      bearerToken: await _validBearerToken(),
+      storeId: sid,
+      resource: 'notifications/read',
+      method: 'POST',
+      body: {'keys': keys.toList()},
+    );
+    if (_notificationStore == sid && epoch==_sessionEpoch)
+      _notifications =
+          _notifications.map((n) => keys.contains(n.id)?n.copyWith(isRead: true):n).toList();
+  }
+
+  Future<ResponsibleProfile> fetchResponsibleProfile(String sid) async {
+    final j = await _api.workspaceResource(
+      bearerToken: await _validBearerToken(),
+      storeId: sid,
+      resource: 'profile',
+    );
+    return ResponsibleProfile.fromJson(
+      (j['profile'] as Map<String, dynamic>?) ?? {},
+    );
+  }
+
+  Future<void> saveResponsibleProfile(
+    String sid,
+    ResponsibleProfile profile,
+  ) async =>
+      _api.workspaceResource(
+        bearerToken: await _validBearerToken(),
+        storeId: sid,
+        resource: 'profile',
+        method: 'PUT',
+        body: profile.toJson(),
+      );
+  Future<List<CustomerConversation>> fetchConversations(String sid) async {
+    final j = await _api.workspaceResource(
+      bearerToken: await _validBearerToken(),
+      storeId: sid,
+      resource: 'conversations',
+    );
+    return jsonRecords(j['conversations'])
+        .map(CustomerConversation.fromJson)
+        .toList();
+  }
+
+  Future<ChatMessagesBundle> fetchChatMessages(
+    String sid,
+    String cid, {
+    String? before,
+  }) async =>
+      ChatMessagesBundle.fromJson(
+        await _api.workspaceResource(
+          bearerToken: await _validBearerToken(),
+          storeId: sid,
+          resource: 'conversations/$cid',
+          query: before == null ? null : {'before': before},
+        ),
+      );
+  Future<void> sendChatMessage(
+    String sid,
+    String cid,
+    String text,
+    String clientId,
+  ) async =>
+      _api.workspaceResource(
+        bearerToken: await _validBearerToken(),
+        storeId: sid,
+        resource: 'conversations/$cid',
+        method: 'POST',
+        body: {'body': text, 'client_message_id': clientId},
+      );
+  Future<void> markChatRead(String sid, String cid, String messageId) async =>
+      _api.workspaceResource(
+        bearerToken: await _validBearerToken(),
+        storeId: sid,
+        resource: 'conversations/$cid/read',
+        method: 'POST',
+        body: {'last_message_id': messageId},
+      );
 }

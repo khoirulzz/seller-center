@@ -18,36 +18,45 @@ Widget harness({
   bool eligible = true,
   bool analytics = true,
   VoidCallback? onStoreTap,
-}) => MaterialApp(
-  theme: NsTheme.light,
-  home: SellerFeatureGuide(
-    userId: userId,
-    eligible: eligible,
-    showAnalytics: analytics,
-    builder: (context, anchors) => Scaffold(
-      appBar: AppBar(
-        title: TextButton(
-          key: anchors.store,
-          onPressed: onStoreTap,
-          child: const Text('Toko contoh'),
+}) =>
+    MaterialApp(
+      theme: NsTheme.light,
+      home: SellerFeatureGuide(
+        userId: userId,
+        eligible: eligible,
+        showAnalytics: analytics,
+        builder: (context, anchors) => Scaffold(
+          appBar: AppBar(
+            title: TextButton(
+              key: anchors.store,
+              onPressed: onStoreTap,
+              child: const Text('Toko contoh'),
+            ),
+          ),
+          body: Center(
+            child: TextButton(
+              onPressed: SellerGuideScope.maybeOf(context)?.replay,
+              child: const Text('Buka panduan'),
+            ),
+          ),
+          bottomNavigationBar: NavigationBar(
+            destinations: List.generate(
+                5,
+                (index) => NavigationDestination(
+                      key: anchors.tabs[index],
+                      icon: const Icon(Icons.store_outlined),
+                      label: [
+                        'Beranda',
+                        'Pesanan',
+                        'Produk',
+                        'Analitik',
+                        'Toko'
+                      ][index],
+                    )),
+          ),
         ),
       ),
-      body: Center(
-        child: TextButton(
-          onPressed: SellerGuideScope.maybeOf(context)?.replay,
-          child: const Text('Buka panduan'),
-        ),
-      ),
-      bottomNavigationBar: NavigationBar(
-        destinations: List.generate(5, (index) => NavigationDestination(
-          key: anchors.tabs[index],
-          icon: const Icon(Icons.store_outlined),
-          label: ['Beranda', 'Pesanan', 'Produk', 'Analitik', 'Toko'][index],
-        )),
-      ),
-    ),
-  ),
-);
+    );
 
 Future<void> next(WidgetTester tester) async {
   await tester.ensureVisible(find.text('Lanjut'));
@@ -58,8 +67,8 @@ Future<void> next(WidgetTester tester) async {
 
 Future<void> capture(WidgetTester tester, GlobalKey key, String name) async {
   await tester.runAsync(() async {
-    final boundary = key.currentContext!.findRenderObject()!
-        as RenderRepaintBoundary;
+    final boundary =
+        key.currentContext!.findRenderObject()! as RenderRepaintBoundary;
     final image = await boundary.toImage();
     final png = await image.toByteData(format: ui.ImageByteFormat.png);
     final directory = Directory('build/ui-qa');
@@ -78,8 +87,7 @@ void main() {
       ('Manrope', 'assets/fonts/Manrope.ttf'),
       ('DM Sans', 'assets/fonts/DMSans.ttf'),
     ]) {
-      final loader = FontLoader(font.$1)
-        ..addFont(rootBundle.load(font.$2));
+      final loader = FontLoader(font.$1)..addFont(rootBundle.load(font.$2));
       await loader.load();
     }
   });
@@ -213,11 +221,14 @@ void main() {
       router.go('/toko');
       await tester.pumpAndSettle();
       await tester.scrollUntilVisible(
-        find.text('Panduan fitur'), 300,
-        scrollable: find.descendant(
-          of: find.byKey(const PageStorageKey('store-hub')),
-          matching: find.byType(Scrollable),
-        ).first,
+        find.text('Panduan fitur'),
+        300,
+        scrollable: find
+            .descendant(
+              of: find.byKey(const PageStorageKey('store-hub')),
+              matching: find.byType(Scrollable),
+            )
+            .first,
       );
       await tester.tap(find.text('Panduan fitur'));
       await tester.pumpAndSettle();

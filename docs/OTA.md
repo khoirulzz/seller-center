@@ -12,8 +12,7 @@ form untuk menerapkan patch.
 
 **Integrasi kode tidak sama dengan aktivasi layanan.** OTA baru berfungsi setelah
 akun Shorebird dikonfigurasi, baseline dibuat dengan `shorebird release`, dan APK
-baseline itu dipasang pada perangkat. APK dari workflow **Android CI** tetap APK
-debug Flutter biasa dan tidak menerima OTA. Jangan membagikannya sebagai APK OTA.
+baseline itu dipasang pada perangkat. Workflow **Android CI** menghasilkan APK release per arsitektur yang belum ditandatangani. APK ini ditandatangani secara terpisah memakai kunci rilis permanen. Build Flutter biasa tetap tidak menerima OTA; hanya baseline dari `shorebird release` yang menerima patch.
 
 ## Aktivasi satu kali
 
@@ -48,7 +47,7 @@ debug Flutter biasa dan tidak menerima OTA. Jangan membagikannya sebagai APK OTA
    GitHub CLI, jalankan `base64 -w0 nalaro-seller-release.jks | gh secret set
    ANDROID_KEYSTORE_BASE64 --repo khoirulzz/seller-center`.
 5. Buka Actions → **Android OTA** → Run workflow → branch **main**, operation
-   **release**. Workflow membuat baseline versi `1.1.0+3` dan artifact
+   **release**. Workflow membuat baseline versi `1.2.0+4` dan artifact
    **nalaro-seller-center-ota-release-apk**. Unduh dan pasang APK tersebut sekali.
    Nomor versi mengikuti `pubspec.yaml`, jadi baca nomor di commit yang dirilis.
 
@@ -56,6 +55,12 @@ Workflow berhenti sebelum build jika app ID, API key, atau konfigurasi signing
 belum tersedia. Ia tidak diam-diam mengganti build OTA dengan APK Flutter biasa.
 Keystore hanya ditulis ke direktori sementara runner dengan izin 0600, tidak
 di-upload sebagai artifact, dan dibersihkan sesudah job.
+
+Android CI membangun satu target ABI setiap kali, sehingga setiap APK memakai
+versionCode yang sama dengan build number pubspec. Jangan mengganti proses ini
+dengan `--split-per-abi` tanpa mengelola versionCode: Flutter menambahkan offset
+ABI (misalnya ARM64 menjadi 2004 untuk build 4), yang dapat membuat baseline OTA
+dengan build number berikutnya dianggap downgrade oleh Android.
 
 APK debug lama dapat memiliki sertifikat berbeda dari keystore rilis. Android
 dapat menolak instalasi di atas APK lama. Simpan pekerjaan/draft lokal sebelum
@@ -67,7 +72,7 @@ sudah tersimpan di server tidak bergantung pada instalasi APK.
 1. Ubah kode Dart dan jalankan pemeriksaan biasa lewat PR. Merge perubahan yang
    lulus pemeriksaan ke `main`.
 2. Jalankan **Android OTA**, operation **patch**, `release_version` diisi **versi
-   baseline yang benar-benar terpasang**, misalnya `1.1.0+3`. Awali dengan
+   baseline yang benar-benar terpasang**, misalnya `1.2.0+4`. Awali dengan
    **dry_run = true**. Workflow tidak memakai target ambigu `latest`.
 3. Setelah validasi berhasil, ulangi dengan **dry_run = false** untuk menerbitkan
    patch ke track `stable`. Ini adalah tindakan publikasi; merge saja tidak
@@ -133,3 +138,19 @@ Referensi resmi:
 - https://docs.shorebird.dev/code-push/release/
 - https://docs.shorebird.dev/code-push/patch/
 - https://pub.dev/packages/shorebird_code_push
+
+## Hasil verifikasi aktivasi 17 Oktober 2026
+
+Token repository berhasil melakukan autentikasi dan menampilkan daftar aplikasi kosong.
+`shorebird init` sudah dijalankan pada runner dengan proyek Android/Gradle siap,
+tetapi server menolak pembuatan aplikasi: `This credential does not have permission for this operation.`
+Untuk inisialisasi otomatis, ganti secret sementara dengan API key **Full access**; key **Release and patch only** tidak dapat membuat aplikasi (https://docs.shorebird.dev/account/api-keys/). Setelah init selesai, key dapat dibatasi kembali untuk release/patch. Alternatifnya, buat aplikasi Nalaro Seller Center dengan akun yang memiliki izin, lalu commit
+`shorebird.yaml` atau isi variable SHOREBIRD_APP_ID. Token berikutnya harus
+memiliki akses release/patch untuk aplikasi tersebut. App ID tidak perlu dirahasiakan.
+`prepare_ota.py` menerima app ID dari variable atau konfigurasi terdaftar.
+
+APK release 1.2.0+4 memakai kunci permanen baru. Backup privat terpisah berisi
+keystore dan informasi signing; kunci ini tidak masuk source maupun artifact Actions.
+Gunakan kunci yang sama sebagai secrets signing untuk build OTA berikutnya.
+Setelah aktivasi, pasang APK baseline Shorebird satu kali; patch tidak dapat
+menambahkan runtime Shorebird ke APK Flutter yang sudah terpasang.

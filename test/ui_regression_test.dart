@@ -61,32 +61,33 @@ class UiRepository extends SellerRepository {
   Future<StoreSettings> fetchSettings({
     required String storeId,
     required MerchantStore store,
-  }) async => StoreSettings.fromJson({
-    'store_name': store.name,
-    'contact_phone': '081234567890',
-    'pickup_address': 'Jalan Batik 1',
-    'bank_details': 'BCA 123',
-    'policies': 'Pengiriman dilakukan setiap hari kerja.',
-    'accent': '#FF154F',
-  });
+  }) async =>
+      StoreSettings.fromJson({
+        'store_name': store.name,
+        'contact_phone': '081234567890',
+        'pickup_address': 'Jalan Batik 1',
+        'bank_details': 'BCA 123',
+        'policies': 'Pengiriman dilakukan setiap hari kerja.',
+        'accent': '#FF154F',
+      });
   Completer<Product>? saving;
   @override
   Future<UserIdentity?> restoreSession() async => const UserIdentity(
-    id: 'user',
-    email: 'seller@example.test',
-    verified: true,
-    admin: false,
-  );
+        id: 'user',
+        email: 'seller@example.test',
+        verified: true,
+        admin: false,
+      );
   @override
   Future<List<MerchantStore>> fetchStores() async => [store];
   @override
   Future<StoreOverview> fetchOverview(String storeId) async => StoreOverview(
-    ordersCount: 0,
-    verifiedRevenueIdr: 0,
-    pendingOrdersCount: 0,
-    lowStockAlerts: [],
-    fetchedAt: DateTime.now(),
-  );
+        ordersCount: 0,
+        verifiedRevenueIdr: 0,
+        pendingOrdersCount: 0,
+        lowStockAlerts: [],
+        fetchedAt: DateTime.now(),
+      );
   @override
   Future<List<Product>> fetchProducts(String storeId) async => [product];
   @override
@@ -113,7 +114,7 @@ class UiRepository extends SellerRepository {
 }
 
 Future<({SellerAppState state, UiRepository repository})> setup() async {
-  SharedPreferences.setMockInitialValues({'ns_feature_guide_v1_user': true});
+  SharedPreferences.setMockInitialValues({'ns_feature_guide_v2_user': true});
   final repository = UiRepository();
   final state = SellerAppState(repository: repository);
   await state.initializeApp();
@@ -129,7 +130,8 @@ void main() {
     ]) {
       await (FontLoader(
         font.name,
-      )..addFont(rootBundle.load('assets/fonts/${font.file}.ttf'))).load();
+      )..addFont(rootBundle.load('assets/fonts/${font.file}.ttf')))
+          .load();
     }
   });
   testWidgets(
@@ -397,9 +399,8 @@ void main() {
         expect(tester.takeException(), isNull);
         Future<void> capture(String screen) async {
           await tester.runAsync(() async {
-            final boundary =
-                key.currentContext!.findRenderObject()!
-                    as RenderRepaintBoundary;
+            final boundary = key.currentContext!.findRenderObject()!
+                as RenderRepaintBoundary;
             final image = await boundary.toImage();
             final png = await image.toByteData(format: ui.ImageByteFormat.png);
             final directory = Directory('build/ui-qa');

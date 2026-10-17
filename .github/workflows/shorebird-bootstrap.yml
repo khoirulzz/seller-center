@@ -1,0 +1,54 @@
+name: Initialize Shorebird app
+
+on:
+  push:
+    branches: [work/professional-seller-center]
+    paths:
+      - .github/workflows/shorebird-bootstrap.yml
+      - tool/shorebird_bootstrap.py
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  initialize:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      SHOREBIRD_TOKEN: ${{ secrets.SHOREBIRD_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.7'
+          channel: stable
+          cache: true
+      - uses: shorebirdtech/setup-shorebird@v1
+        with:
+          cache: true
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Generate Android Gradle wrapper for initialization
+        run: |
+          cp android/app/src/main/AndroidManifest.xml "$RUNNER_TEMP/AndroidManifest.xml"
+          cp pubspec.lock "$RUNNER_TEMP/pubspec.lock"
+          flutter create --no-pub --platforms=android --org digital.nalaro --project-name nalaro_seller_center .
+          cp "$RUNNER_TEMP/AndroidManifest.xml" android/app/src/main/AndroidManifest.xml
+          cp "$RUNNER_TEMP/pubspec.lock" pubspec.lock
+      - name: Register or reuse the app without exposing credentials
+        run: python3 tool/shorebird_bootstrap.py
+      - name: Persist the registered public app configuration
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -f shorebird.yaml
+          git add pubspec.yaml
+          if ! git diff --cached --quiet; then
+            git commit -m 'Register public Shorebird app configuration'
+            git push origin HEAD:${{ github.ref_name }}
+          fi

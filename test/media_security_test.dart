@@ -46,7 +46,9 @@ void main() {
       throwsA(isA<Exception>()),
     );
   });
-  test('media failure exposes a recoverable message without returning HTML as image data', () async {
+  test(
+      'media failure exposes a recoverable message without returning HTML as image data',
+      () async {
     final api = SellerApiService(
       httpClient: MockClient((r) async => http.Response('Access denied', 404)),
     );

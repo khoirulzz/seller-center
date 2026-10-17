@@ -33,15 +33,13 @@ class _HomeScreenState extends State<HomeScreen> {
     future = id == null ? null : widget.appState.repository.fetchOverview(id);
     final request = future;
     if (request != null) {
-      request
-          .then((result) {
-            if (mounted && storeId == id && future == request)
-              setState(() {
-                cached = result;
-                updated = DateTime.now();
-              });
-          })
-          .catchError((Object _) {});
+      request.then((result) {
+        if (mounted && storeId == id && future == request)
+          setState(() {
+            cached = result;
+            updated = DateTime.now();
+          });
+      }).catchError((Object _) {});
     }
   }
 
@@ -96,9 +94,16 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(height: 6),
           Text(
             'Pantau penjualan dan pekerjaan tokomu.',
-            style: Theme.of(context).textTheme.bodyMedium
+            style: Theme.of(context)
+                .textTheme
+                .bodyMedium
                 ?.copyWith(color: NsColors.textSecondary),
           ),
+          if (widget.appState.user != null)
+            Padding(
+                padding: const EdgeInsets.only(top: 6),
+                child: Text('Masuk sebagai ${widget.appState.user!.email}',
+                    style: Theme.of(context).textTheme.bodySmall)),
           if (store != null &&
               !store.isPublished &&
               widget.appState.activeRole.canManageSettings) ...[
@@ -152,8 +157,7 @@ class _HomeScreenState extends State<HomeScreen> {
           FutureBuilder<StoreOverview>(
             future: future,
             builder: (ctx, snap) {
-              final data =
-                  cached ??
+              final data = cached ??
                   (snap.connectionState == ConnectionState.done
                       ? snap.data
                       : null);
@@ -161,7 +165,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 return const NsSkeleton(height: 180);
               if (data == null && snap.hasError)
                 return NsInlineError(
-                  message: 'Ringkasan belum dapat dimuat. Periksa koneksi lalu coba lagi.',
+                  message:
+                      'Ringkasan belum dapat dimuat. Periksa koneksi lalu coba lagi.',
                   onRetry: () => setState(load),
                 );
               if (data == null) return const Text('Ringkasan belum tersedia.');
@@ -191,7 +196,9 @@ class _HomeScreenState extends State<HomeScreen> {
                         const SizedBox(height: 12),
                         Text(
                           NsFormatters.rupiah(data.verifiedRevenueIdr),
-                          style: Theme.of(context).textTheme.headlineMedium
+                          style: Theme.of(context)
+                              .textTheme
+                              .headlineMedium
                               ?.copyWith(fontWeight: FontWeight.w800),
                         ),
                         const SizedBox(height: 4),
@@ -371,19 +378,22 @@ class _HomeScreenState extends State<HomeScreen> {
     String title,
     String subtitle,
     VoidCallback onTap,
-  ) => Padding(
-    padding: const EdgeInsets.only(bottom: 10),
-    child: Material(
-      color: NsColors.surfaceSubtle,
-      borderRadius: BorderRadius.circular(14),
-      child: ListTile(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        leading: NsIcon(icon, color: NsColors.brandAction),
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
-        subtitle: Text(subtitle),
-        trailing: const NsIcon('chevron-right', size: 18),
-        onTap: onTap,
-      ),
-    ),
-  );
+  ) =>
+      Padding(
+        padding: const EdgeInsets.only(bottom: 10),
+        child: Material(
+          color: NsColors.surfaceSubtle,
+          borderRadius: BorderRadius.circular(14),
+          child: ListTile(
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+            leading: NsIcon(icon, color: NsColors.brandAction),
+            title: Text(title,
+                style: const TextStyle(fontWeight: FontWeight.w600)),
+            subtitle: Text(subtitle),
+            trailing: const NsIcon('chevron-right', size: 18),
+            onTap: onTap,
+          ),
+        ),
+      );
 }

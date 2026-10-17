@@ -1,7 +1,7 @@
 name: Android CI
 on:
   push:
-    branches: [main]
+    branches: [main, work/professional-seller-center]
   pull_request:
     branches: [main]
   workflow_dispatch:
@@ -10,6 +10,7 @@ permissions:
 jobs:
   android:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
       - name: Test OTA build configuration
@@ -31,7 +32,9 @@ jobs:
         run: rm -f test/widget_test.dart
       - run: flutter pub get --enforce-lockfile
       - name: Generate launcher icon from official Nalaro Store asset
-        run: dart run flutter_launcher_icons
+        run: |
+          dart run flutter_launcher_icons
+          python3 tool/configure_launcher.py
       - name: Format Dart sources
         run: dart format lib test
       - run: flutter analyze --no-fatal-infos
@@ -43,9 +46,35 @@ jobs:
           name: seller-ui-qa
           path: build/ui-qa/
           if-no-files-found: ignore
-      - run: flutter build apk --debug
-      - name: Upload debug APK
+      - name: Capture formatting changes
+        if: always()
+        run: git diff -- lib test > build/formatted-source.patch
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: seller-formatting
+          path: build/formatted-source.patch
+      - name: Prepare unsigned release for offline permanent signing
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          path=Path('android/app/build.gradle.kts')
+          text=path.read_text()
+          marker='signingConfig = signingConfigs.getByName("debug")'
+          if text.count(marker)!=1: raise SystemExit('Expected generated signing configuration')
+          path.write_text(text.replace(marker,'signingConfig = null'))
+          PY
+      - name: Build one ABI per APK with a stable package version code
+        run: |
+          mkdir -p build/release-apks
+          for specification in android-arm64:arm64-v8a android-arm:armeabi-v7a android-x64:x86_64; do
+            target="${specification%%:*}"
+            abi="${specification#*:}"
+            flutter build apk --release --target-platform "$target"
+            cp build/app/outputs/flutter-apk/app-release.apk "build/release-apks/app-$abi-release.apk"
+          done
+      - name: Upload unsigned release APKs
         uses: actions/upload-artifact@v4
         with:
-          name: nalaro-seller-center-debug-apk
-          path: build/app/outputs/flutter-apk/app-debug.apk
+          name: nalaro-seller-center-unsigned-release-apks
+          path: build/release-apks/*-release.apk

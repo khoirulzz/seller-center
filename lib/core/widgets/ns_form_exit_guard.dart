@@ -21,25 +21,25 @@ class _NsFormExitGuardState extends State<NsFormExitGuard> {
   bool confirming = false;
   @override
   Widget build(BuildContext context) => PopScope<Object?>(
-    canPop: !widget.dirty && !widget.busy,
-    onPopInvokedWithResult: (didPop, result) async {
-      if (didPop || confirming) return;
-      if (widget.busy) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Tunggu hingga proses selesai.')),
-        );
-        return;
-      }
-      confirming = true;
-      try {
-        final leave = await widget.confirmExit();
-        if (!leave || !mounted) return;
-        await WidgetsBinding.instance.endOfFrame;
-        if (mounted) await Navigator.of(context).maybePop(result);
-      } finally {
-        confirming = false;
-      }
-    },
-    child: widget.child,
-  );
+        canPop: !widget.dirty && !widget.busy,
+        onPopInvokedWithResult: (didPop, result) async {
+          if (didPop || confirming) return;
+          if (widget.busy) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Tunggu hingga proses selesai.')),
+            );
+            return;
+          }
+          confirming = true;
+          try {
+            final leave = await widget.confirmExit();
+            if (!leave || !mounted) return;
+            await WidgetsBinding.instance.endOfFrame;
+            if (mounted) await Navigator.of(context).maybePop(result);
+          } finally {
+            confirming = false;
+          }
+        },
+        child: widget.child,
+      );
 }
