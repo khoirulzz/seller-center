@@ -139,4 +139,5 @@ jobs:
         with:
           name: Nalaro-Android-Web-Source-1.2.0
           path: bundle/
+          include-hidden-files: true
           if-no-files-found: error
