@@ -8,27 +8,13 @@ import '../../../core/errors/ns_error_mapper.dart';
 import '../../../core/widgets/ns_widgets.dart';
 import '../../../data/services/firebase_auth_service.dart';
 import '../../state/seller_app_state.dart';
+import 'seller_splash_screen.dart';
 
 class SplashSessionScreen extends StatelessWidget {
   const SplashSessionScreen({super.key, required this.appState});
   final SellerAppState appState;
   @override
-  Widget build(BuildContext context) => const Scaffold(
-    body: SafeArea(
-      child: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            NsBrandMark(size: 66, showLabel: true),
-            SizedBox(height: 28),
-            CircularProgressIndicator(strokeWidth: 2),
-            SizedBox(height: 12),
-            Text('Menghubungkan ke akun…'),
-          ],
-        ),
-      ),
-    ),
-  );
+  Widget build(BuildContext context) => const SellerSplashScreen();
 }
 
 class LoginRegisterScreen extends StatefulWidget {

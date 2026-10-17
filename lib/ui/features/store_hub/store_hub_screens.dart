@@ -13,6 +13,7 @@ import '../../../core/errors/api_exception.dart';
 import '../../../core/config/status_dictionary.dart';
 import '../../../domain/models/seller_models.dart';
 import '../../state/seller_app_state.dart';
+import '../onboarding/seller_feature_guide.dart';
 
 class StoreHubScreen extends StatelessWidget {
   const StoreHubScreen({super.key, required this.appState});
@@ -94,6 +95,20 @@ class StoreHubScreen extends StatelessWidget {
         'Keamanan akun',
         'Ubah kata sandi akun seller',
         '/toko/account',
+      ),
+      const SizedBox(height: 16),
+      Text('Bantuan', style: Theme.of(context).textTheme.titleLarge),
+      const SizedBox(height: 12),
+      Card(
+        margin: const EdgeInsets.only(bottom: 10),
+        child: ListTile(
+          leading: const NsIcon('help', color: NsColors.brandAction),
+          title: const Text('Panduan fitur',
+              style: TextStyle(fontWeight: FontWeight.w600)),
+          subtitle: const Text('Kenali menu dan cara mulai mengelola toko'),
+          trailing: const NsIcon('chevron-right', size: 18),
+          onTap: SellerGuideScope.maybeOf(context)?.replay,
+        ),
       ),
       TextButton.icon(
         icon: const NsIcon('logout', color: NsColors.brandAction),
