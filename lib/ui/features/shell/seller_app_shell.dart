@@ -9,6 +9,7 @@ import '../../../core/widgets/ns_widgets.dart';
 import '../../../core/widgets/ns_root_back_guard.dart';
 import '../../state/seller_app_state.dart';
 import '../stores/store_screens.dart';
+import '../updates/app_update_screen.dart';
 
 /// AppShell 5 tab tetap (`desain.md` Bab 5.1 & `PRD` Bab 6.1):
 /// Beranda, Pesanan, Produk, Analitik, Toko.
@@ -131,6 +132,7 @@ class SellerAppShell extends StatelessWidget {
                 ),
                 body: Column(
                   children: [
+                    const AppUpdateNotice(),
                     NsConnectivityStrip(
                       isOffline: appState.isOffline,
                       onRetry: () {
@@ -188,8 +190,8 @@ class SellerAppShell extends StatelessWidget {
                           child: NavigationBar(
                             height:
                                 MediaQuery.textScalerOf(context).scale(1) > 1.3
-                                ? 76
-                                : 64,
+                                    ? 76
+                                    : 64,
                             backgroundColor: NsColors.surfaceCanvas,
                             surfaceTintColor: Colors.transparent,
                             indicatorColor: NsColors.surfacePressed,

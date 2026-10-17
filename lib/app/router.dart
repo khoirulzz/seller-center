@@ -9,6 +9,7 @@ import '../ui/features/products/products_screens.dart';
 import '../ui/features/shell/seller_app_shell.dart';
 import '../ui/features/store_hub/store_hub_screens.dart';
 import '../ui/features/stores/store_screens.dart';
+import '../ui/features/updates/app_update_screen.dart';
 import '../ui/state/seller_app_state.dart';
 
 /// Konfigurasi `GoRouter` dengan `StatefulShellRoute.indexedStack` 5 tab tetap
@@ -22,6 +23,8 @@ GoRouter createSellerRouter(SellerAppState appState) {
     redirect: (BuildContext context, GoRouterState state) {
       final lifecycle = appState.lifecycle;
       final path = state.uri.path;
+      // App maintenance stays accessible even before login/store onboarding.
+      if (path == '/app-update') return null;
       final isAuthRoute =
           path == '/login' || path == '/register' || path == '/forgot-password';
 
@@ -45,6 +48,10 @@ GoRouter createSellerRouter(SellerAppState appState) {
       return null;
     },
     routes: [
+      GoRoute(
+        path: '/app-update',
+        builder: (context, state) => const AppUpdateScreen(),
+      ),
       GoRoute(
         path: '/launch',
         builder: (context, state) => SplashSessionScreen(appState: appState),

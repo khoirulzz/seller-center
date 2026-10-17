@@ -1,0 +1,106 @@
+name: Android OTA
+
+on:
+  workflow_dispatch:
+    inputs:
+      operation:
+        description: Build the first OTA APK or patch an installed OTA release
+        required: true
+        default: patch
+        type: choice
+        options: [release, patch]
+      release_version:
+        description: Exact installed release to patch (e.g. 1.1.0+3); required for patch
+        required: false
+        type: string
+      dry_run:
+        description: Validate a patch without publishing it (patch only)
+        required: true
+        default: true
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: seller-android-ota
+  cancel-in-progress: false
+
+jobs:
+  ota:
+    # Publishing code is allowed only from the reviewed main branch.
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      SHOREBIRD_APP_ID: ${{ vars.SHOREBIRD_APP_ID }}
+      SHOREBIRD_TOKEN: ${{ secrets.SHOREBIRD_TOKEN }}
+      ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+      ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+      ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+      ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+      OPERATION: ${{ inputs.operation }}
+      RELEASE_VERSION: ${{ inputs.release_version }}
+      DRY_RUN: ${{ inputs.dry_run }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate OTA account, target, and signing configuration
+        run: |
+          echo "ANDROID_KEYSTORE_PATH=$RUNNER_TEMP/seller-release.jks" >> "$GITHUB_ENV"
+          python3 tool/prepare_ota.py
+          python3 tool/configure_android_signing.py --check-only
+          if [ "$OPERATION" = patch ]; then
+            if ! [[ "$RELEASE_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+\+[0-9]+$ ]]; then
+              echo '::error::Enter the exact installed release version (for example 1.1.0+3).'
+              exit 1
+            fi
+          fi
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.7'
+          channel: stable
+          cache: true
+      - name: Generate native Android project
+        run: |
+          cp android/app/src/main/AndroidManifest.xml "$RUNNER_TEMP/seller-manifest.xml"
+          cp pubspec.lock "$RUNNER_TEMP/seller-pubspec.lock"
+          flutter create --no-pub --platforms=android --org digital.nalaro --project-name nalaro_seller_center .
+          cp "$RUNNER_TEMP/seller-manifest.xml" android/app/src/main/AndroidManifest.xml
+          # Flutter create rewrites the lockfile even with --no-pub.
+          cp "$RUNNER_TEMP/seller-pubspec.lock" pubspec.lock
+          rm -f test/widget_test.dart
+          python3 tool/prepare_ota.py
+      - run: flutter pub get --enforce-lockfile
+      - run: dart run flutter_launcher_icons
+      - run: flutter analyze --no-fatal-infos
+      - run: flutter test
+      - name: Configure and verify persistent release signing
+        run: |
+          python3 tool/configure_android_signing.py
+          keytool -list -keystore "$ANDROID_KEYSTORE_PATH" -storepass:env ANDROID_KEYSTORE_PASSWORD -alias "$ANDROID_KEY_ALIAS" >/dev/null
+      - uses: shorebirdtech/setup-shorebird@v1
+        with:
+          cache: true
+      - name: Build and register OTA-enabled APK
+        if: inputs.operation == 'release'
+        run: shorebird release android --flutter-version=3.47.7 --artifact=apk --no-confirm
+      - name: Validate or publish a patch to the exact installed release
+        if: inputs.operation == 'patch'
+        run: |
+          args=(android --release-version "$RELEASE_VERSION" --track stable --no-confirm)
+          if [ "$DRY_RUN" = true ]; then args+=(--dry-run); fi
+          shorebird patch "${args[@]}"
+      - name: Upload OTA-enabled release APK
+        if: inputs.operation == 'release'
+        uses: actions/upload-artifact@v4
+        with:
+          name: nalaro-seller-center-ota-release-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error
+      - name: Remove signing material
+        if: always()
+        run: rm -f "$RUNNER_TEMP/seller-release.jks"

@@ -83,6 +83,13 @@ class StoreHubScreen extends StatelessWidget {
       const SizedBox(height: 12),
       item(
         context,
+        'refresh',
+        'Pembaruan aplikasi',
+        'Periksa versi dan pembaruan otomatis',
+        '/app-update',
+      ),
+      item(
+        context,
         'shield',
         'Keamanan akun',
         'Ubah kata sandi akun seller',

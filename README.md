@@ -2,6 +2,11 @@
 
 Aplikasi Flutter Android-first untuk mengelola toko pada **Nalaro Store**. Backend bisnis tetap Cloudflare Workers/PostgreSQL pada [khoirulzz/nalarostore](https://github.com/khoirulzz/nalarostore). Aplikasi ini bukan APK untuk pembeli atau admin platform.
 
+Pembaruan kode Dart melalui Shorebird disiapkan lewat workflow **Android OTA**.
+Lihat [aktivasi akun, APK baseline, patch, dan rollback](docs/OTA.md).
+APK debug dari **Android CI** tidak menerima OTA; dukungan baru aktif setelah
+konfigurasi akun/signing dan pemasangan APK baseline Shorebird.
+
 ## Status
 
 **Beta pengembangan, bukan rilis produksi.** Lihat [audit PRD dan desain](docs/PRD_DESIGN_AUDIT_2026-10-17.md) untuk implementasi, ketergantungan API, dan langkah pengujian yang masih wajib.
