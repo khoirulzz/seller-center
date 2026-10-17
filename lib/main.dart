@@ -8,6 +8,8 @@ Future<void> main() async {
   await initializeDateFormatting('id_ID');
   final appState = SellerAppState();
   // Mulai pemulihan sesi secara asinkron saat aplikasi dibuka
-  appState.initializeApp();
+  appState.initializeApp(
+    minimumSplashDuration: const Duration(milliseconds: 900),
+  );
   runApp(NalaroSellerApp(appState: appState));
 }

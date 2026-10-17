@@ -121,4 +121,54 @@ void main() {
     router.dispose();
     state.dispose();
   });
+
+  testWidgets('fast session restoration keeps the opening visible briefly',
+      (tester) async {
+    final repository = PendingSessionRepository();
+    final state = SellerAppState(repository: repository);
+    final router = createSellerRouter(state);
+    final initialization = state.initializeApp(
+      minimumSplashDuration: const Duration(milliseconds: 900),
+    );
+    await tester.pumpWidget(
+      MaterialApp.router(theme: NsTheme.light, routerConfig: router),
+    );
+    repository.restored.complete(null);
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(state.lifecycle, AuthLifecycleState.initializing);
+    expect(find.byType(SellerSplashScreen), findsOneWidget);
+    await tester.pump(const Duration(milliseconds: 500));
+    await initialization;
+    await tester.pumpAndSettle();
+    expect(router.routeInformationProvider.value.uri.path, '/login');
+    expect(find.byType(SellerSplashScreen), findsNothing);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+    router.dispose();
+    state.dispose();
+  });
+
+  testWidgets('slow restoration overlaps the opening duration',
+      (tester) async {
+    final repository = PendingSessionRepository();
+    final state = SellerAppState(repository: repository);
+    final router = createSellerRouter(state);
+    final initialization = state.initializeApp(
+      minimumSplashDuration: const Duration(milliseconds: 900),
+    );
+    await tester.pumpWidget(
+      MaterialApp.router(theme: NsTheme.light, routerConfig: router),
+    );
+    await tester.pump(const Duration(milliseconds: 1200));
+    expect(state.lifecycle, AuthLifecycleState.initializing);
+    repository.restored.complete(null);
+    await tester.pump();
+    await initialization;
+    await tester.pumpAndSettle();
+    expect(router.routeInformationProvider.value.uri.path, '/login');
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+    router.dispose();
+    state.dispose();
+  });
 }

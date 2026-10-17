@@ -26,7 +26,7 @@ class SellerAppState extends ChangeNotifier {
 
   @override
   void notifyListeners() {
-    routing.value = _lifecycle;
+    routing.value = lifecycle;
     super.notifyListeners();
   }
 
@@ -37,6 +37,7 @@ class SellerAppState extends ChangeNotifier {
   }
 
   AuthLifecycleState _lifecycle = AuthLifecycleState.initializing;
+  bool _launchPending = false;
   UserIdentity? _user;
   List<MerchantStore> _stores = const [];
   MerchantStore? _activeStore;
@@ -47,7 +48,8 @@ class SellerAppState extends ChangeNotifier {
   bool _hasUnsavedFormDraft = false;
 
   SellerRepository get repository => _repository;
-  AuthLifecycleState get lifecycle => _lifecycle;
+  AuthLifecycleState get lifecycle =>
+      _launchPending ? AuthLifecycleState.initializing : _lifecycle;
   UserIdentity? get user => _user;
   List<MerchantStore> get stores => _stores;
   MerchantStore? get activeStore => _activeStore;
@@ -74,7 +76,15 @@ class SellerAppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> initializeApp() async {
+  Future<void> initializeApp({
+    Duration minimumSplashDuration = Duration.zero,
+  }) async {
+    // Run the brief opening composition and session work concurrently.
+    // Slower session restoration does not incur an extra branding delay.
+    _launchPending = minimumSplashDuration > Duration.zero;
+    final splashReady = _launchPending
+        ? Future<void>.delayed(minimumSplashDuration)
+        : Future<void>.value();
     _lifecycle = AuthLifecycleState.initializing;
     _globalError = null;
     notifyListeners();
@@ -96,6 +106,10 @@ class SellerAppState extends ChangeNotifier {
     } catch (e) {
       _globalError = NsErrorMapper.toUserMessage(e);
       _lifecycle = AuthLifecycleState.unauthenticated;
+      notifyListeners();
+    } finally {
+      await splashReady;
+      _launchPending = false;
       notifyListeners();
     }
   }
