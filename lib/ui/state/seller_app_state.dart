@@ -8,6 +8,7 @@ enum AuthLifecycleState {
   initializing,
   unauthenticated,
   unverifiedEmail,
+  platformAdmin,
   needsStoreOnboarding,
   authenticatedReady,
 }
@@ -46,6 +47,7 @@ class SellerAppState extends ChangeNotifier {
   bool _isOffline = false;
   int _storeDataRevision = 0;
   bool _hasUnsavedFormDraft = false;
+  int _sessionEpoch = 0;
 
   SellerRepository get repository => _repository;
   AuthLifecycleState get lifecycle =>
@@ -79,6 +81,7 @@ class SellerAppState extends ChangeNotifier {
   Future<void> initializeApp({
     Duration minimumSplashDuration = Duration.zero,
   }) async {
+    final epoch = ++_sessionEpoch;
     // Run the brief opening composition and session work concurrently.
     // Slower session restoration does not incur an extra branding delay.
     _launchPending = minimumSplashDuration > Duration.zero;
@@ -91,6 +94,7 @@ class SellerAppState extends ChangeNotifier {
 
     try {
       final restored = await _repository.restoreSession();
+      if (epoch != _sessionEpoch) return;
       if (restored == null) {
         _lifecycle = AuthLifecycleState.unauthenticated;
         notifyListeners();
@@ -104,17 +108,25 @@ class SellerAppState extends ChangeNotifier {
       }
       await _loadStoresAndSelectActive(restored.id);
     } catch (e) {
+      if (epoch != _sessionEpoch) return;
       _globalError = NsErrorMapper.toUserMessage(e);
       _lifecycle = AuthLifecycleState.unauthenticated;
       notifyListeners();
     } finally {
       await splashReady;
-      _launchPending = false;
-      notifyListeners();
+      if (epoch == _sessionEpoch) {
+        _launchPending = false;
+        notifyListeners();
+      }
     }
   }
 
   Future<bool> signIn(String email, String password) async {
+    final epoch = ++_sessionEpoch;
+    _launchPending = false;
+    _user = null;
+    _stores = const [];
+    _activeStore = null;
     _isBusy = true;
     _globalError = null;
     notifyListeners();
@@ -124,6 +136,7 @@ class SellerAppState extends ChangeNotifier {
         email: email,
         password: password,
       );
+      if (epoch != _sessionEpoch) return false;
       _user = identity;
       if (!identity.verified) {
         _lifecycle = AuthLifecycleState.unverifiedEmail;
@@ -132,11 +145,14 @@ class SellerAppState extends ChangeNotifier {
       await _loadStoresAndSelectActive(identity.id);
       return true;
     } catch (e) {
+      if (epoch != _sessionEpoch) return false;
       _globalError = NsErrorMapper.toUserMessage(e);
       return false;
     } finally {
-      _isBusy = false;
-      notifyListeners();
+      if (epoch == _sessionEpoch) {
+        _isBusy = false;
+        notifyListeners();
+      }
     }
   }
 
@@ -187,15 +203,19 @@ class SellerAppState extends ChangeNotifier {
 
   Future<void> _loadStoresAndSelectActive(String userId) async {
     final storesList = await _repository.fetchStores();
+    if (_user?.id != userId) return;
     _stores = storesList;
     if (storesList.isEmpty) {
       _activeStore = null;
-      _lifecycle = AuthLifecycleState.needsStoreOnboarding;
+      _lifecycle = _user?.admin == true
+          ? AuthLifecycleState.platformAdmin
+          : AuthLifecycleState.needsStoreOnboarding;
       notifyListeners();
       return;
     }
 
     final savedStoreId = await _repository.drafts.loadActiveStoreId(userId);
+    if (_user?.id != userId) return;
     final matched =
         storesList.where((s) => s.id == savedStoreId).firstOrNull ??
         storesList.first;
@@ -214,6 +234,7 @@ class SellerAppState extends ChangeNotifier {
     if (_activeStore?.id == target.id) return true;
 
     _repository.clearMediaCache();
+    _repository.clearNotifications();
     _activeStore = target;
     _hasUnsavedFormDraft = false;
     _storeDataRevision++;
@@ -222,6 +243,13 @@ class SellerAppState extends ChangeNotifier {
     }
     notifyListeners();
     return true;
+  }
+
+  Future<void> refreshNotifications() async {
+    final sid = _activeStore?.id, userId = _user?.id;
+    if (sid == null) return;
+    await _repository.fetchNotifications(sid);
+    if (sid == _activeStore?.id && userId == _user?.id) notifyListeners();
   }
 
   Future<MerchantStore?> createNewStore({
@@ -283,7 +311,10 @@ class SellerAppState extends ChangeNotifier {
   }
 
   Future<void> signOut() async {
-    await _repository.signOut();
+    _sessionEpoch++;
+    _launchPending = false;
+    _isBusy = false;
+    final clearing = _repository.signOut();
     _user = null;
     _stores = const [];
     _activeStore = null;
@@ -291,5 +322,6 @@ class SellerAppState extends ChangeNotifier {
     _globalError = null;
     _lifecycle = AuthLifecycleState.unauthenticated;
     notifyListeners();
+    await clearing;
   }
 }

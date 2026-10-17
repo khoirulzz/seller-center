@@ -48,6 +48,8 @@ class StoreHubScreen extends StatelessWidget {
       const SizedBox(height: 20),
       Text('Pengelolaan toko', style: Theme.of(context).textTheme.titleLarge),
       const SizedBox(height: 12),
+      item(context,'mail','Chat pelanggan','Baca dan balas percakapan pembeli','/chat'),
+      if(appState.activeRole.canManageSettings)item(context,'shield','Penanggung jawab','Profil pribadi dan kontak operasional','/responsible'),
       item(
         context,
         'settings',

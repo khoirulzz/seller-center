@@ -183,6 +183,7 @@ class SellerApiService {
     }
     return null;
   }
+  Future<Map<String,dynamic>> workspaceResource({required String bearerToken,required String storeId,required String resource,String method='GET',Object? body,Map<String,String>? query}) => _requestJson(method:method,path:'/api/merchant/stores/$storeId/$resource',bearerToken:bearerToken,body:body,query:query);
 
   Future<List<MerchantStore>> fetchStores(String bearerToken) async {
     final json = await _requestJson(
@@ -621,6 +622,7 @@ class SellerApiService {
         }
       }
       if (rowCount < 500) break;
+      if(page==20) throw const ApiException(message:'Ekspor melebihi 10.000 baris. Gunakan versi web atau hubungi dukungan untuk ekspor lengkap.');
     }
     return parts.join();
   }

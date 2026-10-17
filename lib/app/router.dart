@@ -11,6 +11,7 @@ import '../ui/features/store_hub/store_hub_screens.dart';
 import '../ui/features/stores/store_screens.dart';
 import '../ui/features/updates/app_update_screen.dart';
 import '../ui/state/seller_app_state.dart';
+import '../ui/features/engagement/engagement_screens.dart';
 
 /// Konfigurasi `GoRouter` dengan `StatefulShellRoute.indexedStack` 5 tab tetap
 /// dan redirect guard sesuai status sesi (`flutter-setup-declarative-routing.md` & `PRD` Bab 6.3).
@@ -37,6 +38,7 @@ GoRouter createSellerRouter(SellerAppState appState) {
       if (lifecycle == AuthLifecycleState.unverifiedEmail) {
         return path == '/verify' ? null : '/verify';
       }
+      if(lifecycle==AuthLifecycleState.platformAdmin)return path=='/platform-admin'?null:'/platform-admin';
       if (lifecycle == AuthLifecycleState.needsStoreOnboarding) {
         return path == '/stores/create' ? null : '/stores/create';
       }
@@ -48,6 +50,9 @@ GoRouter createSellerRouter(SellerAppState appState) {
       return null;
     },
     routes: [
+      GoRoute(path:'/platform-admin',builder:(context,state)=>PlatformAdminScreen(appState:appState)),
+      GoRoute(path:'/chat',builder:(context,state)=>CustomerChatScreen(appState:appState)),
+      GoRoute(path:'/responsible',builder:(context,state)=>ResponsibleProfileScreen(appState:appState)),
       GoRoute(
         path: '/app-update',
         builder: (context, state) => const AppUpdateScreen(),
@@ -81,7 +86,7 @@ GoRouter createSellerRouter(SellerAppState appState) {
       ),
       GoRoute(
         path: '/notifications',
-        builder: (context, state) => NotificationsScreen(appState: appState),
+        builder: (context, state) => MerchantNotificationsScreen(appState: appState),
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {

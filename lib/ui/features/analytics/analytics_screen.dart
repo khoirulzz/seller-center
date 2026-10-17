@@ -184,7 +184,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Laporan: ${NsFormatters.calendarDate(range.start)} s.d. ${NsFormatters.calendarDate(range.end)} • tanggal laporan menggunakan UTC.',
+            'Laporan: ${NsFormatters.calendarDate(range.start)} s.d. ${NsFormatters.calendarDate(range.end)} • WIB (Asia/Jakarta).',
             style: Theme.of(context).textTheme.bodySmall,
           ),
           FutureBuilder<SalesAnalyticsBundle>(
@@ -210,7 +210,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                 children: [
                   const SizedBox(height: 16),
                   Text(
-                    'Omzet terverifikasi',
+                    'Penjualan produk terverifikasi (tanpa ongkir)',
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),
                   Text(
@@ -225,9 +225,24 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                       Chip(label: Text('${d.totalOrders} pesanan')),
                       Chip(label: Text('${d.paidOrders} dibayar')),
                       Chip(label: Text('${d.canceledOrders} dibatalkan')),
+                      Chip(label:Text('${d.unitsSold} unit terjual')),
                     ],
                   ),
                   const SizedBox(height: 20),
+                  Card(child:Padding(padding:const EdgeInsets.all(16),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+                    Text('Rata-rata pesanan: ${NsFormatters.rupiah(d.averagePaidOrderIdr)}'),
+                    Text('Ongkir dibayar: ${NsFormatters.rupiah(d.shippingRevenueIdr)}'),
+                    Text('Total pembayaran: ${NsFormatters.rupiah(d.totalCollectedIdr)}'),
+                    Text('Pelanggan kembali: ${d.returningCustomers} dari ${d.purchasingCustomers} pembeli'),
+                    const SizedBox(height:12),Text('Periode sebelumnya: ${NsFormatters.rupiah(d.previousRevenueIdr)}'),
+                    if(d.previousRevenueIdr>0)Text('Perubahan: ${((d.verifiedRevenueIdr/d.previousRevenueIdr-1)*100).toStringAsFixed(1)}%'),
+                  ]))),
+                  const SizedBox(height:16),Text('Produk terlaris',style:Theme.of(context).textTheme.titleLarge),
+                  if(d.topProducts.isEmpty)const ListTile(title:Text('Belum ada produk terjual pada periode ini.')),
+                  for(final p in d.topProducts)Card(child:ListTile(title:Text(p.name),subtitle:Text('${p.units} unit'),trailing:Text(NsFormatters.rupiah(p.revenueIdr)))),
+                  const SizedBox(height:16),Text('Varian terlaris',style:Theme.of(context).textTheme.titleLarge),
+                  for(final p in d.topVariants)Card(child:ListTile(title:Text(p.name),subtitle:Text('${p.variant} · ${p.units} unit'),trailing:Text(NsFormatters.rupiah(p.revenueIdr)))),
+                  const SizedBox(height:16),
                   Text(
                     'Penjualan harian',
                     style: Theme.of(context).textTheme.titleLarge,
@@ -236,7 +251,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                   NsMetricChart(points: d.dailyPoints),
                   const SizedBox(height: 8),
                   Text(
-                    '${d.dailyPoints.length} hari memiliki aktivitas yang tercatat dalam rentang ini.',
+                    '${d.dailyPoints.length} hari dalam rentang laporan. Berdasarkan pesanan dibayar yang tidak dibatalkan atau kedaluwarsa, menurut tanggal pesanan. Pelanggan tamu dikenali dari telepon; laba dan konversi belum dihitung.',
                   ),
                 ],
               );

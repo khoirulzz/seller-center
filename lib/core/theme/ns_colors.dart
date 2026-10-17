@@ -13,7 +13,7 @@ abstract final class NsColors {
   static const Color brandOnPrimary = Color(0xFFFFFFFF);
 
   /// Kanvas utama mayoritas layar (light mode v1).
-  static const Color surfaceCanvas = Color(0xFFFFFFFF);
+  static const Color surfaceCanvas = Color(0xFFF3F4F7);
 
   /// Permukaan kartu konten dengan border halus.
   static const Color surfaceCard = Color(0xFFFFFFFF);

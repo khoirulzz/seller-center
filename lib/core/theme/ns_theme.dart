@@ -131,7 +131,7 @@ abstract final class NsTheme {
         showDragHandle: false,
       ),
       cardTheme: CardThemeData(
-        color: NsColors.surfaceSubtle,
+        color: NsColors.surfaceCard,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         shape: RoundedRectangleBorder(

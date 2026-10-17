@@ -1,7 +1,7 @@
 name: Android CI
 on:
   push:
-    branches: [main]
+    branches: [main, work/professional-seller-center]
   pull_request:
     branches: [main]
   workflow_dispatch:
@@ -43,9 +43,27 @@ jobs:
           name: seller-ui-qa
           path: build/ui-qa/
           if-no-files-found: ignore
-      - run: flutter build apk --debug
-      - name: Upload debug APK
+      - name: Capture formatting changes
+        if: always()
+        run: git diff -- lib test > build/formatted-source.patch
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: seller-formatting
+          path: build/formatted-source.patch
+      - name: Prepare unsigned release for offline permanent signing
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          path=Path('android/app/build.gradle.kts')
+          text=path.read_text()
+          marker='signingConfig = signingConfigs.getByName("debug")'
+          if text.count(marker)!=1: raise SystemExit('Expected generated signing configuration')
+          path.write_text(text.replace(marker,'signingConfig = null'))
+          PY
+      - run: flutter build apk --release --split-per-abi
+      - name: Upload unsigned release APKs
         uses: actions/upload-artifact@v4
         with:
-          name: nalaro-seller-center-debug-apk
-          path: build/app/outputs/flutter-apk/app-debug.apk
+          name: nalaro-seller-center-unsigned-release-apks
+          path: build/app/outputs/flutter-apk/*-release.apk

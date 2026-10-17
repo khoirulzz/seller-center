@@ -49,10 +49,12 @@ class NsBrandMark extends StatelessWidget {
     super.key,
     this.size = 32,
     this.showLabel = false,
+    this.color,
   });
 
   final double size;
   final bool showLabel;
+  final Color? color;
 
   @override
   Widget build(BuildContext context) {
@@ -63,6 +65,7 @@ class NsBrandMark extends StatelessWidget {
       fit: BoxFit.contain,
       semanticLabel: 'Nalaro Store',
       filterQuality: FilterQuality.medium,
+      color:color,
     );
     if (!showLabel) return badge;
     return Row(
@@ -287,12 +290,14 @@ class NsIconButton extends StatelessWidget {
     required this.semanticLabel,
     required this.onPressed,
     this.badgeCount = 0,
+    this.color=NsColors.textPrimary,
   });
 
   final String iconName;
   final String semanticLabel;
   final VoidCallback? onPressed;
   final int badgeCount;
+  final Color color;
 
   @override
   Widget build(BuildContext context) {
@@ -312,7 +317,7 @@ class NsIconButton extends StatelessWidget {
             child: Stack(
               alignment: Alignment.center,
               children: [
-                NsIcon(iconName, size: 21, color: NsColors.textPrimary),
+                NsIcon(iconName, size: 21, color: color),
                 if (badgeCount > 0)
                   Positioned(
                     top: 10,
