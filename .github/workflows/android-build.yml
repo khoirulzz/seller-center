@@ -12,6 +12,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Test OTA build configuration
+        run: python3 -m unittest discover -s tool -p 'test_*.py'
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: "3.47.7"
@@ -20,11 +22,11 @@ jobs:
       - name: Generate native Android project
         run: |
           cp android/app/src/main/AndroidManifest.xml /tmp/nalaro-AndroidManifest.xml
-          flutter create --platforms=android --org digital.nalaro --project-name nalaro_seller_center .
+          flutter create --no-pub --platforms=android --org digital.nalaro --project-name nalaro_seller_center .
           cp /tmp/nalaro-AndroidManifest.xml android/app/src/main/AndroidManifest.xml
       - name: Remove generated Flutter demo test
         run: rm -f test/widget_test.dart
-      - run: flutter pub get
+      - run: flutter pub get --enforce-lockfile
       - name: Generate launcher icon from official Nalaro Store asset
         run: dart run flutter_launcher_icons
       - name: Format Dart sources
