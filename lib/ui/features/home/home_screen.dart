@@ -99,6 +99,7 @@ class _HomeScreenState extends State<HomeScreen> {
             style: Theme.of(context).textTheme.bodyMedium
                 ?.copyWith(color: NsColors.textSecondary),
           ),
+          if(widget.appState.user!=null)Padding(padding:const EdgeInsets.only(top:6),child:Text('Masuk sebagai ${widget.appState.user!.email}',style:Theme.of(context).textTheme.bodySmall)),
           if (store != null &&
               !store.isPublished &&
               widget.appState.activeRole.canManageSettings) ...[

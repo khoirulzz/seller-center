@@ -12,8 +12,7 @@ form untuk menerapkan patch.
 
 **Integrasi kode tidak sama dengan aktivasi layanan.** OTA baru berfungsi setelah
 akun Shorebird dikonfigurasi, baseline dibuat dengan `shorebird release`, dan APK
-baseline itu dipasang pada perangkat. APK dari workflow **Android CI** tetap APK
-debug Flutter biasa dan tidak menerima OTA. Jangan membagikannya sebagai APK OTA.
+baseline itu dipasang pada perangkat. Workflow **Android CI** menghasilkan APK release per arsitektur yang belum ditandatangani. APK ini ditandatangani secara terpisah memakai kunci rilis permanen. Build Flutter biasa tetap tidak menerima OTA; hanya baseline dari `shorebird release` yang menerima patch.
 
 ## Aktivasi satu kali
 
@@ -48,7 +47,7 @@ debug Flutter biasa dan tidak menerima OTA. Jangan membagikannya sebagai APK OTA
    GitHub CLI, jalankan `base64 -w0 nalaro-seller-release.jks | gh secret set
    ANDROID_KEYSTORE_BASE64 --repo khoirulzz/seller-center`.
 5. Buka Actions → **Android OTA** → Run workflow → branch **main**, operation
-   **release**. Workflow membuat baseline versi `1.1.0+3` dan artifact
+   **release**. Workflow membuat baseline versi `1.2.0+4` dan artifact
    **nalaro-seller-center-ota-release-apk**. Unduh dan pasang APK tersebut sekali.
    Nomor versi mengikuti `pubspec.yaml`, jadi baca nomor di commit yang dirilis.
 
@@ -67,7 +66,7 @@ sudah tersimpan di server tidak bergantung pada instalasi APK.
 1. Ubah kode Dart dan jalankan pemeriksaan biasa lewat PR. Merge perubahan yang
    lulus pemeriksaan ke `main`.
 2. Jalankan **Android OTA**, operation **patch**, `release_version` diisi **versi
-   baseline yang benar-benar terpasang**, misalnya `1.1.0+3`. Awali dengan
+   baseline yang benar-benar terpasang**, misalnya `1.2.0+4`. Awali dengan
    **dry_run = true**. Workflow tidak memakai target ambigu `latest`.
 3. Setelah validasi berhasil, ulangi dengan **dry_run = false** untuk menerbitkan
    patch ke track `stable`. Ini adalah tindakan publikasi; merge saja tidak
@@ -133,3 +132,19 @@ Referensi resmi:
 - https://docs.shorebird.dev/code-push/release/
 - https://docs.shorebird.dev/code-push/patch/
 - https://pub.dev/packages/shorebird_code_push
+
+## Hasil verifikasi aktivasi 17 Oktober 2026
+
+Token repository berhasil melakukan autentikasi dan menampilkan daftar aplikasi kosong.
+`shorebird init` sudah dijalankan pada runner dengan proyek Android/Gradle siap,
+tetapi server menolak pembuatan aplikasi: `This credential does not have permission for this operation.`
+Buat aplikasi Nalaro Seller Center dengan akun yang memiliki izin, lalu commit
+`shorebird.yaml` atau isi variable SHOREBIRD_APP_ID. Token berikutnya harus
+memiliki akses release/patch untuk aplikasi tersebut. App ID tidak perlu dirahasiakan.
+`prepare_ota.py` menerima app ID dari variable atau konfigurasi terdaftar.
+
+APK release 1.2.0+4 memakai kunci permanen baru. Backup privat terpisah berisi
+keystore dan informasi signing; kunci ini tidak masuk source maupun artifact Actions.
+Gunakan kunci yang sama sebagai secrets signing untuk build OTA berikutnya.
+Setelah aktivasi, pasang APK baseline Shorebird satu kali; patch tidak dapat
+menambahkan runtime Shorebird ke APK Flutter yang sudah terpasang.
