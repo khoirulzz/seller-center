@@ -8,7 +8,8 @@ abstract final class NsFormatters {
     decimalDigits: 0,
   );
 
-  static final NumberFormat _decimalFormatter = NumberFormat.decimalPattern('id_ID');
+  static final NumberFormat _decimalFormatter =
+      NumberFormat.decimalPattern('id_ID');
 
   /// Format integer IDR menjadi `Rp120.000` (tanpa desimal).
   static String rupiah(num? value) {
@@ -34,8 +35,18 @@ abstract final class NsFormatters {
     final parsed = DateTime.tryParse(isoString)?.toLocal();
     if (parsed == null) return isoString;
     const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
-      'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des',
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'Mei',
+      'Jun',
+      'Jul',
+      'Agu',
+      'Sep',
+      'Okt',
+      'Nov',
+      'Des',
     ];
     return '${parsed.day} ${months[parsed.month - 1]} ${parsed.year}';
   }

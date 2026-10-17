@@ -66,65 +66,66 @@ class _CreateStoreWizardScreenState extends State<CreateStoreWizardScreen> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('Buat toko')),
-    body: Center(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 540),
-        child: ListView(
-          padding: const EdgeInsets.all(24),
-          children: [
-            const Text(
-              'Mulai berjualan dengan toko milikmu',
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+        appBar: AppBar(title: const Text('Buat toko')),
+        body: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 540),
+            child: ListView(
+              padding: const EdgeInsets.all(24),
+              children: [
+                const Text(
+                  'Mulai berjualan dengan toko milikmu',
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 20),
+                TextField(
+                  controller: name,
+                  textInputAction: TextInputAction.next,
+                  onChanged: (v) {
+                    if (!slugEdited) slug.text = NsSlugUtils.normalize(v);
+                  },
+                  decoration: const InputDecoration(
+                    labelText: 'Nama toko *',
+                    hintText: 'Nalaro Batik',
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: slug,
+                  onChanged: (_) => slugEdited = true,
+                  textInputAction: TextInputAction.next,
+                  decoration: const InputDecoration(
+                    labelText: 'Link toko *',
+                    hintText: 'nalaro-batik',
+                    helperText:
+                        'Alamat unik toko, bukan alamat pengambilan. Gunakan huruf kecil, angka, dan tanda hubung.',
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: description,
+                  maxLines: 3,
+                  decoration: const InputDecoration(
+                    labelText: 'Deskripsi (opsional)',
+                  ),
+                ),
+                if (error != null)
+                  Text(error!, style: const TextStyle(color: Colors.red)),
+                const SizedBox(height: 20),
+                FilledButton(
+                  onPressed: busy ? null : save,
+                  child: Text(busy ? 'Menyimpan...' : 'Buat toko'),
+                ),
+                if (widget.appState.stores.isNotEmpty)
+                  TextButton(
+                    onPressed: () => context.go('/beranda'),
+                    child: const Text('Kembali'),
+                  ),
+              ],
             ),
-            const SizedBox(height: 20),
-            TextField(
-              controller: name,
-              textInputAction: TextInputAction.next,
-              onChanged: (v) {
-                if (!slugEdited) slug.text = NsSlugUtils.normalize(v);
-              },
-              decoration: const InputDecoration(
-                labelText: 'Nama toko *',
-                hintText: 'Nalaro Batik',
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: slug,
-              onChanged: (_) => slugEdited = true,
-              textInputAction: TextInputAction.next,
-              decoration: const InputDecoration(
-                labelText: 'Link toko *',
-                hintText: 'nalaro-batik',
-                helperText: 'Alamat unik toko, bukan alamat pengambilan. Gunakan huruf kecil, angka, dan tanda hubung.',
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: description,
-              maxLines: 3,
-              decoration: const InputDecoration(
-                labelText: 'Deskripsi (opsional)',
-              ),
-            ),
-            if (error != null)
-              Text(error!, style: const TextStyle(color: Colors.red)),
-            const SizedBox(height: 20),
-            FilledButton(
-              onPressed: busy ? null : save,
-              child: Text(busy ? 'Menyimpan...' : 'Buat toko'),
-            ),
-            if (widget.appState.stores.isNotEmpty)
-              TextButton(
-                onPressed: () => context.go('/beranda'),
-                child: const Text('Kembali'),
-              ),
-          ],
+          ),
         ),
-      ),
-    ),
-  );
+      );
 }
 
 Future<void> showNsStoreSwitcherSheet({

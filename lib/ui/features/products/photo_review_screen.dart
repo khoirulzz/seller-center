@@ -71,73 +71,74 @@ class _PhotoReviewScreenState extends State<PhotoReviewScreen> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('Atur foto')),
-    body: Column(
-      children: [
-        Expanded(
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Center(
-              child: Image.memory(preview ?? widget.bytes, fit: BoxFit.contain),
-            ),
-          ),
-        ),
-        if (busy) const LinearProgressIndicator(),
-        if (error != null)
-          Padding(padding: const EdgeInsets.all(12), child: Text(error!)),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Column(
-            children: [
-              const Text(
-                'Pemotongan mengambil bagian tengah foto. Periksa hasil sebelum menerapkan.',
+        appBar: AppBar(title: const Text('Atur foto')),
+        body: Column(
+          children: [
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Center(
+                  child: Image.memory(preview ?? widget.bytes,
+                      fit: BoxFit.contain),
+                ),
               ),
-              const SizedBox(height: 12),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                alignment: WrapAlignment.center,
+            ),
+            if (busy) const LinearProgressIndicator(),
+            if (error != null)
+              Padding(padding: const EdgeInsets.all(12), child: Text(error!)),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Column(
                 children: [
-                  for (final option in <({String label, double? ratio})>[
-                    (label: 'Asli', ratio: null),
-                    (label: '1:1', ratio: 1),
-                    (label: '4:5', ratio: 0.8),
-                  ])
-                    ChoiceChip(
-                      label: Text(option.label),
-                      selected: ratio == option.ratio,
-                      onSelected: busy
-                          ? null
-                          : (_) {
-                              ratio = option.ratio;
-                              update();
-                            },
-                    ),
-                  OutlinedButton.icon(
-                    onPressed: busy
-                        ? null
-                        : () {
-                            turns = (turns + 1) % 4;
-                            update();
-                          },
-                    icon: const Icon(Icons.rotate_right),
-                    label: const Text('Putar 90°'),
+                  const Text(
+                    'Pemotongan mengambil bagian tengah foto. Periksa hasil sebelum menerapkan.',
+                  ),
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    alignment: WrapAlignment.center,
+                    children: [
+                      for (final option in <({String label, double? ratio})>[
+                        (label: 'Asli', ratio: null),
+                        (label: '1:1', ratio: 1),
+                        (label: '4:5', ratio: 0.8),
+                      ])
+                        ChoiceChip(
+                          label: Text(option.label),
+                          selected: ratio == option.ratio,
+                          onSelected: busy
+                              ? null
+                              : (_) {
+                                  ratio = option.ratio;
+                                  update();
+                                },
+                        ),
+                      OutlinedButton.icon(
+                        onPressed: busy
+                            ? null
+                            : () {
+                                turns = (turns + 1) % 4;
+                                update();
+                              },
+                        icon: const Icon(Icons.rotate_right),
+                        label: const Text('Putar 90°'),
+                      ),
+                    ],
                   ),
                 ],
               ),
-            ],
+            ),
+          ],
+        ),
+        bottomNavigationBar: SafeArea(
+          minimum: const EdgeInsets.all(16),
+          child: FilledButton(
+            onPressed: busy || error != null
+                ? null
+                : () => Navigator.pop(context, preview ?? widget.bytes),
+            child: const Text('Terapkan foto'),
           ),
         ),
-      ],
-    ),
-    bottomNavigationBar: SafeArea(
-      minimum: const EdgeInsets.all(16),
-      child: FilledButton(
-        onPressed: busy || error != null
-            ? null
-            : () => Navigator.pop(context, preview ?? widget.bytes),
-        child: const Text('Terapkan foto'),
-      ),
-    ),
-  );
+      );
 }

@@ -50,8 +50,7 @@ class SellerAppShell extends StatelessWidget {
       appState: appState,
       child: SellerFeatureGuide(
         userId: appState.user?.id,
-        eligible:
-            appState.lifecycle == AuthLifecycleState.authenticatedReady &&
+        eligible: appState.lifecycle == AuthLifecycleState.authenticatedReady &&
             appState.activeStore != null &&
             const [
               '/beranda',
@@ -124,8 +123,8 @@ class SellerAppShell extends StatelessWidget {
                                                 overflow: TextOverflow.ellipsis,
                                                 style: NsTypography.titleSm
                                                     .copyWith(
-                                                      color: Colors.white,
-                                                    ),
+                                                  color: Colors.white,
+                                                ),
                                               ),
                                             ),
                                             const SizedBox(width: 4),
@@ -219,9 +218,9 @@ class SellerAppShell extends StatelessWidget {
                               child: NavigationBar(
                                 height:
                                     MediaQuery.textScalerOf(context).scale(1) >
-                                        1.3
-                                    ? 76
-                                    : 64,
+                                            1.3
+                                        ? 76
+                                        : 64,
                                 backgroundColor: NsColors.surfaceCanvas,
                                 surfaceTintColor: Colors.transparent,
                                 indicatorColor: NsColors.surfacePressed,

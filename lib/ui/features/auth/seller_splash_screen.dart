@@ -47,7 +47,8 @@ class SellerSplashScreen extends StatelessWidget {
                               child: SizedBox(
                                 width: double.infinity,
                                 child: TweenAnimationBuilder<double>(
-                                  tween: Tween(begin: reduceMotion ? 1 : 0, end: 1),
+                                  tween: Tween(
+                                      begin: reduceMotion ? 1 : 0, end: 1),
                                   duration: reduceMotion
                                       ? Duration.zero
                                       : const Duration(milliseconds: 450),
@@ -55,7 +56,8 @@ class SellerSplashScreen extends StatelessWidget {
                                   builder: (context, opacity, child) =>
                                       Opacity(opacity: opacity, child: child),
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       const _SplashBrand(),
@@ -63,7 +65,8 @@ class SellerSplashScreen extends StatelessWidget {
                                       Text.rich(
                                         const TextSpan(
                                           children: [
-                                            TextSpan(text: 'Kelola toko\ndari '),
+                                            TextSpan(
+                                                text: 'Kelola toko\ndari '),
                                             TextSpan(
                                               text: 'genggaman',
                                               style: TextStyle(color: _accent),
@@ -139,50 +142,50 @@ class _SplashBrand extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Semantics(
-    label: 'Nalaro Seller Center',
-    child: ExcludeSemantics(
-      child: Row(
-        children: [
-          Image.asset(
-            'assets/brand/nalarostore-mark.png',
-            width: 48,
-            height: 56,
-            fit: BoxFit.contain,
-          ),
-          const SizedBox(width: 14),
-          const Flexible(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'Nalaro',
-                  style: TextStyle(
-                    fontFamily: 'Manrope',
-                    fontSize: 23,
-                    height: 1.2,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: -0.7,
-                    color: Colors.white,
-                  ),
+        label: 'Nalaro Seller Center',
+        child: ExcludeSemantics(
+          child: Row(
+            children: [
+              Image.asset(
+                'assets/brand/nalarostore-mark.png',
+                width: 48,
+                height: 56,
+                fit: BoxFit.contain,
+              ),
+              const SizedBox(width: 14),
+              const Flexible(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Nalaro',
+                      style: TextStyle(
+                        fontFamily: 'Manrope',
+                        fontSize: 23,
+                        height: 1.2,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.7,
+                        color: Colors.white,
+                      ),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      'Seller Center',
+                      style: TextStyle(
+                        fontFamily: 'DM Sans',
+                        fontSize: 14,
+                        height: 1.3,
+                        color: Color(0xFFCCBFC5),
+                      ),
+                    ),
+                  ],
                 ),
-                SizedBox(height: 4),
-                Text(
-                  'Seller Center',
-                  style: TextStyle(
-                    fontFamily: 'DM Sans',
-                    fontSize: 14,
-                    height: 1.3,
-                    color: Color(0xFFCCBFC5),
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
-      ),
-    ),
-  );
+        ),
+      );
 }
 
 /// Static vector ornament keeps startup light and scales without a bitmap.

@@ -65,7 +65,7 @@ class NsBrandMark extends StatelessWidget {
       fit: BoxFit.contain,
       semanticLabel: 'Nalaro Store',
       filterQuality: FilterQuality.medium,
-      color:color,
+      color: color,
     );
     if (!showLabel) return badge;
     return Row(
@@ -200,12 +200,10 @@ class NsSecondaryButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final fgColor = isDestructive
-        ? NsColors.statusDangerText
-        : NsColors.textPrimary;
-    final borderColor = isDestructive
-        ? NsColors.statusDangerBorder
-        : NsColors.borderDefault;
+    final fgColor =
+        isDestructive ? NsColors.statusDangerText : NsColors.textPrimary;
+    final borderColor =
+        isDestructive ? NsColors.statusDangerBorder : NsColors.borderDefault;
 
     return SizedBox(
       height: NsSpacing.minTouchTarget,
@@ -290,7 +288,7 @@ class NsIconButton extends StatelessWidget {
     required this.semanticLabel,
     required this.onPressed,
     this.badgeCount = 0,
-    this.color=NsColors.textPrimary,
+    this.color = NsColors.textPrimary,
   });
 
   final String iconName;
@@ -405,9 +403,8 @@ class NsInputField extends StatelessWidget {
           style: NsTypography.bodyMd.copyWith(fontWeight: FontWeight.w500),
           decoration: InputDecoration(
             hintText: hintText,
-            errorText: (errorText != null && errorText!.isNotEmpty)
-                ? errorText
-                : null,
+            errorText:
+                (errorText != null && errorText!.isNotEmpty) ? errorText : null,
             suffixIcon: suffix,
           ),
         ),
@@ -895,9 +892,8 @@ class NsProductCard extends StatelessWidget {
                             color: isLowStock
                                 ? NsColors.statusWarningText
                                 : NsColors.textSecondary,
-                            fontWeight: isLowStock
-                                ? FontWeight.w700
-                                : FontWeight.w500,
+                            fontWeight:
+                                isLowStock ? FontWeight.w700 : FontWeight.w500,
                           ),
                         ),
                       ],

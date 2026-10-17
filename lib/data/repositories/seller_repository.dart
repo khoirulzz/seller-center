@@ -15,9 +15,9 @@ class SellerRepository {
     FirebaseAuthService? authService,
     SellerApiService? apiService,
     LocalDraftService? draftService,
-  }) : _auth = authService ?? FirebaseAuthService(),
-       _api = apiService ?? SellerApiService(),
-       _drafts = draftService ?? LocalDraftService();
+  })  : _auth = authService ?? FirebaseAuthService(),
+        _api = apiService ?? SellerApiService(),
+        _drafts = draftService ?? LocalDraftService();
 
   final FirebaseAuthService _auth;
   final SellerApiService _api;
@@ -181,8 +181,7 @@ class SellerRepository {
     final remoteUser = await _api.fetchCurrentUser(session.idToken);
     _checkSession(epoch);
     if (remoteUser != null) _checkIdentity(session, remoteUser);
-    final updated =
-        remoteUser ??
+    final updated = remoteUser ??
         UserIdentity(
           id: session.uid,
           email: session.email,
@@ -304,24 +303,26 @@ class SellerRepository {
     int page = 1,
     String? fromDate,
     String? toDate,
-  }) async => _api.fetchOrders(
-    bearerToken: await _validBearerToken(),
-    storeId: storeId,
-    status: status,
-    query: query,
-    page: page,
-    fromDate: fromDate,
-    toDate: toDate,
-  );
+  }) async =>
+      _api.fetchOrders(
+        bearerToken: await _validBearerToken(),
+        storeId: storeId,
+        status: status,
+        query: query,
+        page: page,
+        fromDate: fromDate,
+        toDate: toDate,
+      );
 
   Future<OrderDetailBundle> fetchOrderDetail({
     required String storeId,
     required String orderId,
-  }) async => _api.fetchOrderDetail(
-    bearerToken: await _validBearerToken(),
-    storeId: storeId,
-    orderId: orderId,
-  );
+  }) async =>
+      _api.fetchOrderDetail(
+        bearerToken: await _validBearerToken(),
+        storeId: storeId,
+        orderId: orderId,
+      );
 
   Future<void> reviewOrderPayment({
     required String storeId,
@@ -408,9 +409,8 @@ class SellerRepository {
     if (validation != null)
       throw ApiException(message: validation, statusCode: 400);
     final updated = product.copyWith(slug: slug);
-    final skus = updated.variants
-        .map((v) => v.sku.trim().toUpperCase())
-        .toList();
+    final skus =
+        updated.variants.map((v) => v.sku.trim().toUpperCase()).toList();
     if (skus.any((s) => s.isEmpty) || skus.toSet().length != skus.length) {
       throw const ApiException(
         message: 'SKU tidak boleh kosong atau duplikat.',
@@ -484,9 +484,8 @@ class SellerRepository {
         statusCode: 404,
       );
     }
-    final variant = product.variants
-        .where((v) => v.sku == variantSku)
-        .firstOrNull;
+    final variant =
+        product.variants.where((v) => v.sku == variantSku).firstOrNull;
     if (variant == null) {
       throw const ApiException(
         message: 'Varian tidak ditemukan.',
@@ -521,34 +520,37 @@ class SellerRepository {
     required String storeId,
     required String fromDate,
     required String toDate,
-    String timezone='Asia/Jakarta',
-  }) async => _api.fetchAnalytics(
-    bearerToken: await _validBearerToken(),
-    storeId: storeId,
-    fromDate: fromDate,
-    toDate: toDate,
-    timezone:timezone,
-  );
+    String timezone = 'Asia/Jakarta',
+  }) async =>
+      _api.fetchAnalytics(
+        bearerToken: await _validBearerToken(),
+        storeId: storeId,
+        fromDate: fromDate,
+        toDate: toDate,
+        timezone: timezone,
+      );
 
   Future<({List<CustomerSummary> customers, bool hasMore})> fetchCustomers({
     required String storeId,
     String query = '',
     int page = 1,
-  }) async => _api.fetchCustomers(
-    bearerToken: await _validBearerToken(),
-    storeId: storeId,
-    query: query,
-    page: page,
-  );
+  }) async =>
+      _api.fetchCustomers(
+        bearerToken: await _validBearerToken(),
+        storeId: storeId,
+        query: query,
+        page: page,
+      );
 
   Future<StoreSettings> fetchSettings({
     required String storeId,
     required MerchantStore store,
-  }) async => _api.fetchSettings(
-    bearerToken: await _validBearerToken(),
-    storeId: storeId,
-    store: store,
-  );
+  }) async =>
+      _api.fetchSettings(
+        bearerToken: await _validBearerToken(),
+        storeId: storeId,
+        store: store,
+      );
 
   Future<void> saveSettings({
     required String storeId,
@@ -587,9 +589,9 @@ class SellerRepository {
   }
 
   Future<BillingBundle> fetchBilling(String storeId) async => _api.fetchBilling(
-    bearerToken: await _validBearerToken(),
-    storeId: storeId,
-  );
+        bearerToken: await _validBearerToken(),
+        storeId: storeId,
+      );
 
   Future<void> selectSubscriptionPlan({
     required String storeId,
@@ -650,11 +652,11 @@ class SellerRepository {
 
   List<SellerNotification> _notifications = const [];
   String? _notificationStore;
-  int _notificationEpoch=0;
+  int _notificationEpoch = 0;
   List<SellerNotification> getNotificationsForUser() => _notifications;
   Future<List<SellerNotification>> fetchNotifications(String sid) async {
     final epoch = _sessionEpoch;
-    final notificationEpoch=++_notificationEpoch;
+    final notificationEpoch = ++_notificationEpoch;
     final j = await _api.workspaceResource(
       bearerToken: await _validBearerToken(),
       storeId: sid,
@@ -677,7 +679,10 @@ class SellerRepository {
           ),
         )
         .toList();
-    if(notificationEpoch==_notificationEpoch){_notificationStore = sid;_notifications = result;}
+    if (notificationEpoch == _notificationEpoch) {
+      _notificationStore = sid;
+      _notifications = result;
+    }
     return result;
   }
 
@@ -716,9 +721,8 @@ class SellerRepository {
       body: {'keys': _notifications.map((n) => n.id).toList()},
     );
     if (_notificationStore == sid)
-      _notifications = _notifications
-          .map((n) => n.copyWith(isRead: true))
-          .toList();
+      _notifications =
+          _notifications.map((n) => n.copyWith(isRead: true)).toList();
   }
 
   Future<ResponsibleProfile> fetchResponsibleProfile(String sid) async {
@@ -735,13 +739,14 @@ class SellerRepository {
   Future<void> saveResponsibleProfile(
     String sid,
     ResponsibleProfile profile,
-  ) async => _api.workspaceResource(
-    bearerToken: await _validBearerToken(),
-    storeId: sid,
-    resource: 'profile',
-    method: 'PUT',
-    body: profile.toJson(),
-  );
+  ) async =>
+      _api.workspaceResource(
+        bearerToken: await _validBearerToken(),
+        storeId: sid,
+        resource: 'profile',
+        method: 'PUT',
+        body: profile.toJson(),
+      );
   Future<List<CustomerConversation>> fetchConversations(String sid) async {
     final j = await _api.workspaceResource(
       bearerToken: await _validBearerToken(),
@@ -757,26 +762,28 @@ class SellerRepository {
     String sid,
     String cid, {
     String? before,
-  }) async => ChatMessagesBundle.fromJson(
-    await _api.workspaceResource(
-      bearerToken: await _validBearerToken(),
-      storeId: sid,
-      resource: 'conversations/$cid',
-      query: before == null ? null : {'before': before},
-    ),
-  );
+  }) async =>
+      ChatMessagesBundle.fromJson(
+        await _api.workspaceResource(
+          bearerToken: await _validBearerToken(),
+          storeId: sid,
+          resource: 'conversations/$cid',
+          query: before == null ? null : {'before': before},
+        ),
+      );
   Future<void> sendChatMessage(
     String sid,
     String cid,
     String text,
     String clientId,
-  ) async => _api.workspaceResource(
-    bearerToken: await _validBearerToken(),
-    storeId: sid,
-    resource: 'conversations/$cid',
-    method: 'POST',
-    body: {'body': text, 'client_message_id': clientId},
-  );
+  ) async =>
+      _api.workspaceResource(
+        bearerToken: await _validBearerToken(),
+        storeId: sid,
+        resource: 'conversations/$cid',
+        method: 'POST',
+        body: {'body': text, 'client_message_id': clientId},
+      );
   Future<void> markChatRead(String sid, String cid, String messageId) async =>
       _api.workspaceResource(
         bearerToken: await _validBearerToken(),

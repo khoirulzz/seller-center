@@ -13,9 +13,8 @@ class SellerGuideAnchors {
   final store = GlobalKey(debugLabel: 'guide-store');
   final tabs = List.generate(5, (i) => GlobalKey(debugLabel: 'guide-tab-$i'));
 
-  GlobalKey keyFor(SellerGuideTarget target) => target == SellerGuideTarget.store
-      ? store
-      : tabs[target.index - 1];
+  GlobalKey keyFor(SellerGuideTarget target) =>
+      target == SellerGuideTarget.store ? store : tabs[target.index - 1];
 }
 
 class SellerGuideScope extends InheritedWidget {
@@ -103,7 +102,8 @@ class _SellerFeatureGuideState extends State<SellerFeatureGuide> {
 
   Future<void> _showTour() async {
     final userId = widget.userId;
-    if (!mounted || !widget.eligible || userId == null || _route != null) return;
+    if (!mounted || !widget.eligible || userId == null || _route != null)
+      return;
     if (!(ModalRoute.of(context)?.isCurrent ?? true)) return;
     final route = RawDialogRoute<bool>(
       barrierDismissible: false,
@@ -117,8 +117,8 @@ class _SellerFeatureGuideState extends State<SellerFeatureGuide> {
     );
     _route = route;
     try {
-      final acknowledged = await Navigator.of(context, rootNavigator: true)
-          .push<bool>(route);
+      final acknowledged =
+          await Navigator.of(context, rootNavigator: true).push<bool>(route);
       if (acknowledged == true) await _service.markSeen(userId);
     } catch (_) {
       // Dismissal remains available if preference persistence is unavailable.
@@ -144,9 +144,9 @@ class _SellerFeatureGuideState extends State<SellerFeatureGuide> {
 
   @override
   Widget build(BuildContext context) => SellerGuideScope(
-    replay: () => unawaited(_showTour()),
-    child: Builder(builder: (context) => widget.builder(context, _anchors)),
-  );
+        replay: () => unawaited(_showTour()),
+        child: Builder(builder: (context) => widget.builder(context, _anchors)),
+      );
 }
 
 class _GuideStep {
@@ -182,38 +182,38 @@ class _SellerGuideOverlayState extends State<SellerGuideOverlay> {
   bool _closing = false;
 
   List<_GuideStep> get _steps => [
-    const _GuideStep(
-      SellerGuideTarget.store,
-      'Kenali ruang tokomu',
-      'Nama di atas menunjukkan toko yang sedang dikelola. Ketuk untuk berpindah toko; produk dan pesanan mengikuti toko aktif.',
-    ),
-    const _GuideStep(
-      SellerGuideTarget.home,
-      'Mulai dari Beranda',
-      'Lihat ringkasan penjualan, pesanan yang perlu diproses, dan peringatan stok dalam satu halaman.',
-    ),
-    const _GuideStep(
-      SellerGuideTarget.orders,
-      'Pantau setiap pesanan',
-      'Cari pesanan, periksa pembayaran, lalu lanjutkan proses pengiriman atau pengambilan sesuai statusnya.',
-    ),
-    const _GuideStep(
-      SellerGuideTarget.products,
-      'Siapkan produk jualanmu',
-      'Tambahkan produk dan foto, atur harga serta varian, lalu perbarui stok melalui menu Produk.',
-    ),
-    if (widget.showAnalytics)
-      const _GuideStep(
-        SellerGuideTarget.analytics,
-        'Baca perkembangan penjualan',
-        'Pilih rentang tanggal untuk melihat tren penjualan dan laporan. Ekspor datanya saat diperlukan.',
-      ),
-    const _GuideStep(
-      SellerGuideTarget.shop,
-      'Pengaturan ada di Toko',
-      'Buka chat pelanggan, isi penanggung jawab, dan kelola pengaturan sesuai aksesmu. Untuk mengulang panduan ini, buka Toko → Panduan fitur.',
-    ),
-  ];
+        const _GuideStep(
+          SellerGuideTarget.store,
+          'Kenali ruang tokomu',
+          'Nama di atas menunjukkan toko yang sedang dikelola. Ketuk untuk berpindah toko; produk dan pesanan mengikuti toko aktif.',
+        ),
+        const _GuideStep(
+          SellerGuideTarget.home,
+          'Mulai dari Beranda',
+          'Lihat ringkasan penjualan, pesanan yang perlu diproses, dan peringatan stok dalam satu halaman.',
+        ),
+        const _GuideStep(
+          SellerGuideTarget.orders,
+          'Pantau setiap pesanan',
+          'Cari pesanan, periksa pembayaran, lalu lanjutkan proses pengiriman atau pengambilan sesuai statusnya.',
+        ),
+        const _GuideStep(
+          SellerGuideTarget.products,
+          'Siapkan produk jualanmu',
+          'Tambahkan produk dan foto, atur harga serta varian, lalu perbarui stok melalui menu Produk.',
+        ),
+        if (widget.showAnalytics)
+          const _GuideStep(
+            SellerGuideTarget.analytics,
+            'Baca perkembangan penjualan',
+            'Pilih rentang tanggal untuk melihat tren penjualan dan laporan. Ekspor datanya saat diperlukan.',
+          ),
+        const _GuideStep(
+          SellerGuideTarget.shop,
+          'Pengaturan ada di Toko',
+          'Buka chat pelanggan, isi penanggung jawab, dan kelola pengaturan sesuai aksesmu. Untuk mengulang panduan ini, buka Toko → Panduan fitur.',
+        ),
+      ];
 
   @override
   void didChangeDependencies() {
@@ -227,8 +227,8 @@ class _SellerGuideOverlayState extends State<SellerGuideOverlay> {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       _scheduled = false;
       if (!mounted) return;
-      final anchorContext = widget.anchors.keyFor(_steps[_index].target)
-          .currentContext;
+      final anchorContext =
+          widget.anchors.keyFor(_steps[_index].target).currentContext;
       if (anchorContext != null) {
         await Scrollable.ensureVisible(anchorContext, alignment: .5);
       }
@@ -239,13 +239,15 @@ class _SellerGuideOverlayState extends State<SellerGuideOverlay> {
       if (root is! RenderBox || !root.hasSize) return;
       Rect? target;
       if (anchor is RenderBox && anchor.attached && anchor.hasSize) {
-        target = root.globalToLocal(anchor.localToGlobal(Offset.zero)) &
-            anchor.size;
+        target =
+            root.globalToLocal(anchor.localToGlobal(Offset.zero)) & anchor.size;
         if (MediaQuery.sizeOf(context).width >= 600 &&
             _steps[_index].target != SellerGuideTarget.store) {
           target = Rect.fromLTRB(
-            target.left - 12, target.top - 40,
-            target.right + 12, target.bottom + 10,
+            target.left - 12,
+            target.top - 40,
+            target.right + 12,
+            target.bottom + 10,
           );
         } else {
           target = target.inflate(4);
@@ -306,7 +308,8 @@ class _SellerGuideOverlayState extends State<SellerGuideOverlay> {
         child: LayoutBuilder(
           builder: (context, constraints) {
             final safe = Rect.fromLTRB(
-              16, padding.top + 64,
+              16,
+              padding.top + 64,
               constraints.maxWidth - 16,
               constraints.maxHeight - padding.bottom - 16,
             );
@@ -346,7 +349,8 @@ class _SellerGuideOverlayState extends State<SellerGuideOverlay> {
                         child: Semantics(
                           liveRegion: true,
                           namesRoute: true,
-                          label: 'Panduan fitur, langkah ${_index + 1} dari ${_steps.length}',
+                          label:
+                              'Panduan fitur, langkah ${_index + 1} dari ${_steps.length}',
                           child: Material(
                             key: _card,
                             color: Colors.white,
@@ -404,13 +408,15 @@ class _SellerGuideOverlayState extends State<SellerGuideOverlay> {
                                         onPressed: () => _move(1),
                                         icon: NsIcon(
                                           _index == _steps.length - 1
-                                              ? 'check' : 'arrow-right',
+                                              ? 'check'
+                                              : 'arrow-right',
                                           color: Colors.white,
                                           size: 18,
                                         ),
                                         label: Text(
                                           _index == _steps.length - 1
-                                              ? 'Selesai' : 'Lanjut',
+                                              ? 'Selesai'
+                                              : 'Lanjut',
                                         ),
                                       ),
                                     ],
@@ -454,8 +460,8 @@ class _GuideCardLayout extends SingleChildLayoutDelegate {
             : target.top - safe.top - 24;
     return BoxConstraints(
       minWidth: 0,
-      maxWidth: math.min(360.0, _onSide
-          ? safe.right - target.right - 24 : safe.width),
+      maxWidth: math.min(
+          360.0, _onSide ? safe.right - target.right - 24 : safe.width),
       maxHeight: math.max(80.0, math.min(safe.height, available)),
     );
   }
@@ -465,10 +471,12 @@ class _GuideCardLayout extends SingleChildLayoutDelegate {
     final x = _onSide
         ? target.right + 24
         : (target.center.dx - childSize.width / 2)
-            .clamp(safe.left, safe.right - childSize.width).toDouble();
+            .clamp(safe.left, safe.right - childSize.width)
+            .toDouble();
     final y = _onSide
         ? (target.center.dy - childSize.height / 2)
-            .clamp(safe.top, safe.bottom - childSize.height).toDouble()
+            .clamp(safe.top, safe.bottom - childSize.height)
+            .toDouble()
         : _below
             ? math.max(safe.top, target.bottom + 24)
             : math.min(target.top - childSize.height - 24,
@@ -478,7 +486,8 @@ class _GuideCardLayout extends SingleChildLayoutDelegate {
 
   @override
   bool shouldRelayout(_GuideCardLayout oldDelegate) =>
-      safe != oldDelegate.safe || target != oldDelegate.target ||
+      safe != oldDelegate.safe ||
+      target != oldDelegate.target ||
       rail != oldDelegate.rail;
 }
 
@@ -489,17 +498,21 @@ class _GuideSpotlightPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final path = Path()..fillType = PathFillType.evenOdd
+    final path = Path()
+      ..fillType = PathFillType.evenOdd
       ..addRect(Offset.zero & size);
-    final hole = target == null ? null
+    final hole = target == null
+        ? null
         : RRect.fromRectAndRadius(target!, const Radius.circular(14));
     if (hole != null) path.addRRect(hole);
     canvas.drawPath(path, Paint()..color = const Color(0xB8000000));
     if (hole == null) return;
-    canvas.drawRRect(hole, Paint()
-      ..color = const Color(0xFFFF8BAE)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2);
+    canvas.drawRRect(
+        hole,
+        Paint()
+          ..color = const Color(0xFFFF8BAE)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2);
     final panel = card;
     if (panel == null || panel.overlaps(target!)) return;
     final from = target!;
@@ -510,14 +523,17 @@ class _GuideSpotlightPainter extends CustomPainter {
       end = Offset(panel.left - 5, panel.center.dy);
     } else if (panel.top > from.bottom) {
       start = Offset(from.center.dx, from.bottom + 5);
-      end = Offset(from.center.dx.clamp(
-          panel.left + 20, panel.right - 20).toDouble(), panel.top - 5);
+      end = Offset(
+          from.center.dx.clamp(panel.left + 20, panel.right - 20).toDouble(),
+          panel.top - 5);
     } else {
       start = Offset(from.center.dx, from.top - 5);
-      end = Offset(from.center.dx.clamp(
-          panel.left + 20, panel.right - 20).toDouble(), panel.bottom + 5);
+      end = Offset(
+          from.center.dx.clamp(panel.left + 20, panel.right - 20).toDouble(),
+          panel.bottom + 5);
     }
-    final line = Path()..moveTo(start.dx, start.dy)
+    final line = Path()
+      ..moveTo(start.dx, start.dy)
       ..quadraticBezierTo(start.dx, end.dy, end.dx, end.dy);
     final paint = Paint()
       ..color = Colors.white
@@ -526,8 +542,9 @@ class _GuideSpotlightPainter extends CustomPainter {
       ..style = PaintingStyle.stroke;
     for (final metric in line.computeMetrics()) {
       for (double offset = 0; offset < metric.length; offset += 9) {
-        canvas.drawPath(metric.extractPath(offset,
-            math.min(offset + 4, metric.length)), paint);
+        canvas.drawPath(
+            metric.extractPath(offset, math.min(offset + 4, metric.length)),
+            paint);
       }
     }
   }

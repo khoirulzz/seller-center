@@ -17,46 +17,46 @@ class PlatformAdminScreen extends StatelessWidget {
   final SellerAppState appState;
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('Admin platform')),
-    body: ListView(
-      padding: const EdgeInsets.all(24),
-      children: [
-        const Icon(Icons.admin_panel_settings_outlined, size: 64),
-        const SizedBox(height: 24),
-        Text(
-          'Akun admin Nalaro',
-          style: Theme.of(context).textTheme.headlineSmall,
+        appBar: AppBar(title: const Text('Admin platform')),
+        body: ListView(
+          padding: const EdgeInsets.all(24),
+          children: [
+            const Icon(Icons.admin_panel_settings_outlined, size: 64),
+            const SizedBox(height: 24),
+            Text(
+              'Akun admin Nalaro',
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
+            Text(appState.user?.email ?? ''),
+            const SizedBox(height: 12),
+            const Text(
+              'Akun ini tidak menjadi anggota toko. Pengelolaan seluruh toko tersedia melalui dashboard admin web. Setiap akses ke toko dipilih secara eksplisit dan dicatat.',
+            ),
+            const SizedBox(height: 20),
+            SelectableText('${AppConfig.defaultApiBaseUrl}/admin'),
+            const SizedBox(height: 12),
+            FilledButton.icon(
+              onPressed: () async {
+                await Clipboard.setData(
+                  ClipboardData(text: '${AppConfig.defaultApiBaseUrl}/admin'),
+                );
+                if (context.mounted)
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Alamat dashboard admin disalin.'),
+                    ),
+                  );
+              },
+              icon: const Icon(Icons.copy_outlined),
+              label: const Text('Salin alamat dashboard admin'),
+            ),
+            TextButton(
+              onPressed: appState.signOut,
+              child: const Text('Keluar dari akun'),
+            ),
+          ],
         ),
-        Text(appState.user?.email ?? ''),
-        const SizedBox(height: 12),
-        const Text(
-          'Akun ini tidak menjadi anggota toko. Pengelolaan seluruh toko tersedia melalui dashboard admin web. Setiap akses ke toko dipilih secara eksplisit dan dicatat.',
-        ),
-        const SizedBox(height: 20),
-        SelectableText('${AppConfig.defaultApiBaseUrl}/admin'),
-        const SizedBox(height: 12),
-        FilledButton.icon(
-          onPressed: () async {
-            await Clipboard.setData(
-              ClipboardData(text: '${AppConfig.defaultApiBaseUrl}/admin'),
-            );
-            if (context.mounted)
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Alamat dashboard admin disalin.'),
-                ),
-              );
-          },
-          icon: const Icon(Icons.copy_outlined),
-          label: const Text('Salin alamat dashboard admin'),
-        ),
-        TextButton(
-          onPressed: appState.signOut,
-          child: const Text('Keluar dari akun'),
-        ),
-      ],
-    ),
-  );
+      );
 }
 
 class ResponsibleProfileScreen extends StatefulWidget {
@@ -155,145 +155,145 @@ class _ResponsibleProfileState extends State<ResponsibleProfileScreen> {
 
   @override
   Widget build(BuildContext context) => NsFormExitGuard(
-    dirty: dirty,
-    busy: busy,
-    confirmExit: () async {
-      final leave = await showDialog<bool>(
-        context: context,
-        builder: (dialog) => AlertDialog(
-          title: const Text('Tinggalkan perubahan?'),
-          content: const Text('Perubahan profil belum disimpan.'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialog, false),
-              child: const Text('Lanjut mengisi'),
+        dirty: dirty,
+        busy: busy,
+        confirmExit: () async {
+          final leave = await showDialog<bool>(
+            context: context,
+            builder: (dialog) => AlertDialog(
+              title: const Text('Tinggalkan perubahan?'),
+              content: const Text('Perubahan profil belum disimpan.'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(dialog, false),
+                  child: const Text('Lanjut mengisi'),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.pop(dialog, true),
+                  child: const Text('Tinggalkan'),
+                ),
+              ],
             ),
-            TextButton(
-              onPressed: () => Navigator.pop(dialog, true),
-              child: const Text('Tinggalkan'),
-            ),
-          ],
+          );
+          if (leave == true && mounted) setState(() => dirty = false);
+          return leave == true;
+        },
+        child: Scaffold(
+          appBar: AppBar(title: const Text('Penanggung jawab')),
+          body: loading
+              ? const Center(child: CircularProgressIndicator())
+              : Form(
+                  key: form,
+                  child: ListView(
+                    padding: const EdgeInsets.all(20),
+                    children: [
+                      const Text(
+                        'Profil pribadi untuk operasional toko. Hanya pemilik dan manager yang dapat mengakses informasi ini.',
+                      ),
+                      const SizedBox(height: 20),
+                      for (var i = 0; i < 6; i++)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 16),
+                          child: TextFormField(
+                            controller: fields[i],
+                            enabled: !busy && i != 4,
+                            maxLength: i == 5
+                                ? 2000
+                                : i == 0
+                                    ? 120
+                                    : i == 1
+                                        ? 80
+                                        : i == 2
+                                            ? 25
+                                            : i == 3
+                                                ? 254
+                                                : 10,
+                            maxLines: i == 5 ? 3 : 1,
+                            keyboardType: i == 2
+                                ? TextInputType.phone
+                                : i == 3
+                                    ? TextInputType.emailAddress
+                                    : TextInputType.text,
+                            decoration: InputDecoration(
+                              labelText: [
+                                'Nama lengkap',
+                                'Jabatan',
+                                'Nomor telepon',
+                                'Email operasional (opsional)',
+                                'Tanggal lahir (opsional)',
+                                'Alamat operasional',
+                              ][i],
+                            ),
+                            onChanged: (_) => setState(() => dirty = true),
+                            validator: (value) {
+                              final v = (value ?? '').trim();
+                              if ((i == 0 || i == 1) && v.length < 2)
+                                return 'Isi minimal 2 karakter.';
+                              if (i == 2 &&
+                                  !RegExp(r'^[+0-9 ()-]{8,25}$').hasMatch(v))
+                                return 'Nomor telepon tidak valid.';
+                              if (i == 3 &&
+                                  v.isNotEmpty &&
+                                  !RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
+                                      .hasMatch(v)) return 'Email tidak valid.';
+                              return null;
+                            },
+                          ),
+                        ),
+                      OutlinedButton.icon(
+                        onPressed: busy
+                            ? null
+                            : () async {
+                                final d = await showDatePicker(
+                                  context: context,
+                                  initialDate:
+                                      DateTime.tryParse(fields[4].text) ??
+                                          DateTime(1990),
+                                  firstDate: DateTime(1900),
+                                  lastDate: DateTime.now(),
+                                );
+                                if (d != null && mounted)
+                                  setState(() {
+                                    fields[4].text =
+                                        NsFormatters.calendarDate(d);
+                                    dirty = true;
+                                  });
+                              },
+                        icon: const Icon(Icons.calendar_month_outlined),
+                        label: const Text('Pilih tanggal lahir'),
+                      ),
+                      if (fields[4].text.isNotEmpty)
+                        TextButton(
+                          onPressed: busy
+                              ? null
+                              : () => setState(() {
+                                    fields[4].clear();
+                                    dirty = true;
+                                  }),
+                          child: const Text('Hapus tanggal lahir'),
+                        ),
+                      if (DateTime.tryParse(fields[4].text)
+                          case final DateTime birth)
+                        Text(
+                          'Umur: ${DateTime.now().year - birth.year - ((DateTime.now().month < birth.month || (DateTime.now().month == birth.month && DateTime.now().day < birth.day)) ? 1 : 0)} tahun',
+                        ),
+                      if (error != null)
+                        Text(
+                          error!,
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.error,
+                          ),
+                        ),
+                      const SizedBox(height: 16),
+                      FilledButton(
+                        onPressed: busy ? null : save,
+                        child: Text(busy ? 'Menyimpan…' : 'Simpan informasi'),
+                      ),
+                    ],
+                  ),
+                ),
         ),
       );
-      if (leave == true && mounted) setState(() => dirty = false);
-      return leave == true;
-    },
-    child: Scaffold(
-      appBar: AppBar(title: const Text('Penanggung jawab')),
-      body: loading
-          ? const Center(child: CircularProgressIndicator())
-          : Form(
-              key: form,
-              child: ListView(
-                padding: const EdgeInsets.all(20),
-                children: [
-                  const Text(
-                    'Profil pribadi untuk operasional toko. Hanya pemilik dan manager yang dapat mengakses informasi ini.',
-                  ),
-                  const SizedBox(height: 20),
-                  for (var i = 0; i < 6; i++)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 16),
-                      child: TextFormField(
-                        controller: fields[i],
-                        enabled: !busy && i != 4,
-                        maxLength: i == 5
-                            ? 2000
-                            : i == 0
-                            ? 120
-                            : i == 1
-                            ? 80
-                            : i == 2
-                            ? 25
-                            : i == 3
-                            ? 254
-                            : 10,
-                        maxLines: i == 5 ? 3 : 1,
-                        keyboardType: i == 2
-                            ? TextInputType.phone
-                            : i == 3
-                            ? TextInputType.emailAddress
-                            : TextInputType.text,
-                        decoration: InputDecoration(
-                          labelText: [
-                            'Nama lengkap',
-                            'Jabatan',
-                            'Nomor telepon',
-                            'Email operasional (opsional)',
-                            'Tanggal lahir (opsional)',
-                            'Alamat operasional',
-                          ][i],
-                        ),
-                        onChanged: (_) => setState(() => dirty = true),
-                        validator: (value) {
-                          final v = (value ?? '').trim();
-                          if ((i == 0 || i == 1) && v.length < 2)
-                            return 'Isi minimal 2 karakter.';
-                          if (i == 2 &&
-                              !RegExp(r'^[+0-9 ()-]{8,25}$').hasMatch(v))
-                            return 'Nomor telepon tidak valid.';
-                          if (i == 3 &&
-                              v.isNotEmpty &&
-                              !RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
-                                  .hasMatch(v))
-                            return 'Email tidak valid.';
-                          return null;
-                        },
-                      ),
-                    ),
-                  OutlinedButton.icon(
-                    onPressed: busy
-                        ? null
-                        : () async {
-                            final d = await showDatePicker(
-                              context: context,
-                              initialDate:
-                                  DateTime.tryParse(fields[4].text) ??
-                                  DateTime(1990),
-                              firstDate: DateTime(1900),
-                              lastDate: DateTime.now(),
-                            );
-                            if (d != null && mounted)
-                              setState(() {
-                                fields[4].text = NsFormatters.calendarDate(d);
-                                dirty = true;
-                              });
-                          },
-                    icon: const Icon(Icons.calendar_month_outlined),
-                    label: const Text('Pilih tanggal lahir'),
-                  ),
-                  if (fields[4].text.isNotEmpty)
-                    TextButton(
-                      onPressed: busy
-                          ? null
-                          : () => setState(() {
-                              fields[4].clear();
-                              dirty = true;
-                            }),
-                      child: const Text('Hapus tanggal lahir'),
-                    ),
-                  if (DateTime.tryParse(fields[4].text)
-                      case final DateTime birth)
-                    Text(
-                      'Umur: ${DateTime.now().year - birth.year - ((DateTime.now().month < birth.month || (DateTime.now().month == birth.month && DateTime.now().day < birth.day)) ? 1 : 0)} tahun',
-                    ),
-                  if (error != null)
-                    Text(
-                      error!,
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.error,
-                      ),
-                    ),
-                  const SizedBox(height: 16),
-                  FilledButton(
-                    onPressed: busy ? null : save,
-                    child: Text(busy ? 'Menyimpan…' : 'Simpan informasi'),
-                  ),
-                ],
-              ),
-            ),
-    ),
-  );
 }
 
 class CustomerChatScreen extends StatefulWidget {
@@ -481,174 +481,177 @@ class _CustomerChatState extends State<CustomerChatScreen>
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(
-      title: Text(
-        cid == null
-            ? 'Chat pelanggan'
-            : conversations
-                      .where((c) => c.id == cid)
-                      .firstOrNull
-                      ?.customerName ??
-                  'Percakapan',
-      ),
-      leading: cid == null ? null : BackButton(onPressed: () => choose(null)),
-    ),
-    body: Column(
-      children: [
-        if (error != null)
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Text(
-              error!,
-              style: TextStyle(color: Theme.of(context).colorScheme.error),
-            ),
+        appBar: AppBar(
+          title: Text(
+            cid == null
+                ? 'Chat pelanggan'
+                : conversations
+                        .where((c) => c.id == cid)
+                        .firstOrNull
+                        ?.customerName ??
+                    'Percakapan',
           ),
-        if (loading) const LinearProgressIndicator(),
-        Expanded(
-          child: cid == null
-              ? RefreshIndicator(
-                  onRefresh: refresh,
-                  child: ListView(
-                    padding: const EdgeInsets.all(16),
-                    children: [
-                      if (!loading && conversations.isEmpty)
-                        const ListTile(
-                          title: Text('Belum ada percakapan'),
-                          subtitle: Text(
-                            'Pembeli dapat menghubungi toko melalui tombol Chat toko di web.',
-                          ),
-                        ),
-                      for (final c in conversations)
-                        Card(
-                          child: ListTile(
-                            title: Text(c.customerName),
-                            subtitle: Text(
-                              '${c.productName.isEmpty ? '' : '${c.productName} · '}${c.lastMessage}',
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            trailing: c.unread > 0
-                                ? Badge(label: Text('${c.unread}'))
-                                : null,
-                            onTap: () => choose(c.id),
-                          ),
-                        ),
-                      const Padding(
-                        padding: EdgeInsets.all(12),
-                        child: Text(
-                          'Menampilkan hingga 100 percakapan terbaru. Diperbarui saat aplikasi aktif.',
-                        ),
-                      ),
-                    ],
-                  ),
-                )
-              : ListView(
-                  padding: const EdgeInsets.all(16),
-                  children: [
-                    if (hasMore)
-                      TextButton(
-                        onPressed: olderBusy ? null : older,
-                        child: const Text('Muat pesan sebelumnya'),
-                      ),
-                    for (final m in messages)
-                      Align(
-                        alignment: m.senderKind == 'seller'
-                            ? Alignment.centerRight
-                            : Alignment.centerLeft,
-                        child: Container(
-                          margin: const EdgeInsets.only(bottom: 12),
-                          padding: const EdgeInsets.all(14),
-                          constraints: BoxConstraints(
-                            maxWidth: MediaQuery.sizeOf(context).width * .82,
-                          ),
-                          decoration: BoxDecoration(
-                            color: m.senderKind == 'seller'
-                                ? const Color(0xFFFFE5EE)
-                                : Colors.white,
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              SelectableText(m.body),
-                              const SizedBox(height: 6),
-                              Text(
-                                NsFormatters.dateTime(m.createdAt),
-                                style: Theme.of(context).textTheme.labelSmall,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
+          leading:
+              cid == null ? null : BackButton(onPressed: () => choose(null)),
         ),
-        if (cid != null)
-          SafeArea(
-            top: false,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-              child: Column(
-                children: [
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
+        body: Column(
+          children: [
+            if (error != null)
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Text(
+                  error!,
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                ),
+              ),
+            if (loading) const LinearProgressIndicator(),
+            Expanded(
+              child: cid == null
+                  ? RefreshIndicator(
+                      onRefresh: refresh,
+                      child: ListView(
+                        padding: const EdgeInsets.all(16),
+                        children: [
+                          if (!loading && conversations.isEmpty)
+                            const ListTile(
+                              title: Text('Belum ada percakapan'),
+                              subtitle: Text(
+                                'Pembeli dapat menghubungi toko melalui tombol Chat toko di web.',
+                              ),
+                            ),
+                          for (final c in conversations)
+                            Card(
+                              child: ListTile(
+                                title: Text(c.customerName),
+                                subtitle: Text(
+                                  '${c.productName.isEmpty ? '' : '${c.productName} · '}${c.lastMessage}',
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                trailing: c.unread > 0
+                                    ? Badge(label: Text('${c.unread}'))
+                                    : null,
+                                onTap: () => choose(c.id),
+                              ),
+                            ),
+                          const Padding(
+                            padding: EdgeInsets.all(12),
+                            child: Text(
+                              'Menampilkan hingga 100 percakapan terbaru. Diperbarui saat aplikasi aktif.',
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  : ListView(
+                      padding: const EdgeInsets.all(16),
                       children: [
-                        for (final text in [
-                          'Halo, ada yang bisa kami bantu?',
-                          'Pesanan sedang kami periksa.',
-                          'Terima kasih sudah berbelanja.',
-                        ])
-                          Padding(
-                            padding: const EdgeInsets.only(right: 8),
-                            child: ActionChip(
-                              label: Text(text),
-                              onPressed: sending
-                                  ? null
-                                  : () {
-                                      composer.text = text;
-                                    },
+                        if (hasMore)
+                          TextButton(
+                            onPressed: olderBusy ? null : older,
+                            child: const Text('Muat pesan sebelumnya'),
+                          ),
+                        for (final m in messages)
+                          Align(
+                            alignment: m.senderKind == 'seller'
+                                ? Alignment.centerRight
+                                : Alignment.centerLeft,
+                            child: Container(
+                              margin: const EdgeInsets.only(bottom: 12),
+                              padding: const EdgeInsets.all(14),
+                              constraints: BoxConstraints(
+                                maxWidth:
+                                    MediaQuery.sizeOf(context).width * .82,
+                              ),
+                              decoration: BoxDecoration(
+                                color: m.senderKind == 'seller'
+                                    ? const Color(0xFFFFE5EE)
+                                    : Colors.white,
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  SelectableText(m.body),
+                                  const SizedBox(height: 6),
+                                  Text(
+                                    NsFormatters.dateTime(m.createdAt),
+                                    style:
+                                        Theme.of(context).textTheme.labelSmall,
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                       ],
                     ),
-                  ),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.end,
+            ),
+            if (cid != null)
+              SafeArea(
+                top: false,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+                  child: Column(
                     children: [
-                      Expanded(
-                        child: TextField(
-                          controller: composer,
-                          enabled: !sending,
-                          maxLength: 4000,
-                          minLines: 1,
-                          maxLines: 4,
-                          decoration: const InputDecoration(
-                            labelText: 'Pesan',
-                            counterText: '',
-                          ),
+                      SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: [
+                            for (final text in [
+                              'Halo, ada yang bisa kami bantu?',
+                              'Pesanan sedang kami periksa.',
+                              'Terima kasih sudah berbelanja.',
+                            ])
+                              Padding(
+                                padding: const EdgeInsets.only(right: 8),
+                                child: ActionChip(
+                                  label: Text(text),
+                                  onPressed: sending
+                                      ? null
+                                      : () {
+                                          composer.text = text;
+                                        },
+                                ),
+                              ),
+                          ],
                         ),
                       ),
-                      IconButton(
-                        onPressed: sending ? null : send,
-                        tooltip: 'Kirim pesan',
-                        icon: sending
-                            ? const SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(),
-                              )
-                            : const Icon(Icons.send_outlined),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Expanded(
+                            child: TextField(
+                              controller: composer,
+                              enabled: !sending,
+                              maxLength: 4000,
+                              minLines: 1,
+                              maxLines: 4,
+                              decoration: const InputDecoration(
+                                labelText: 'Pesan',
+                                counterText: '',
+                              ),
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: sending ? null : send,
+                            tooltip: 'Kirim pesan',
+                            icon: sending
+                                ? const SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(),
+                                  )
+                                : const Icon(Icons.send_outlined),
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                ],
+                ),
               ),
-            ),
-          ),
-      ],
-    ),
-  );
+          ],
+        ),
+      );
 }
 
 String _uuid() {
@@ -690,68 +693,71 @@ class _MerchantNotificationsState extends State<MerchantNotificationsScreen> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(
-      title: const Text('Notifikasi'),
-      actions: [
-        TextButton(
-          onPressed: () async {
-            try {
-              await widget.appState.repository.markAllNotificationsRead();
-              await load();
-            } catch (e) {
-              if (mounted)
-                setState(() => error = NsErrorMapper.toUserMessage(e));
-            }
-          },
-          child: const Text('Baca semua'),
-        ),
-      ],
-    ),
-    body: RefreshIndicator(
-      onRefresh: load,
-      child: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          if (loading) const LinearProgressIndicator(),
-          if (error != null) Text(error!),
-          if (!loading &&
-              widget.appState.repository.getNotificationsForUser().isEmpty)
-            const ListTile(title: Text('Belum ada notifikasi operasional')),
-          for (final n in widget.appState.repository.getNotificationsForUser())
-            Card(
-              child: ListTile(
-                leading: Icon(
-                  n.isRead
-                      ? Icons.notifications_none
-                      : Icons.notifications_active_outlined,
-                ),
-                title: Text(n.title),
-                subtitle: Text(
-                  '${n.summary}\n${NsFormatters.dateTime(n.createdAt)}',
-                ),
-                isThreeLine: true,
-                onTap: () async {
-                  try {
-                    await widget.appState.repository.markNotificationRead(n.id);
-                    if (!context.mounted) return;
-                    context.push(
-                      n.resourceType == 'chat'
-                          ? '/chat'
-                          : n.resourceType == 'inventory'
-                          ? '/produk?tab=inventory'
-                          : '/pesanan',
-                    );
-                  } catch (e) {
-                    if (mounted)
-                      setState(() => error = NsErrorMapper.toUserMessage(e));
-                  }
-                },
-              ),
+        appBar: AppBar(
+          title: const Text('Notifikasi'),
+          actions: [
+            TextButton(
+              onPressed: () async {
+                try {
+                  await widget.appState.repository.markAllNotificationsRead();
+                  await load();
+                } catch (e) {
+                  if (mounted)
+                    setState(() => error = NsErrorMapper.toUserMessage(e));
+                }
+              },
+              child: const Text('Baca semua'),
             ),
-        ],
-      ),
-    ),
-  );
+          ],
+        ),
+        body: RefreshIndicator(
+          onRefresh: load,
+          child: ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              if (loading) const LinearProgressIndicator(),
+              if (error != null) Text(error!),
+              if (!loading &&
+                  widget.appState.repository.getNotificationsForUser().isEmpty)
+                const ListTile(title: Text('Belum ada notifikasi operasional')),
+              for (final n
+                  in widget.appState.repository.getNotificationsForUser())
+                Card(
+                  child: ListTile(
+                    leading: Icon(
+                      n.isRead
+                          ? Icons.notifications_none
+                          : Icons.notifications_active_outlined,
+                    ),
+                    title: Text(n.title),
+                    subtitle: Text(
+                      '${n.summary}\n${NsFormatters.dateTime(n.createdAt)}',
+                    ),
+                    isThreeLine: true,
+                    onTap: () async {
+                      try {
+                        await widget.appState.repository
+                            .markNotificationRead(n.id);
+                        if (!context.mounted) return;
+                        context.push(
+                          n.resourceType == 'chat'
+                              ? '/chat'
+                              : n.resourceType == 'inventory'
+                                  ? '/produk?tab=inventory'
+                                  : '/pesanan',
+                        );
+                      } catch (e) {
+                        if (mounted)
+                          setState(
+                              () => error = NsErrorMapper.toUserMessage(e));
+                      }
+                    },
+                  ),
+                ),
+            ],
+          ),
+        ),
+      );
 }
 
 class NotificationPoller extends StatefulWidget {

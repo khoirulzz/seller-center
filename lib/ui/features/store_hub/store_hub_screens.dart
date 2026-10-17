@@ -24,120 +24,127 @@ class StoreHubScreen extends StatelessWidget {
     String title,
     String subtitle,
     String route,
-  ) => Card(
-    margin: const EdgeInsets.only(bottom: 10),
-    child: ListTile(
-      leading: NsIcon(icon, color: NsColors.brandAction),
-      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
-      subtitle: Text(subtitle),
-      trailing: const NsIcon('chevron-right', size: 18),
-      onTap: () => context.push(route),
-    ),
-  );
-  @override
-  Widget build(BuildContext context) => ListView(
-    key: const PageStorageKey('store-hub'),
-    padding: const EdgeInsets.all(20),
-    children: [
-      Text('Toko', style: Theme.of(context).textTheme.headlineMedium),
-      const SizedBox(height: 6),
-      Text(
-        appState.activeStore?.name ?? 'Pilih toko',
-        style: Theme.of(context).textTheme.titleMedium,
-      ),
-      const SizedBox(height: 20),
-      Text('Pengelolaan toko', style: Theme.of(context).textTheme.titleLarge),
-      const SizedBox(height: 12),
-      item(context,'mail','Chat pelanggan','Baca dan balas percakapan pembeli','/chat'),
-      if(appState.activeRole.canManageSettings)item(context,'shield','Penanggung jawab','Profil pribadi dan kontak operasional','/responsible'),
-      item(
-        context,
-        'settings',
-        'Pengaturan toko',
-        'Identitas, tampilan, pengiriman, dan pembayaran',
-        '/toko/settings',
-      ),
-      if (appState.activeRole.canManageSettings)
-        item(
-          context,
-          'check',
-          'Kesiapan publikasi',
-          'Periksa syarat dan terbitkan toko',
-          '/toko/readiness',
-        ),
-      if (appState.activeRole.canViewCustomersAndAnalytics)
-        item(
-          context,
-          'users',
-          'Pelanggan',
-          'Cari pelanggan dan ringkasan pembelian',
-          '/toko/customers',
-        ),
-      if (appState.activeRole.canChooseBillingPlan)
-        item(
-          context,
-          'credit-card',
-          'Paket & tagihan',
-          'Langganan aktif, invoice, dan penggunaan',
-          '/toko/billing',
-        ),
-      const SizedBox(height: 16),
-      Text('Akun', style: Theme.of(context).textTheme.titleLarge),
-      const SizedBox(height: 12),
-      item(
-        context,
-        'refresh',
-        'Pembaruan aplikasi',
-        'Periksa versi dan pembaruan otomatis',
-        '/app-update',
-      ),
-      item(
-        context,
-        'shield',
-        'Keamanan akun',
-        'Ubah kata sandi akun seller',
-        '/toko/account',
-      ),
-      const SizedBox(height: 16),
-      Text('Bantuan', style: Theme.of(context).textTheme.titleLarge),
-      const SizedBox(height: 12),
+  ) =>
       Card(
         margin: const EdgeInsets.only(bottom: 10),
         child: ListTile(
-          leading: const NsIcon('help', color: NsColors.brandAction),
-          title: const Text('Panduan fitur',
-              style: TextStyle(fontWeight: FontWeight.w600)),
-          subtitle: const Text('Kenali menu dan cara mulai mengelola toko'),
+          leading: NsIcon(icon, color: NsColors.brandAction),
+          title:
+              Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
+          subtitle: Text(subtitle),
           trailing: const NsIcon('chevron-right', size: 18),
-          onTap: SellerGuideScope.maybeOf(context)?.replay,
+          onTap: () => context.push(route),
         ),
-      ),
-      TextButton.icon(
-        icon: const NsIcon('logout', color: NsColors.brandAction),
-        label: const Text('Keluar dari akun'),
-        onPressed: () async {
-          final confirmed = await showDialog<bool>(
-            context: context,
-            builder: (d) => AlertDialog(
-              title: const Text('Keluar dari akun?'),
-              content: const Text('Sesi akan diakhiri pada perangkat ini.'),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(d, false),
-                  child: const Text('Kembali'),
-                ),
-                FilledButton(
-                  onPressed: () => Navigator.pop(d, true),
-                  child: const Text('Keluar'),
-                ),
-              ],
+      );
+  @override
+  Widget build(BuildContext context) => ListView(
+        key: const PageStorageKey('store-hub'),
+        padding: const EdgeInsets.all(20),
+        children: [
+          Text('Toko', style: Theme.of(context).textTheme.headlineMedium),
+          const SizedBox(height: 6),
+          Text(
+            appState.activeStore?.name ?? 'Pilih toko',
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+          const SizedBox(height: 20),
+          Text('Pengelolaan toko',
+              style: Theme.of(context).textTheme.titleLarge),
+          const SizedBox(height: 12),
+          item(context, 'mail', 'Chat pelanggan',
+              'Baca dan balas percakapan pembeli', '/chat'),
+          if (appState.activeRole.canManageSettings)
+            item(context, 'shield', 'Penanggung jawab',
+                'Profil pribadi dan kontak operasional', '/responsible'),
+          item(
+            context,
+            'settings',
+            'Pengaturan toko',
+            'Identitas, tampilan, pengiriman, dan pembayaran',
+            '/toko/settings',
+          ),
+          if (appState.activeRole.canManageSettings)
+            item(
+              context,
+              'check',
+              'Kesiapan publikasi',
+              'Periksa syarat dan terbitkan toko',
+              '/toko/readiness',
             ),
-          );
-          if (confirmed == true && context.mounted) await appState.signOut();
-        },
-      ),
-    ],
-  );
+          if (appState.activeRole.canViewCustomersAndAnalytics)
+            item(
+              context,
+              'users',
+              'Pelanggan',
+              'Cari pelanggan dan ringkasan pembelian',
+              '/toko/customers',
+            ),
+          if (appState.activeRole.canChooseBillingPlan)
+            item(
+              context,
+              'credit-card',
+              'Paket & tagihan',
+              'Langganan aktif, invoice, dan penggunaan',
+              '/toko/billing',
+            ),
+          const SizedBox(height: 16),
+          Text('Akun', style: Theme.of(context).textTheme.titleLarge),
+          const SizedBox(height: 12),
+          item(
+            context,
+            'refresh',
+            'Pembaruan aplikasi',
+            'Periksa versi dan pembaruan otomatis',
+            '/app-update',
+          ),
+          item(
+            context,
+            'shield',
+            'Keamanan akun',
+            'Ubah kata sandi akun seller',
+            '/toko/account',
+          ),
+          const SizedBox(height: 16),
+          Text('Bantuan', style: Theme.of(context).textTheme.titleLarge),
+          const SizedBox(height: 12),
+          Card(
+            margin: const EdgeInsets.only(bottom: 10),
+            child: ListTile(
+              leading: const NsIcon('help', color: NsColors.brandAction),
+              title: const Text('Panduan fitur',
+                  style: TextStyle(fontWeight: FontWeight.w600)),
+              subtitle: const Text('Kenali menu dan cara mulai mengelola toko'),
+              trailing: const NsIcon('chevron-right', size: 18),
+              onTap: SellerGuideScope.maybeOf(context)?.replay,
+            ),
+          ),
+          TextButton.icon(
+            icon: const NsIcon('logout', color: NsColors.brandAction),
+            label: const Text('Keluar dari akun'),
+            onPressed: () async {
+              final confirmed = await showDialog<bool>(
+                context: context,
+                builder: (d) => AlertDialog(
+                  title: const Text('Keluar dari akun?'),
+                  content: const Text('Sesi akan diakhiri pada perangkat ini.'),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(d, false),
+                      child: const Text('Kembali'),
+                    ),
+                    FilledButton(
+                      onPressed: () => Navigator.pop(d, true),
+                      child: const Text('Keluar'),
+                    ),
+                  ],
+                ),
+              );
+              if (confirmed == true && context.mounted)
+                await appState.signOut();
+            },
+          ),
+        ],
+      );
 }
 
 class StoreSettingsScreen extends StatefulWidget {
@@ -181,31 +188,29 @@ class _StoreSettingsScreenState extends State<StoreSettingsScreen> {
       storeId: storeId,
       store: widget.appState.activeStore!,
     );
-    future
-        .then((d) {
-          if (!mounted) return;
-          current = d;
-          names['name']!.text = d.storeName;
-          names['description']!.text = d.storeDescription;
-          names['phone']!.text = d.contactPhone;
-          names['address']!.text = d.pickupAddress;
-          names['shipping']!.text = d.shippingFeeIdr.toString();
-          names['bank']!.text = d.bankDetails;
-          names['policies']!.text = d.policies;
-          names['hero']!.text = d.heroTitle;
-          names['accent']!.text = d.accent;
-          names['hours']!.text = d.openingHours;
-          names['threshold']!.text = d.lowStockThreshold.toString();
-          pickup = d.pickupEnabled;
-          delivery = d.deliveryEnabled;
-          logoUrl = d.logoUrl;
-          heroUrl = d.heroImageUrl;
-          qrisKey = d.qrisMediaKey;
-          hydrating = false;
-          setState(() => dirty = false);
-          widget.appState.setHasUnsavedFormDraft(false);
-        })
-        .catchError((Object _) {});
+    future.then((d) {
+      if (!mounted) return;
+      current = d;
+      names['name']!.text = d.storeName;
+      names['description']!.text = d.storeDescription;
+      names['phone']!.text = d.contactPhone;
+      names['address']!.text = d.pickupAddress;
+      names['shipping']!.text = d.shippingFeeIdr.toString();
+      names['bank']!.text = d.bankDetails;
+      names['policies']!.text = d.policies;
+      names['hero']!.text = d.heroTitle;
+      names['accent']!.text = d.accent;
+      names['hours']!.text = d.openingHours;
+      names['threshold']!.text = d.lowStockThreshold.toString();
+      pickup = d.pickupEnabled;
+      delivery = d.deliveryEnabled;
+      logoUrl = d.logoUrl;
+      heroUrl = d.heroImageUrl;
+      qrisKey = d.qrisMediaKey;
+      hydrating = false;
+      setState(() => dirty = false);
+      widget.appState.setHasUnsavedFormDraft(false);
+    }).catchError((Object _) {});
   }
 
   void onDirty() {
@@ -342,7 +347,8 @@ class _StoreSettingsScreenState extends State<StoreSettingsScreen> {
         (pickup && names['address']!.text.trim().isEmpty) ||
         (delivery && names['phone']!.text.trim().length < 8)) {
       setState(
-        () => error = 'Periksa nama toko, ongkir, warna (#RRGGBB), alamat pickup, kontak pengiriman, dan ambang stok.',
+        () => error =
+            'Periksa nama toko, ongkir, warna (#RRGGBB), alamat pickup, kontak pengiriman, dan ambang stok.',
       );
       return;
     }
@@ -406,7 +412,8 @@ class _StoreSettingsScreenState extends State<StoreSettingsScreen> {
     const helpers = {
       'phone': 'Nomor yang dapat dihubungi pembeli.',
       'shipping': 'Biaya tetap per pesanan melalui kurir toko.',
-      'threshold': 'Tampilkan peringatan jika stok tersedia sama dengan atau di bawah angka ini.',
+      'threshold':
+          'Tampilkan peringatan jika stok tersedia sama dengan atau di bawah angka ini.',
       'accent': 'Kode warna enam digit, diawali #.',
       'bank': 'Nama bank, nomor rekening, dan nama pemilik rekening.',
       'policies': 'Minimal 20 karakter agar toko dapat diterbitkan.',
@@ -418,9 +425,8 @@ class _StoreSettingsScreenState extends State<StoreSettingsScreen> {
         maxLines: lines,
         readOnly: busy || !widget.appState.activeRole.canManageSettings,
         keyboardType: type,
-        textInputAction: lines == 1
-            ? TextInputAction.next
-            : TextInputAction.newline,
+        textInputAction:
+            lines == 1 ? TextInputAction.next : TextInputAction.newline,
         inputFormatters: type == TextInputType.number
             ? [FilteringTextInputFormatter.digitsOnly]
             : null,
@@ -451,166 +457,170 @@ class _StoreSettingsScreenState extends State<StoreSettingsScreen> {
   }
 
   Widget mediaTile(String title, String? url, String target) => ListTile(
-    contentPadding: EdgeInsets.zero,
-    leading: SizedBox(
-      width: 56,
-      height: 56,
-      child: NsProductImage(
-        repository: widget.appState.repository,
-        url: url,
-        label: title,
-      ),
-    ),
-    title: Text(title),
-    subtitle: Text(
-      url == null ? 'Belum ditambahkan' : 'Ketuk foto untuk memperbesar',
-    ),
-    trailing: IconButton(
-      tooltip: 'Ganti $title',
-      icon: const Icon(Icons.upload_outlined),
-      onPressed: busy || !widget.appState.activeRole.canManageSettings
-          ? null
-          : () => upload(target),
-    ),
-  );
+        contentPadding: EdgeInsets.zero,
+        leading: SizedBox(
+          width: 56,
+          height: 56,
+          child: NsProductImage(
+            repository: widget.appState.repository,
+            url: url,
+            label: title,
+          ),
+        ),
+        title: Text(title),
+        subtitle: Text(
+          url == null ? 'Belum ditambahkan' : 'Ketuk foto untuk memperbesar',
+        ),
+        trailing: IconButton(
+          tooltip: 'Ganti $title',
+          icon: const Icon(Icons.upload_outlined),
+          onPressed: busy || !widget.appState.activeRole.canManageSettings
+              ? null
+              : () => upload(target),
+        ),
+      );
   Widget section(String title, List<Widget> children) => Card(
-    margin: const EdgeInsets.only(bottom: 12),
-    child: ExpansionTile(
-      maintainState: true,
-      initiallyExpanded: title == 'Identitas toko',
-      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
-      childrenPadding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-      children: children,
-    ),
-  );
+        margin: const EdgeInsets.only(bottom: 12),
+        child: ExpansionTile(
+          maintainState: true,
+          initiallyExpanded: title == 'Identitas toko',
+          title:
+              Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
+          childrenPadding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+          children: children,
+        ),
+      );
   @override
   Widget build(BuildContext context) => NsFormExitGuard(
-    dirty: dirty,
-    busy: busy,
-    confirmExit: confirmExit,
-    child: Scaffold(
-      appBar: AppBar(
-        title: const Text('Pengaturan toko'),
-        leading: BackButton(onPressed: () => Navigator.of(context).maybePop()),
-      ),
-      bottomNavigationBar: SafeArea(
-        minimum: const EdgeInsets.all(16),
-        child: FilledButton(
-          onPressed:
-              dirty &&
-                  !busy &&
-                  !widget.appState.isOffline &&
-                  widget.appState.activeRole.canManageSettings
-              ? save
-              : null,
-          child: Text(busy ? 'Menyimpan...' : 'Simpan perubahan'),
-        ),
-      ),
-      body: FutureBuilder<StoreSettings>(
-        future: future,
-        builder: (context, snap) {
-          if (snap.connectionState != ConnectionState.done)
-            return const Center(child: CircularProgressIndicator());
-          if (snap.hasError)
-            return Center(
-              child: Text('Pengaturan belum dapat dibuka: ${snap.error}'),
-            );
-          return Form(
-            key: form,
-            autovalidateMode: AutovalidateMode.onUserInteraction,
-            child: ListView(
-              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-              children: [
-                section('Identitas toko', [
-                  field('name', 'Nama toko'),
-                  field('description', 'Deskripsi', lines: 3),
-                  field('phone', 'Kontak toko', type: TextInputType.phone),
-                  field('hours', 'Jam operasional'),
-                ]),
-                section('Tampilan toko', [
-                  field('hero', 'Judul utama toko'),
-                  field('accent', 'Warna toko (contoh #171715)'),
-                  mediaTile('Logo toko', logoUrl, 'logo'),
-                  mediaTile('Banner toko', heroUrl, 'hero'),
-                ]),
-                section('Pengiriman', [
-                  SwitchListTile(
-                    title: const Text('Ambil di tempat'),
-                    value: pickup,
-                    onChanged:
-                        busy || !widget.appState.activeRole.canManageSettings
-                        ? null
-                        : (v) {
-                            setState(() => pickup = v);
-                            onDirty();
-                          },
-                  ),
-                  SwitchListTile(
-                    title: const Text('Kurir toko'),
-                    value: delivery,
-                    onChanged:
-                        busy || !widget.appState.activeRole.canManageSettings
-                        ? null
-                        : (v) {
-                            setState(() => delivery = v);
-                            onDirty();
-                          },
-                  ),
-                  field('address', 'Alamat pengambilan', lines: 3),
-                  field(
-                    'shipping',
-                    'Biaya pengiriman (Rp)',
-                    type: TextInputType.number,
-                  ),
-                ]),
-                section('Pembayaran', [
-                  field('bank', 'Informasi rekening / transfer', lines: 3),
-                  mediaTile(
-                    'Gambar QRIS',
-                    qrisKey == null ? null : '/api/media/$qrisKey',
-                    'qris',
-                  ),
-                  if (qrisKey != null)
-                    TextButton(
-                      onPressed:
-                          busy || !widget.appState.activeRole.canManageSettings
-                          ? null
-                          : () {
-                              setState(() => qrisKey = null);
-                              onDirty();
-                            },
-                      child: const Text('Hapus QRIS dari pengaturan'),
-                    ),
-                ]),
-                section('Kebijakan dan lainnya', [
-                  field('policies', 'Pengiriman dan pengembalian', lines: 5),
-                  field(
-                    'threshold',
-                    'Peringatan stok menipis',
-                    type: TextInputType.number,
-                  ),
-                ]),
-                const SizedBox(height: 12),
-                const Text(
-                  'Domain dan status verifikasinya dikelola oleh dashboard Nalaro Store. Perubahan diterapkan setelah kamu menyimpannya.',
-                ),
-                if (error != null)
-                  Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Text(
-                      error!,
-                      style: const TextStyle(color: Colors.red),
-                    ),
-                  ),
-                const SizedBox(height: 24),
-              ],
+        dirty: dirty,
+        busy: busy,
+        confirmExit: confirmExit,
+        child: Scaffold(
+          appBar: AppBar(
+            title: const Text('Pengaturan toko'),
+            leading:
+                BackButton(onPressed: () => Navigator.of(context).maybePop()),
+          ),
+          bottomNavigationBar: SafeArea(
+            minimum: const EdgeInsets.all(16),
+            child: FilledButton(
+              onPressed: dirty &&
+                      !busy &&
+                      !widget.appState.isOffline &&
+                      widget.appState.activeRole.canManageSettings
+                  ? save
+                  : null,
+              child: Text(busy ? 'Menyimpan...' : 'Simpan perubahan'),
             ),
-          );
-        },
-      ),
-    ),
-  );
+          ),
+          body: FutureBuilder<StoreSettings>(
+            future: future,
+            builder: (context, snap) {
+              if (snap.connectionState != ConnectionState.done)
+                return const Center(child: CircularProgressIndicator());
+              if (snap.hasError)
+                return Center(
+                  child: Text('Pengaturan belum dapat dibuka: ${snap.error}'),
+                );
+              return Form(
+                key: form,
+                autovalidateMode: AutovalidateMode.onUserInteraction,
+                child: ListView(
+                  keyboardDismissBehavior:
+                      ScrollViewKeyboardDismissBehavior.onDrag,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+                  children: [
+                    section('Identitas toko', [
+                      field('name', 'Nama toko'),
+                      field('description', 'Deskripsi', lines: 3),
+                      field('phone', 'Kontak toko', type: TextInputType.phone),
+                      field('hours', 'Jam operasional'),
+                    ]),
+                    section('Tampilan toko', [
+                      field('hero', 'Judul utama toko'),
+                      field('accent', 'Warna toko (contoh #171715)'),
+                      mediaTile('Logo toko', logoUrl, 'logo'),
+                      mediaTile('Banner toko', heroUrl, 'hero'),
+                    ]),
+                    section('Pengiriman', [
+                      SwitchListTile(
+                        title: const Text('Ambil di tempat'),
+                        value: pickup,
+                        onChanged: busy ||
+                                !widget.appState.activeRole.canManageSettings
+                            ? null
+                            : (v) {
+                                setState(() => pickup = v);
+                                onDirty();
+                              },
+                      ),
+                      SwitchListTile(
+                        title: const Text('Kurir toko'),
+                        value: delivery,
+                        onChanged: busy ||
+                                !widget.appState.activeRole.canManageSettings
+                            ? null
+                            : (v) {
+                                setState(() => delivery = v);
+                                onDirty();
+                              },
+                      ),
+                      field('address', 'Alamat pengambilan', lines: 3),
+                      field(
+                        'shipping',
+                        'Biaya pengiriman (Rp)',
+                        type: TextInputType.number,
+                      ),
+                    ]),
+                    section('Pembayaran', [
+                      field('bank', 'Informasi rekening / transfer', lines: 3),
+                      mediaTile(
+                        'Gambar QRIS',
+                        qrisKey == null ? null : '/api/media/$qrisKey',
+                        'qris',
+                      ),
+                      if (qrisKey != null)
+                        TextButton(
+                          onPressed: busy ||
+                                  !widget.appState.activeRole.canManageSettings
+                              ? null
+                              : () {
+                                  setState(() => qrisKey = null);
+                                  onDirty();
+                                },
+                          child: const Text('Hapus QRIS dari pengaturan'),
+                        ),
+                    ]),
+                    section('Kebijakan dan lainnya', [
+                      field('policies', 'Pengiriman dan pengembalian',
+                          lines: 5),
+                      field(
+                        'threshold',
+                        'Peringatan stok menipis',
+                        type: TextInputType.number,
+                      ),
+                    ]),
+                    const SizedBox(height: 12),
+                    const Text(
+                      'Domain dan status verifikasinya dikelola oleh dashboard Nalaro Store. Perubahan diterapkan setelah kamu menyimpannya.',
+                    ),
+                    if (error != null)
+                      Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Text(
+                          error!,
+                          style: const TextStyle(color: Colors.red),
+                        ),
+                      ),
+                    const SizedBox(height: 24),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+      );
 }
 
 class StoreReadinessScreen extends StatefulWidget {
@@ -681,11 +691,14 @@ class _StoreReadinessScreenState extends State<StoreReadinessScreen> {
       }
     } catch (e) {
       if (mounted) {
-        if (e is ApiException && e.isLockedEntitlement &&
+        if (e is ApiException &&
+            e.isLockedEntitlement &&
             widget.appState.activeStore?.status != 'suspended') {
           context.push('/toko/billing');
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Aktifkan paket sebelum menerbitkan toko. Pengaturan tetap tersimpan.')),
+            const SnackBar(
+                content: Text(
+                    'Aktifkan paket sebelum menerbitkan toko. Pengaturan tetap tersimpan.')),
           );
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -700,93 +713,96 @@ class _StoreReadinessScreenState extends State<StoreReadinessScreen> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(
-      title: const Text('Kesiapan toko'),
-      actions: [
-        IconButton(
-          tooltip: 'Muat ulang',
-          icon: const Icon(Icons.refresh),
-          onPressed: () => setState(load),
-        ),
-      ],
-    ),
-    body: FutureBuilder<({StoreSettings settings, List<Product> products})>(
-      future: future,
-      builder: (context, snap) {
-        if (snap.connectionState != ConnectionState.done)
-          return const Center(child: CircularProgressIndicator());
-        if (snap.hasError)
-          return Center(
-            child: Text('Kesiapan belum dapat dimuat: ${snap.error}'),
-          );
-        final d = snap.data!.settings, products = snap.data!.products;
-        final checks = <String, bool>{
-          'Ada produk aktif dengan stok': products.any(
-            (p) => p.status == 'active' && p.totalAvailableStock > 0,
-          ),
-          'Rekening atau QRIS': d.hasPaymentConfigured,
-          'Nomor kontak minimal 8 karakter': d.contactPhone.trim().length >= 8,
-          'Kebijakan toko minimal 20 karakter': d.policies.trim().length >= 20,
-          'Metode pengiriman atau pengambilan': d.hasFulfillmentConfigured,
-          'Alamat pengambilan jika diaktifkan': d.hasValidPickupAddress,
-          'Kontak pengiriman jika diaktifkan': d.hasValidDeliveryContact,
-        };
-        final ready = checks.values.every((v) => v);
-        final published = widget.appState.activeStore?.isPublished ?? false;
-        return ListView(
-          padding: const EdgeInsets.all(20),
-          children: [
-            Text(
-              published ? 'Toko sedang terbit' : 'Siapkan toko sebelum terbit',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 12),
-            for (final check in checks.entries)
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: Icon(
-                  check.value
-                      ? Icons.check_circle_outline
-                      : Icons.error_outline,
-                  color: check.value
-                      ? Colors.green.shade700
-                      : Colors.orange.shade700,
-                ),
-                title: Text(check.key),
-                onTap: check.value
-                    ? null
-                    : () => context.push(
-                        check.key.contains('produk')
-                            ? '/produk'
-                            : '/toko/settings',
-                      ),
-              ),
-            const SizedBox(height: 8),
-            const Text(
-              'Pemeriksaan ini membantu persiapan. Server tetap memverifikasi izin, kuota, dan kelayakan final.',
-            ),
-            const SizedBox(height: 24),
-            FilledButton(
-              onPressed:
-                  busy ||
-                      widget.appState.isOffline ||
-                      !widget.appState.activeRole.canManageSettings ||
-                      (!published && !ready)
-                  ? null
-                  : () => publish(!published),
-              child: Text(
-                busy
-                    ? 'Memproses...'
-                    : published
-                    ? 'Jeda publikasi'
-                    : 'Publikasikan toko',
-              ),
+        appBar: AppBar(
+          title: const Text('Kesiapan toko'),
+          actions: [
+            IconButton(
+              tooltip: 'Muat ulang',
+              icon: const Icon(Icons.refresh),
+              onPressed: () => setState(load),
             ),
           ],
-        );
-      },
-    ),
-  );
+        ),
+        body: FutureBuilder<({StoreSettings settings, List<Product> products})>(
+          future: future,
+          builder: (context, snap) {
+            if (snap.connectionState != ConnectionState.done)
+              return const Center(child: CircularProgressIndicator());
+            if (snap.hasError)
+              return Center(
+                child: Text('Kesiapan belum dapat dimuat: ${snap.error}'),
+              );
+            final d = snap.data!.settings, products = snap.data!.products;
+            final checks = <String, bool>{
+              'Ada produk aktif dengan stok': products.any(
+                (p) => p.status == 'active' && p.totalAvailableStock > 0,
+              ),
+              'Rekening atau QRIS': d.hasPaymentConfigured,
+              'Nomor kontak minimal 8 karakter':
+                  d.contactPhone.trim().length >= 8,
+              'Kebijakan toko minimal 20 karakter':
+                  d.policies.trim().length >= 20,
+              'Metode pengiriman atau pengambilan': d.hasFulfillmentConfigured,
+              'Alamat pengambilan jika diaktifkan': d.hasValidPickupAddress,
+              'Kontak pengiriman jika diaktifkan': d.hasValidDeliveryContact,
+            };
+            final ready = checks.values.every((v) => v);
+            final published = widget.appState.activeStore?.isPublished ?? false;
+            return ListView(
+              padding: const EdgeInsets.all(20),
+              children: [
+                Text(
+                  published
+                      ? 'Toko sedang terbit'
+                      : 'Siapkan toko sebelum terbit',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                const SizedBox(height: 12),
+                for (final check in checks.entries)
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: Icon(
+                      check.value
+                          ? Icons.check_circle_outline
+                          : Icons.error_outline,
+                      color: check.value
+                          ? Colors.green.shade700
+                          : Colors.orange.shade700,
+                    ),
+                    title: Text(check.key),
+                    onTap: check.value
+                        ? null
+                        : () => context.push(
+                              check.key.contains('produk')
+                                  ? '/produk'
+                                  : '/toko/settings',
+                            ),
+                  ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Pemeriksaan ini membantu persiapan. Server tetap memverifikasi izin, kuota, dan kelayakan final.',
+                ),
+                const SizedBox(height: 24),
+                FilledButton(
+                  onPressed: busy ||
+                          widget.appState.isOffline ||
+                          !widget.appState.activeRole.canManageSettings ||
+                          (!published && !ready)
+                      ? null
+                      : () => publish(!published),
+                  child: Text(
+                    busy
+                        ? 'Memproses...'
+                        : published
+                            ? 'Jeda publikasi'
+                            : 'Publikasikan toko',
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
+      );
 }
 
 class CustomersScreen extends StatefulWidget {
@@ -830,8 +846,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
     if (!hasMore ||
         busy ||
         storeId == null ||
-        !widget.appState.activeRole.canViewCustomersAndAnalytics)
-      return;
+        !widget.appState.activeRole.canViewCustomersAndAnalytics) return;
     final current = storeId!, marker = epoch, nextPage = page + 1;
     setState(() {
       busy = true;
@@ -867,102 +882,102 @@ class _CustomersScreenState extends State<CustomersScreen> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('Pelanggan')),
-    body: !widget.appState.activeRole.canViewCustomersAndAnalytics
-        ? const Center(
-            child: Text('Akun ini tidak memiliki akses ke data pelanggan.'),
-          )
-        : RefreshIndicator(
-            onRefresh: () async {
-              reset();
-            },
-            child: ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                TextField(
-                  controller: search,
-                  textInputAction: TextInputAction.search,
-                  decoration: InputDecoration(
-                    hintText: 'Cari nama, email, atau telepon',
-                    prefixIcon: const Icon(Icons.search),
-                    suffixIcon: IconButton(
-                      tooltip: 'Cari pelanggan',
-                      icon: const Icon(Icons.arrow_forward),
-                      onPressed: reset,
+        appBar: AppBar(title: const Text('Pelanggan')),
+        body: !widget.appState.activeRole.canViewCustomersAndAnalytics
+            ? const Center(
+                child: Text('Akun ini tidak memiliki akses ke data pelanggan.'),
+              )
+            : RefreshIndicator(
+                onRefresh: () async {
+                  reset();
+                },
+                child: ListView(
+                  padding: const EdgeInsets.all(16),
+                  children: [
+                    TextField(
+                      controller: search,
+                      textInputAction: TextInputAction.search,
+                      decoration: InputDecoration(
+                        hintText: 'Cari nama, email, atau telepon',
+                        prefixIcon: const Icon(Icons.search),
+                        suffixIcon: IconButton(
+                          tooltip: 'Cari pelanggan',
+                          icon: const Icon(Icons.arrow_forward),
+                          onPressed: reset,
+                        ),
+                      ),
+                      onSubmitted: (_) => reset(),
                     ),
-                  ),
-                  onSubmitted: (_) => reset(),
-                ),
-                const SizedBox(height: 16),
-                for (final item in customers) ...[
-                  ListTile(
-                    contentPadding: const EdgeInsets.symmetric(vertical: 4),
-                    title: Text(item.name),
-                    subtitle: Text(
-                      '${item.ordersCount} pesanan • Terakhir ${NsFormatters.shortDate(item.lastOrderAt)}',
-                    ),
-                    trailing: Text(NsFormatters.rupiah(item.paidTotalIdr)),
-                    onTap: () => showModalBottomSheet<void>(
-                      context: context,
-                      showDragHandle: true,
-                      builder: (ctx) => SafeArea(
-                        child: Padding(
-                          padding: const EdgeInsets.all(20),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                item.name,
-                                style: Theme.of(ctx).textTheme.titleLarge,
+                    const SizedBox(height: 16),
+                    for (final item in customers) ...[
+                      ListTile(
+                        contentPadding: const EdgeInsets.symmetric(vertical: 4),
+                        title: Text(item.name),
+                        subtitle: Text(
+                          '${item.ordersCount} pesanan • Terakhir ${NsFormatters.shortDate(item.lastOrderAt)}',
+                        ),
+                        trailing: Text(NsFormatters.rupiah(item.paidTotalIdr)),
+                        onTap: () => showModalBottomSheet<void>(
+                          context: context,
+                          showDragHandle: true,
+                          builder: (ctx) => SafeArea(
+                            child: Padding(
+                              padding: const EdgeInsets.all(20),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    item.name,
+                                    style: Theme.of(ctx).textTheme.titleLarge,
+                                  ),
+                                  const SizedBox(height: 8),
+                                  SelectableText(item.email),
+                                  SelectableText(item.contactPhone),
+                                  const SizedBox(height: 12),
+                                  Text(
+                                    '${item.ordersCount} pesanan • ${NsFormatters.rupiah(item.paidTotalIdr)} dibayar',
+                                  ),
+                                  const SizedBox(height: 12),
+                                  const Text(
+                                    'Informasi kontak hanya ditampilkan saat Anda membuka pelanggan ini.',
+                                  ),
+                                ],
                               ),
-                              const SizedBox(height: 8),
-                              SelectableText(item.email),
-                              SelectableText(item.contactPhone),
-                              const SizedBox(height: 12),
-                              Text(
-                                '${item.ordersCount} pesanan • ${NsFormatters.rupiah(item.paidTotalIdr)} dibayar',
-                              ),
-                              const SizedBox(height: 12),
-                              const Text(
-                                'Informasi kontak hanya ditampilkan saat Anda membuka pelanggan ini.',
-                              ),
-                            ],
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  ),
-                  const Divider(height: 1),
-                ],
-                if (busy)
-                  const Padding(
-                    padding: EdgeInsets.all(24),
-                    child: Center(child: CircularProgressIndicator()),
-                  ),
-                if (!busy && customers.isEmpty && error == null)
-                  const Padding(
-                    padding: EdgeInsets.all(24),
-                    child: Text('Belum ada pelanggan yang sesuai.'),
-                  ),
-                if (error != null)
-                  ListTile(
-                    title: const Text('Pelanggan belum dapat dimuat'),
-                    subtitle: Text(error!),
-                    trailing: IconButton(
-                      icon: const Icon(Icons.refresh),
-                      onPressed: load,
-                    ),
-                  ),
-                if (hasMore && customers.isNotEmpty)
-                  TextButton(
-                    onPressed: busy ? null : load,
-                    child: const Text('Muat pelanggan lainnya'),
-                  ),
-              ],
-            ),
-          ),
-  );
+                      const Divider(height: 1),
+                    ],
+                    if (busy)
+                      const Padding(
+                        padding: EdgeInsets.all(24),
+                        child: Center(child: CircularProgressIndicator()),
+                      ),
+                    if (!busy && customers.isEmpty && error == null)
+                      const Padding(
+                        padding: EdgeInsets.all(24),
+                        child: Text('Belum ada pelanggan yang sesuai.'),
+                      ),
+                    if (error != null)
+                      ListTile(
+                        title: const Text('Pelanggan belum dapat dimuat'),
+                        subtitle: Text(error!),
+                        trailing: IconButton(
+                          icon: const Icon(Icons.refresh),
+                          onPressed: load,
+                        ),
+                      ),
+                    if (hasMore && customers.isNotEmpty)
+                      TextButton(
+                        onPressed: busy ? null : load,
+                        child: const Text('Muat pelanggan lainnya'),
+                      ),
+                  ],
+                ),
+              ),
+      );
 }
 
 class BillingScreen extends StatefulWidget {
@@ -1256,55 +1271,57 @@ class _AccountSecurityScreenState extends State<AccountSecurityScreen> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('Keamanan akun')),
-    body: ListView(
-      padding: const EdgeInsets.all(20),
-      children: [
-        Text(widget.appState.user?.email ?? ''),
-        const SizedBox(height: 20),
-        TextField(
-          controller: current,
-          obscureText: true,
-          autofillHints: const [AutofillHints.password],
-          textInputAction: TextInputAction.next,
-          decoration: const InputDecoration(labelText: 'Kata sandi saat ini'),
+        appBar: AppBar(title: const Text('Keamanan akun')),
+        body: ListView(
+          padding: const EdgeInsets.all(20),
+          children: [
+            Text(widget.appState.user?.email ?? ''),
+            const SizedBox(height: 20),
+            TextField(
+              controller: current,
+              obscureText: true,
+              autofillHints: const [AutofillHints.password],
+              textInputAction: TextInputAction.next,
+              decoration:
+                  const InputDecoration(labelText: 'Kata sandi saat ini'),
+            ),
+            const SizedBox(height: 18),
+            TextField(
+              controller: next,
+              obscureText: true,
+              autofillHints: const [AutofillHints.newPassword],
+              decoration: const InputDecoration(
+                labelText: 'Kata sandi baru',
+                helperText:
+                    'Minimal 8 karakter, huruf besar, huruf kecil, dan angka.',
+              ),
+            ),
+            const SizedBox(height: 20),
+            if (message != null) Text(message!),
+            FilledButton(
+              onPressed: busy
+                  ? null
+                  : () async {
+                      setState(() => busy = true);
+                      try {
+                        await widget.appState.repository.changePassword(
+                          currentPassword: current.text,
+                          newPassword: next.text,
+                        );
+                        await widget.appState.signOut();
+                      } catch (e) {
+                        if (mounted)
+                          setState(
+                              () => message = NsErrorMapper.toUserMessage(e));
+                      } finally {
+                        if (mounted) setState(() => busy = false);
+                      }
+                    },
+              child: const Text('Ganti kata sandi'),
+            ),
+          ],
         ),
-        const SizedBox(height: 18),
-        TextField(
-          controller: next,
-          obscureText: true,
-          autofillHints: const [AutofillHints.newPassword],
-          decoration: const InputDecoration(
-            labelText: 'Kata sandi baru',
-            helperText:
-                'Minimal 8 karakter, huruf besar, huruf kecil, dan angka.',
-          ),
-        ),
-        const SizedBox(height: 20),
-        if (message != null) Text(message!),
-        FilledButton(
-          onPressed: busy
-              ? null
-              : () async {
-                  setState(() => busy = true);
-                  try {
-                    await widget.appState.repository.changePassword(
-                      currentPassword: current.text,
-                      newPassword: next.text,
-                    );
-                    await widget.appState.signOut();
-                  } catch (e) {
-                    if (mounted)
-                      setState(() => message = NsErrorMapper.toUserMessage(e));
-                  } finally {
-                    if (mounted) setState(() => busy = false);
-                  }
-                },
-          child: const Text('Ganti kata sandi'),
-        ),
-      ],
-    ),
-  );
+      );
 }
 
 class NotificationsScreen extends StatelessWidget {
@@ -1312,20 +1329,21 @@ class NotificationsScreen extends StatelessWidget {
   final SellerAppState appState;
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('Notifikasi')),
-    body: ListView(
-      children: [
-        if (appState.repository.getNotificationsForUser().isEmpty)
-          const ListTile(
-            title: Text('Belum ada notifikasi'),
-            subtitle: Text(
-              'Pembaruan pesanan dapat dilihat melalui tab Pesanan.',
-            ),
-          ),
-        ...appState.repository.getNotificationsForUser().map(
-          (n) => ListTile(title: Text(n.title), subtitle: Text(n.summary)),
+        appBar: AppBar(title: const Text('Notifikasi')),
+        body: ListView(
+          children: [
+            if (appState.repository.getNotificationsForUser().isEmpty)
+              const ListTile(
+                title: Text('Belum ada notifikasi'),
+                subtitle: Text(
+                  'Pembaruan pesanan dapat dilihat melalui tab Pesanan.',
+                ),
+              ),
+            ...appState.repository.getNotificationsForUser().map(
+                  (n) =>
+                      ListTile(title: Text(n.title), subtitle: Text(n.summary)),
+                ),
+          ],
         ),
-      ],
-    ),
-  );
+      );
 }

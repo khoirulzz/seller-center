@@ -59,133 +59,134 @@ class _LoginRegisterScreenState extends State<LoginRegisterScreen> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: Text(widget.isRegister ? 'Daftar' : 'Masuk')),
-    body: SafeArea(
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 460),
-          child: AutofillGroup(
-            child: Form(
-              key: form,
-              child: ListView(
-                shrinkWrap: true,
-                padding: const EdgeInsets.all(24),
-                children: [
-                  const Align(
-                    alignment: Alignment.centerLeft,
-                    child: NsBrandMark(size: 46, showLabel: true),
-                  ),
-                  const SizedBox(height: 28),
-                  Text(
-                    widget.isRegister
-                        ? 'Buat akun seller'
-                        : 'Masuk ke Nalaro Seller',
-                    style: Theme.of(context).textTheme.headlineMedium,
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    widget.isRegister
-                        ? 'Kelola tokomu dari satu tempat.'
-                        : 'Lanjutkan mengelola pesanan dan produk tokomu.',
-                  ),
-                  const SizedBox(height: 28),
-                  TextFormField(
-                    controller: email,
-                    keyboardType: TextInputType.emailAddress,
-                    textInputAction: TextInputAction.next,
-                    autofillHints: const [AutofillHints.email],
-                    decoration: const InputDecoration(labelText: 'Email'),
-                    validator: (v) =>
-                        RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
-                            .hasMatch((v ?? '').trim())
-                        ? null
-                        : 'Masukkan email yang valid.',
-                  ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: password,
-                    obscureText: hidden,
-                    autofillHints: [
-                      widget.isRegister
-                          ? AutofillHints.newPassword
-                          : AutofillHints.password,
-                    ],
-                    textInputAction: TextInputAction.done,
-                    onFieldSubmitted: (_) => submit(),
-                    decoration: InputDecoration(
-                      labelText: 'Kata sandi',
-                      suffixIcon: IconButton(
-                        tooltip: hidden
-                            ? 'Tampilkan kata sandi'
-                            : 'Sembunyikan kata sandi',
-                        onPressed: () => setState(() => hidden = !hidden),
-                        icon: Icon(
-                          hidden
-                              ? Icons.visibility_outlined
-                              : Icons.visibility_off_outlined,
+        appBar: AppBar(title: Text(widget.isRegister ? 'Daftar' : 'Masuk')),
+        body: SafeArea(
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 460),
+              child: AutofillGroup(
+                child: Form(
+                  key: form,
+                  child: ListView(
+                    shrinkWrap: true,
+                    padding: const EdgeInsets.all(24),
+                    children: [
+                      const Align(
+                        alignment: Alignment.centerLeft,
+                        child: NsBrandMark(size: 46, showLabel: true),
+                      ),
+                      const SizedBox(height: 28),
+                      Text(
+                        widget.isRegister
+                            ? 'Buat akun seller'
+                            : 'Masuk ke Nalaro Seller',
+                        style: Theme.of(context).textTheme.headlineMedium,
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        widget.isRegister
+                            ? 'Kelola tokomu dari satu tempat.'
+                            : 'Lanjutkan mengelola pesanan dan produk tokomu.',
+                      ),
+                      const SizedBox(height: 28),
+                      TextFormField(
+                        controller: email,
+                        keyboardType: TextInputType.emailAddress,
+                        textInputAction: TextInputAction.next,
+                        autofillHints: const [AutofillHints.email],
+                        decoration: const InputDecoration(labelText: 'Email'),
+                        validator: (v) => RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
+                                .hasMatch((v ?? '').trim())
+                            ? null
+                            : 'Masukkan email yang valid.',
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: password,
+                        obscureText: hidden,
+                        autofillHints: [
+                          widget.isRegister
+                              ? AutofillHints.newPassword
+                              : AutofillHints.password,
+                        ],
+                        textInputAction: TextInputAction.done,
+                        onFieldSubmitted: (_) => submit(),
+                        decoration: InputDecoration(
+                          labelText: 'Kata sandi',
+                          suffixIcon: IconButton(
+                            tooltip: hidden
+                                ? 'Tampilkan kata sandi'
+                                : 'Sembunyikan kata sandi',
+                            onPressed: () => setState(() => hidden = !hidden),
+                            icon: Icon(
+                              hidden
+                                  ? Icons.visibility_outlined
+                                  : Icons.visibility_off_outlined,
+                            ),
+                          ),
+                        ),
+                        validator: (v) {
+                          if (widget.isRegister &&
+                              !FirebaseAuthService.isPasswordPolicySatisfied(
+                                v ?? '',
+                              )) {
+                            return 'Minimal 8 karakter, huruf besar, kecil dan angka.';
+                          }
+                          if ((v?.length ?? 0) < 1)
+                            return 'Kata sandi wajib diisi.';
+                          return null;
+                        },
+                      ),
+                      if (widget.isRegister) ...[
+                        const SizedBox(height: 10),
+                        const Text(
+                          'Gunakan minimal 8 karakter, huruf besar, huruf kecil, dan angka.',
+                        ),
+                      ],
+                      const SizedBox(height: 26),
+                      ListenableBuilder(
+                        listenable: widget.appState,
+                        builder: (ctx, _) => FilledButton(
+                          onPressed: widget.appState.isBusy ? null : submit,
+                          child: Text(
+                            widget.appState.isBusy
+                                ? 'Memproses…'
+                                : widget.isRegister
+                                    ? 'Buat akun'
+                                    : 'Masuk',
+                          ),
                         ),
                       ),
-                    ),
-                    validator: (v) {
-                      if (widget.isRegister &&
-                          !FirebaseAuthService.isPasswordPolicySatisfied(
-                            v ?? '',
-                          )) {
-                        return 'Minimal 8 karakter, huruf besar, kecil dan angka.';
-                      }
-                      if ((v?.length ?? 0) < 1)
-                        return 'Kata sandi wajib diisi.';
-                      return null;
-                    },
-                  ),
-                  if (widget.isRegister) ...[
-                    const SizedBox(height: 10),
-                    const Text(
-                      'Gunakan minimal 8 karakter, huruf besar, huruf kecil, dan angka.',
-                    ),
-                  ],
-                  const SizedBox(height: 26),
-                  ListenableBuilder(
-                    listenable: widget.appState,
-                    builder: (ctx, _) => FilledButton(
-                      onPressed: widget.appState.isBusy ? null : submit,
-                      child: Text(
-                        widget.appState.isBusy
-                            ? 'Memproses…'
-                            : widget.isRegister
-                            ? 'Buat akun'
-                            : 'Masuk',
+                      const SizedBox(height: 10),
+                      TextButton(
+                        onPressed: () {
+                          if (widget.isRegister) {
+                            context.canPop()
+                                ? context.pop()
+                                : context.go('/login');
+                          } else {
+                            context.push('/register');
+                          }
+                        },
+                        child: Text(
+                          widget.isRegister
+                              ? 'Sudah punya akun? Masuk'
+                              : 'Belum punya akun? Daftar',
+                        ),
                       ),
-                    ),
+                      if (!widget.isRegister)
+                        TextButton(
+                          onPressed: () => context.push('/forgot-password'),
+                          child: const Text('Lupa kata sandi?'),
+                        ),
+                    ],
                   ),
-                  const SizedBox(height: 10),
-                  TextButton(
-                    onPressed: () {
-                      if (widget.isRegister) {
-                        context.canPop() ? context.pop() : context.go('/login');
-                      } else {
-                        context.push('/register');
-                      }
-                    },
-                    child: Text(
-                      widget.isRegister
-                          ? 'Sudah punya akun? Masuk'
-                          : 'Belum punya akun? Daftar',
-                    ),
-                  ),
-                  if (!widget.isRegister)
-                    TextButton(
-                      onPressed: () => context.push('/forgot-password'),
-                      child: const Text('Lupa kata sandi?'),
-                    ),
-                ],
+                ),
               ),
             ),
           ),
         ),
-      ),
-    ),
-  );
+      );
 }
 
 class VerifyEmailScreen extends StatefulWidget {
@@ -239,68 +240,69 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('Verifikasi email')),
-    body: SafeArea(
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 460),
-          child: ListView(
-            shrinkWrap: true,
-            padding: const EdgeInsets.all(24),
-            children: [
-              const NsBrandMark(size: 56),
-              const SizedBox(height: 22),
-              Text(
-                'Periksa emailmu',
-                style: Theme.of(context).textTheme.headlineMedium,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Kami mengirim tautan verifikasi ke ${widget.appState.user?.email ?? 'email akunmu'}. Buka tautannya lalu kembali ke aplikasi.',
-              ),
-              if (message != null)
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  child: Text(message!),
-                ),
-              const SizedBox(height: 20),
-              ListenableBuilder(
-                listenable: widget.appState,
-                builder: (ctx, _) => FilledButton(
-                  onPressed: widget.appState.isBusy
-                      ? null
-                      : () async {
-                          final ok = await widget.appState.checkEmailVerified();
-                          if (mounted && !ok)
-                            setState(
-                              () => message = widget.appState.globalError,
-                            );
-                        },
-                  child: Text(
-                    widget.appState.isBusy
-                        ? 'Memeriksa…'
-                        : 'Saya sudah verifikasi',
+        appBar: AppBar(title: const Text('Verifikasi email')),
+        body: SafeArea(
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 460),
+              child: ListView(
+                shrinkWrap: true,
+                padding: const EdgeInsets.all(24),
+                children: [
+                  const NsBrandMark(size: 56),
+                  const SizedBox(height: 22),
+                  Text(
+                    'Periksa emailmu',
+                    style: Theme.of(context).textTheme.headlineMedium,
                   ),
-                ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Kami mengirim tautan verifikasi ke ${widget.appState.user?.email ?? 'email akunmu'}. Buka tautannya lalu kembali ke aplikasi.',
+                  ),
+                  if (message != null)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      child: Text(message!),
+                    ),
+                  const SizedBox(height: 20),
+                  ListenableBuilder(
+                    listenable: widget.appState,
+                    builder: (ctx, _) => FilledButton(
+                      onPressed: widget.appState.isBusy
+                          ? null
+                          : () async {
+                              final ok =
+                                  await widget.appState.checkEmailVerified();
+                              if (mounted && !ok)
+                                setState(
+                                  () => message = widget.appState.globalError,
+                                );
+                            },
+                      child: Text(
+                        widget.appState.isBusy
+                            ? 'Memeriksa…'
+                            : 'Saya sudah verifikasi',
+                      ),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: busy || countdown > 0 ? null : resend,
+                    child: Text(
+                      countdown > 0
+                          ? 'Kirim ulang dalam ${countdown} dtk'
+                          : 'Kirim ulang email',
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: widget.appState.signOut,
+                    child: const Text('Keluar'),
+                  ),
+                ],
               ),
-              TextButton(
-                onPressed: busy || countdown > 0 ? null : resend,
-                child: Text(
-                  countdown > 0
-                      ? 'Kirim ulang dalam ${countdown} dtk'
-                      : 'Kirim ulang email',
-                ),
-              ),
-              TextButton(
-                onPressed: widget.appState.signOut,
-                child: const Text('Keluar'),
-              ),
-            ],
+            ),
           ),
         ),
-      ),
-    ),
-  );
+      );
 }
 
 class ForgotPasswordScreen extends StatefulWidget {
@@ -334,7 +336,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       await widget.appState.repository.sendPasswordReset(email.text);
       if (mounted)
         setState(
-          () => message = 'Jika akun terdaftar, tautan pemulihan akan dikirim. Periksa juga spam.',
+          () => message =
+              'Jika akun terdaftar, tautan pemulihan akan dikirim. Periksa juga spam.',
         );
     } catch (e) {
       if (mounted) setState(() => message = NsErrorMapper.toUserMessage(e));
@@ -345,51 +348,51 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('Pulihkan kata sandi')),
-    body: SafeArea(
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 460),
-          child: ListView(
-            shrinkWrap: true,
-            padding: const EdgeInsets.all(24),
-            children: [
-              Text(
-                'Lupa kata sandi?',
-                style: Theme.of(context).textTheme.headlineMedium,
+        appBar: AppBar(title: const Text('Pulihkan kata sandi')),
+        body: SafeArea(
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 460),
+              child: ListView(
+                shrinkWrap: true,
+                padding: const EdgeInsets.all(24),
+                children: [
+                  Text(
+                    'Lupa kata sandi?',
+                    style: Theme.of(context).textTheme.headlineMedium,
+                  ),
+                  const SizedBox(height: 10),
+                  const Text(
+                    'Masukkan alamat email akun agar kami dapat mengirim tautan pemulihan.',
+                  ),
+                  const SizedBox(height: 24),
+                  TextField(
+                    controller: email,
+                    keyboardType: TextInputType.emailAddress,
+                    textInputAction: TextInputAction.done,
+                    onSubmitted: (_) => submit(),
+                    decoration: const InputDecoration(labelText: 'Email akun'),
+                  ),
+                  const SizedBox(height: 18),
+                  FilledButton(
+                    onPressed: busy ? null : submit,
+                    child: Text(busy ? 'Mengirim…' : 'Kirim tautan pemulihan'),
+                  ),
+                  if (message != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 16),
+                      child: Text(message!),
+                    ),
+                  TextButton(
+                    onPressed: () {
+                      context.canPop() ? context.pop() : context.go('/login');
+                    },
+                    child: const Text('Kembali ke login'),
+                  ),
+                ],
               ),
-              const SizedBox(height: 10),
-              const Text(
-                'Masukkan alamat email akun agar kami dapat mengirim tautan pemulihan.',
-              ),
-              const SizedBox(height: 24),
-              TextField(
-                controller: email,
-                keyboardType: TextInputType.emailAddress,
-                textInputAction: TextInputAction.done,
-                onSubmitted: (_) => submit(),
-                decoration: const InputDecoration(labelText: 'Email akun'),
-              ),
-              const SizedBox(height: 18),
-              FilledButton(
-                onPressed: busy ? null : submit,
-                child: Text(busy ? 'Mengirim…' : 'Kirim tautan pemulihan'),
-              ),
-              if (message != null)
-                Padding(
-                  padding: const EdgeInsets.only(top: 16),
-                  child: Text(message!),
-                ),
-              TextButton(
-                onPressed: () {
-                  context.canPop() ? context.pop() : context.go('/login');
-                },
-                child: const Text('Kembali ke login'),
-              ),
-            ],
+            ),
           ),
         ),
-      ),
-    ),
-  );
+      );
 }

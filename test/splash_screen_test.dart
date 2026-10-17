@@ -28,8 +28,7 @@ void main() {
       ('Manrope', 'assets/fonts/Manrope.ttf'),
       ('DM Sans', 'assets/fonts/DMSans.ttf'),
     ]) {
-      final loader = FontLoader(font.$1)
-        ..addFont(rootBundle.load(font.$2));
+      final loader = FontLoader(font.$1)..addFont(rootBundle.load(font.$2));
       await loader.load();
     }
   });
@@ -68,15 +67,20 @@ void main() {
       expect(find.text('Nalaro'), findsOneWidget);
       expect(find.text('Seller Center'), findsOneWidget);
       final headline = find.byWidgetPredicate(
-        (widget) => widget is Text &&
+        (widget) =>
+            widget is Text &&
             widget.semanticsLabel == 'Kelola toko dari genggaman tanganmu.',
       );
       expect(headline, findsOneWidget);
       expect(tester.getRect(headline).left, greaterThanOrEqualTo(24));
       expect(tester.getRect(headline).right,
           lessThanOrEqualTo(layout.size.width - 24));
-      expect(tester.widget<LinearProgressIndicator>(
-          find.byType(LinearProgressIndicator)).value, 0.5);
+      expect(
+          tester
+              .widget<LinearProgressIndicator>(
+                  find.byType(LinearProgressIndicator))
+              .value,
+          0.5);
       expect(tester.getBottomRight(find.text('Menyiapkan tokomu…')).dy,
           lessThanOrEqualTo(layout.size.height - 24));
 
@@ -148,8 +152,7 @@ void main() {
     state.dispose();
   });
 
-  testWidgets('slow restoration overlaps the opening duration',
-      (tester) async {
+  testWidgets('slow restoration overlaps the opening duration', (tester) async {
     final repository = PendingSessionRepository();
     final state = SellerAppState(repository: repository);
     final router = createSellerRouter(state);

@@ -138,7 +138,7 @@ Referensi resmi:
 Token repository berhasil melakukan autentikasi dan menampilkan daftar aplikasi kosong.
 `shorebird init` sudah dijalankan pada runner dengan proyek Android/Gradle siap,
 tetapi server menolak pembuatan aplikasi: `This credential does not have permission for this operation.`
-Buat aplikasi Nalaro Seller Center dengan akun yang memiliki izin, lalu commit
+Untuk inisialisasi otomatis, ganti secret sementara dengan API key **Full access**; key **Release and patch only** tidak dapat membuat aplikasi (https://docs.shorebird.dev/account/api-keys/). Setelah init selesai, key dapat dibatasi kembali untuk release/patch. Alternatifnya, buat aplikasi Nalaro Seller Center dengan akun yang memiliki izin, lalu commit
 `shorebird.yaml` atau isi variable SHOREBIRD_APP_ID. Token berikutnya harus
 memiliki akses release/patch untuk aplikasi tersebut. App ID tidak perlu dirahasiakan.
 `prepare_ota.py` menerima app ID dari variable atau konfigurasi terdaftar.

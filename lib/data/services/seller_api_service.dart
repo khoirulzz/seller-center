@@ -51,9 +51,8 @@ class SellerApiService {
     request.headers['Accept'] = 'image/*';
     if (isPrivateMedia(uri) && bearerToken != null)
       request.headers['Authorization'] = 'Bearer $bearerToken';
-    final response = await _http
-        .send(request)
-        .timeout(const Duration(seconds: 20));
+    final response =
+        await _http.send(request).timeout(const Duration(seconds: 20));
     if (response.statusCode != 200) {
       await response.stream.drain<void>();
       throw ApiException(
@@ -159,8 +158,8 @@ class SellerApiService {
     }
 
     if (response.statusCode < 200 || response.statusCode >= 300) {
-      final errText = (decoded['error'] ?? 'Layanan belum tersedia.')
-          .toString();
+      final errText =
+          (decoded['error'] ?? 'Layanan belum tersedia.').toString();
       throw ApiException(
         message: errText,
         statusCode: response.statusCode,
@@ -183,7 +182,20 @@ class SellerApiService {
     }
     return null;
   }
-  Future<Map<String,dynamic>> workspaceResource({required String bearerToken,required String storeId,required String resource,String method='GET',Object? body,Map<String,String>? query}) => _requestJson(method:method,path:'/api/merchant/stores/$storeId/$resource',bearerToken:bearerToken,body:body,query:query);
+
+  Future<Map<String, dynamic>> workspaceResource(
+          {required String bearerToken,
+          required String storeId,
+          required String resource,
+          String method = 'GET',
+          Object? body,
+          Map<String, String>? query}) =>
+      _requestJson(
+          method: method,
+          path: '/api/merchant/stores/$storeId/$resource',
+          bearerToken: bearerToken,
+          body: body,
+          query: query);
 
   Future<List<MerchantStore>> fetchStores(String bearerToken) async {
     final json = await _requestJson(
@@ -389,7 +401,8 @@ class SellerApiService {
   }) async {
     if (bytes.lengthInBytes > AppConfig.maxMediaUploadBytes) {
       throw const ApiException(
-        message: 'Ukuran foto terlalu besar. Pilih atau kecilkan gambar lalu coba lagi.',
+        message:
+            'Ukuran foto terlalu besar. Pilih atau kecilkan gambar lalu coba lagi.',
         statusCode: 413,
       );
     }
@@ -405,8 +418,8 @@ class SellerApiService {
     final decoded = jsonDecode(response.body) as Map<String, dynamic>;
     if (response.statusCode != 201 && response.statusCode != 200) {
       throw ApiException(
-        message: (decoded['error'] ?? 'Foto belum berhasil diunggah.')
-            .toString(),
+        message:
+            (decoded['error'] ?? 'Foto belum berhasil diunggah.').toString(),
         statusCode: response.statusCode,
       );
     }
@@ -437,13 +450,13 @@ class SellerApiService {
     required String storeId,
     required String fromDate,
     required String toDate,
-    String timezone='Asia/Jakarta',
+    String timezone = 'Asia/Jakarta',
   }) async {
     final json = await _requestJson(
       method: 'GET',
       path: '/api/merchant/stores/$storeId/analytics',
       bearerToken: bearerToken,
-      query: {'from': fromDate, 'to': toDate,'timezone':timezone},
+      query: {'from': fromDate, 'to': toDate, 'timezone': timezone},
     );
     return SalesAnalyticsBundle.fromJson(json);
   }
@@ -539,10 +552,11 @@ class SellerApiService {
     final plans = (plansJson['plans'] as List<dynamic>?) ?? const [];
 
     return BillingBundle(
-      entitlements: ((billingJson['entitlements'] as List<dynamic>?) ?? const [])
-          .whereType<Map<String, dynamic>>()
-          .map(PlanEntitlement.fromJson)
-          .toList(),
+      entitlements:
+          ((billingJson['entitlements'] as List<dynamic>?) ?? const [])
+              .whereType<Map<String, dynamic>>()
+              .map(PlanEntitlement.fromJson)
+              .toList(),
       accessAvailable: billingJson['accessAvailable'] == true,
       currentSubscriptionId: billingJson['currentSubscriptionId']?.toString(),
       pilotUntil: billingJson['pilotUntil']?.toString(),
@@ -562,10 +576,9 @@ class SellerApiService {
           .whereType<Map<String, dynamic>>()
           .map(SubscriptionPlan.fromJson)
           .toList(),
-      paymentInstructions:
-          (billingJson['paymentInstructions'] ??
-                  'Instruksi pembayaran belum ditetapkan admin.')
-              .toString(),
+      paymentInstructions: (billingJson['paymentInstructions'] ??
+              'Instruksi pembayaran belum ditetapkan admin.')
+          .toString(),
     );
   }
 
@@ -623,7 +636,10 @@ class SellerApiService {
         }
       }
       if (rowCount < 500) break;
-      if(page==20) throw const ApiException(message:'Ekspor melebihi 10.000 baris. Gunakan versi web atau hubungi dukungan untuk ekspor lengkap.');
+      if (page == 20)
+        throw const ApiException(
+            message:
+                'Ekspor melebihi 10.000 baris. Gunakan versi web atau hubungi dukungan untuk ekspor lengkap.');
     }
     return parts.join();
   }

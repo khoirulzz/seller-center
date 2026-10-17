@@ -39,17 +39,25 @@ void main() {
       expect(payload['note'], 'Dana diterima');
     },
   );
-  test('subscription replacement requires explicit consent in the request', () async {
+  test('subscription replacement requires explicit consent in the request',
+      () async {
     final sent = <Map<String, dynamic>>[];
-    final api = SellerApiService(baseUrl: 'https://example.test',httpClient: MockClient((request) async {
-      expect(request.url.path, '/api/merchant/stores/shop-1/billing');
-      sent.add(jsonDecode(request.body) as Map<String,dynamic>);
-      return http.Response('{"ok":true}',201);
-    }));
-    await api.selectSubscriptionPlan(bearerToken:'token',storeId:'shop-1',planPriceId:'price-1');
-    await api.selectSubscriptionPlan(bearerToken:'token',storeId:'shop-1',planPriceId:'price-2',confirmReplace:true);
-    expect(sent[0]['confirm_replace'],false);
-    expect(sent[1]['confirm_replace'],true);
+    final api = SellerApiService(
+        baseUrl: 'https://example.test',
+        httpClient: MockClient((request) async {
+          expect(request.url.path, '/api/merchant/stores/shop-1/billing');
+          sent.add(jsonDecode(request.body) as Map<String, dynamic>);
+          return http.Response('{"ok":true}', 201);
+        }));
+    await api.selectSubscriptionPlan(
+        bearerToken: 'token', storeId: 'shop-1', planPriceId: 'price-1');
+    await api.selectSubscriptionPlan(
+        bearerToken: 'token',
+        storeId: 'shop-1',
+        planPriceId: 'price-2',
+        confirmReplace: true);
+    expect(sent[0]['confirm_replace'], false);
+    expect(sent[1]['confirm_replace'], true);
   });
   test(
     'billing keeps active and pending package identities separate',

@@ -18,7 +18,7 @@ enum AuthLifecycleState {
 /// sesuai `PRD` Bab 5.2 & `flutter-apply-architecture-best-practices.md`.
 class SellerAppState extends ChangeNotifier {
   SellerAppState({SellerRepository? repository})
-    : _repository = repository ?? SellerRepository();
+      : _repository = repository ?? SellerRepository();
 
   final SellerRepository _repository;
   final ValueNotifier<AuthLifecycleState> routing = ValueNotifier(
@@ -27,14 +27,15 @@ class SellerAppState extends ChangeNotifier {
 
   @override
   void notifyListeners() {
-    if(_disposed)return;
+    if (_disposed) return;
     routing.value = lifecycle;
     super.notifyListeners();
   }
 
   @override
   void dispose() {
-    _disposed=true;_sessionEpoch++;
+    _disposed = true;
+    _sessionEpoch++;
     routing.dispose();
     super.dispose();
   }
@@ -50,7 +51,7 @@ class SellerAppState extends ChangeNotifier {
   int _storeDataRevision = 0;
   bool _hasUnsavedFormDraft = false;
   int _sessionEpoch = 0;
-  bool _disposed=false;
+  bool _disposed = false;
 
   SellerRepository get repository => _repository;
   AuthLifecycleState get lifecycle =>
@@ -160,8 +161,11 @@ class SellerAppState extends ChangeNotifier {
   }
 
   Future<bool> register(String email, String password) async {
-    final epoch=++_sessionEpoch;
-    _launchPending=false;_user=null;_stores=const [];_activeStore=null;
+    final epoch = ++_sessionEpoch;
+    _launchPending = false;
+    _user = null;
+    _stores = const [];
+    _activeStore = null;
     _isBusy = true;
     _globalError = null;
     notifyListeners();
@@ -171,46 +175,47 @@ class SellerAppState extends ChangeNotifier {
         email: email,
         password: password,
       );
-      if(epoch!=_sessionEpoch)return false;
+      if (epoch != _sessionEpoch) return false;
       _user = identity;
       _lifecycle = AuthLifecycleState.unverifiedEmail;
       return true;
     } catch (e) {
-      if(epoch!=_sessionEpoch)return false;
+      if (epoch != _sessionEpoch) return false;
       _globalError = NsErrorMapper.toUserMessage(e);
       return false;
     } finally {
-      if(epoch==_sessionEpoch){
-      _isBusy = false;
-      notifyListeners();
+      if (epoch == _sessionEpoch) {
+        _isBusy = false;
+        notifyListeners();
       }
     }
   }
 
   Future<bool> checkEmailVerified() async {
-    final epoch=_sessionEpoch;
+    final epoch = _sessionEpoch;
     _isBusy = true;
     _globalError = null;
     notifyListeners();
 
     try {
       final updated = await _repository.refreshVerificationStatus();
-      if(epoch!=_sessionEpoch)return false;
+      if (epoch != _sessionEpoch) return false;
       if (updated != null && updated.verified) {
         _user = updated;
         await _loadStoresAndSelectActive(updated.id);
         return true;
       }
-      _globalError = 'Email belum terverifikasi. Buka tautan pada inbox atau folder spam, lalu periksa kembali.';
+      _globalError =
+          'Email belum terverifikasi. Buka tautan pada inbox atau folder spam, lalu periksa kembali.';
       return false;
     } catch (e) {
-      if(epoch!=_sessionEpoch)return false;
+      if (epoch != _sessionEpoch) return false;
       _globalError = NsErrorMapper.toUserMessage(e);
       return false;
     } finally {
-      if(epoch==_sessionEpoch){
-      _isBusy = false;
-      notifyListeners();
+      if (epoch == _sessionEpoch) {
+        _isBusy = false;
+        notifyListeners();
       }
     }
   }
@@ -230,12 +235,11 @@ class SellerAppState extends ChangeNotifier {
 
     final savedStoreId = await _repository.drafts.loadActiveStoreId(userId);
     if (_user?.id != userId) return;
-    final matched =
-        storesList.where((s) => s.id == savedStoreId).firstOrNull ??
+    final matched = storesList.where((s) => s.id == savedStoreId).firstOrNull ??
         storesList.first;
     _activeStore = matched;
     await _repository.drafts.saveActiveStoreId(userId, matched.id);
-    if(_user?.id!=userId)return;
+    if (_user?.id != userId) return;
     _storeDataRevision++;
     _lifecycle = AuthLifecycleState.authenticatedReady;
     notifyListeners();
@@ -272,7 +276,7 @@ class SellerAppState extends ChangeNotifier {
     required String slug,
     String description = '',
   }) async {
-    final epoch=_sessionEpoch;
+    final epoch = _sessionEpoch;
     _isBusy = true;
     _globalError = null;
     notifyListeners();
@@ -283,41 +287,41 @@ class SellerAppState extends ChangeNotifier {
         slug: slug,
         description: description,
       );
-      if(epoch!=_sessionEpoch)return null;
-      final stores=await _repository.fetchStores();
-      if(epoch!=_sessionEpoch)return null;
-      _stores=stores;
+      if (epoch != _sessionEpoch) return null;
+      final stores = await _repository.fetchStores();
+      if (epoch != _sessionEpoch) return null;
+      _stores = stores;
       _activeStore =
           _stores.where((s) => s.id == created.id).firstOrNull ?? created;
       if (_user != null) {
         await _repository.drafts.saveActiveStoreId(_user!.id, _activeStore!.id);
       }
-      if(epoch!=_sessionEpoch)return null;
+      if (epoch != _sessionEpoch) return null;
       _storeDataRevision++;
       _lifecycle = AuthLifecycleState.authenticatedReady;
       return _activeStore;
     } catch (e) {
-      if(epoch!=_sessionEpoch)return null;
+      if (epoch != _sessionEpoch) return null;
       _globalError = NsErrorMapper.toUserMessage(e);
       return null;
     } finally {
-      if(epoch==_sessionEpoch){
-      _isBusy = false;
-      notifyListeners();
+      if (epoch == _sessionEpoch) {
+        _isBusy = false;
+        notifyListeners();
       }
     }
   }
 
   Future<void> refreshStoresMetadata() async {
-    final epoch=_sessionEpoch;
+    final epoch = _sessionEpoch;
     try {
       final updated = await _repository.fetchStores();
-      if(epoch!=_sessionEpoch)return;
+      if (epoch != _sessionEpoch) return;
       _stores = updated;
       if (_activeStore != null) {
         _activeStore =
             updated.where((s) => s.id == _activeStore!.id).firstOrNull ??
-            updated.firstOrNull;
+                updated.firstOrNull;
       }
       _storeDataRevision++;
       notifyListeners();
