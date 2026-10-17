@@ -39,6 +39,72 @@ void main() {
       expect(payload['note'], 'Dana diterima');
     },
   );
+  test('subscription replacement requires explicit consent in the request', () async {
+    final sent = <Map<String, dynamic>>[];
+    final api = SellerApiService(baseUrl: 'https://example.test',httpClient: MockClient((request) async {
+      expect(request.url.path, '/api/merchant/stores/shop-1/billing');
+      sent.add(jsonDecode(request.body) as Map<String,dynamic>);
+      return http.Response('{"ok":true}',201);
+    }));
+    await api.selectSubscriptionPlan(bearerToken:'token',storeId:'shop-1',planPriceId:'price-1');
+    await api.selectSubscriptionPlan(bearerToken:'token',storeId:'shop-1',planPriceId:'price-2',confirmReplace:true);
+    expect(sent[0]['confirm_replace'],false);
+    expect(sent[1]['confirm_replace'],true);
+  });
+  test(
+    'billing keeps active and pending package identities separate',
+    () async {
+      final api = SellerApiService(
+        baseUrl: 'https://example.test',
+        httpClient: MockClient((request) async {
+          if (request.url.path == '/api/public/plans')
+            return http.Response('{"plans":[]}', 200);
+          return http.Response(
+            jsonEncode({
+              'accessAvailable': true,
+              'currentSubscriptionId': 'current-1',
+              'entitlements': [
+                {
+                  'feature_code': 'products',
+                  'allowed': true,
+                  'limit_value': '0',
+                },
+              ],
+              'pilotUntil': null,
+              'subscriptions': [
+                {
+                  'id': 'pending-2',
+                  'name': 'Paket Baru',
+                  'status': 'pending',
+                  'plan_price_id': 'price-2',
+                },
+                {
+                  'id': 'current-1',
+                  'name': 'Paket Aktif',
+                  'status': 'active',
+                  'plan_price_id': 'price-1',
+                },
+              ],
+              'invoices': <Object?>[],
+              'usage': <Object?>[],
+              'paymentInstructions': 'Bank Uji',
+            }),
+            200,
+          );
+        }),
+      );
+      final data = await api.fetchBilling(
+        bearerToken: 'token',
+        storeId: 'shop-1',
+      );
+      expect(data.accessAvailable, true);
+      expect(data.currentSubscriptionId, 'current-1');
+      expect(data.entitlements.single.limitValue, 0);
+      expect(data.subscriptions.first.status, 'pending');
+      expect(data.subscriptions.last.planPriceId, 'price-1');
+      expect(data.pilotUntil, isNull);
+    },
+  );
   test('overview reads tenant ID and correct 30-day summary', () async {
     final api = SellerApiService(
       baseUrl: 'https://example.test',

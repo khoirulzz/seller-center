@@ -9,6 +9,11 @@ enum NsSemanticTone {
 
 abstract final class NsStatusDictionary {
   static const Map<String, String> _labels = {
+    'storefront': 'Etalase toko',
+    'products': 'Jumlah produk',
+    'orders': 'Pesanan',
+    'media_bytes': 'Unggahan gambar',
+    'void': 'Dibatalkan',
     'draft': 'Draft',
     'published': 'Terbit',
     'paused': 'Dijeda',

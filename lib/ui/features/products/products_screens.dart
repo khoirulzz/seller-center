@@ -1001,6 +1001,13 @@ class _ProductEditorScreenState extends State<ProductEditorScreen>
                   ),
                 ),
               ),
+            if (error != null &&
+                RegExp(r'paket|kuota|langganan', caseSensitive: false).hasMatch(error!))
+              TextButton.icon(
+                onPressed: busy ? null : () => context.push('/toko/billing'),
+                icon: const Icon(Icons.upgrade),
+                label: const Text('Lihat paket & upgrade'),
+              ),
             if (dirty)
               Padding(
                 padding: const EdgeInsets.only(bottom: 6),
