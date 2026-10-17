@@ -73,19 +73,22 @@ jobs:
           for apk in sorted(Path('unsigned').glob('*.apk')):
               aligned=Path(os.environ['RUNNER_TEMP'])/apk.name
               subprocess.run([str(tools/'zipalign'),'-P','16','-f','4',str(apk),str(aligned)],check=True)
-              target=output/apk.name.replace('app-','Nalaro-Seller-Center-1.2.0-')
+              badging=subprocess.check_output([str(tools/'aapt'),'dump','badging',str(apk)],text=True)
+            version=re.search(r"versionName='([^']+)'",badging).group(1)
+            build=re.search(r"versionCode='([0-9]+)'",badging).group(1)
+            target=output/apk.name.replace('app-','Nalaro-Seller-Center-'+version+'-')
               subprocess.run([str(tools/'apksigner'),'sign','--ks',str(key),'--ks-key-alias',os.environ['ANDROID_KEY_ALIAS'],'--ks-pass','env:ANDROID_KEYSTORE_PASSWORD','--key-pass','env:ANDROID_KEY_PASSWORD','--out',str(target),str(aligned)],check=True)
               verified=subprocess.run([str(tools/'apksigner'),'verify','--verbose','--print-certs',str(target)],capture_output=True,text=True,check=True)
               digest=next(line.split(': ',1)[1]for line in verified.stdout.splitlines()if line.startswith('Signer #1 certificate SHA-256 digest:'))
-              metadata['apks'].append({'file':target.name,'bytes':target.stat().st_size,'sha256':hashlib.sha256(target.read_bytes()).hexdigest(),'certificate_sha256':digest})
+              metadata['apks'].append({'file':target.name,'version':version,'version_code':int(build),'bytes':target.stat().st_size,'sha256':hashlib.sha256(target.read_bytes()).hexdigest(),'certificate_sha256':digest})
               print('Verified permanent signature: '+target.name)
           if len(metadata['apks'])!=3:raise SystemExit('Expected all three architecture APKs')
           (output/'RELEASE.json').write_text(json.dumps(metadata,indent=2))
-          (output/'README.txt').write_text('NALARO SELLER CENTER 1.2.0+4\nPilih ARM64 untuk sebagian besar HP Android modern. ARMv7 untuk perangkat 32-bit; x86_64 untuk emulator.\nAPK ditandatangani menggunakan kunci permanen pada repository secrets.\nAPK debug lama dapat memakai sertifikat berbeda; simpan draft lokal sebelum mengganti instalasi.\nPembaruan otomatis Shorebird belum aktif sampai app_id terdaftar dan baseline Shorebird dipasang.\n')
+          (output/'README.txt').write_text('NALARO SELLER CENTER RELEASE\nPilih ARM64 untuk sebagian besar HP Android modern. ARMv7 untuk perangkat 32-bit; x86_64 untuk emulator.\nAPK ditandatangani menggunakan kunci permanen pada repository secrets.\nAPK debug lama dapat memakai sertifikat berbeda; simpan draft lokal sebelum mengganti instalasi.\nPembaruan otomatis Shorebird belum aktif sampai app_id terdaftar dan baseline Shorebird dipasang.\n')
           PY
       - uses: actions/upload-artifact@v4
         with:
-          name: Nalaro-Seller-Center-1.2.0-Signed-Release
+          name: nalaro-seller-center-signed-release-apks
           path: signed/
           if-no-files-found: error
       - name: Remove private signing material
