@@ -108,3 +108,35 @@ jobs:
       - name: Remove private signing material
         if: always()
         run: rm -f "$RUNNER_TEMP/nalaro-release.jks"
+
+  source_bundle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: seller-center
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: khoirulzz/nalarostore
+          ref: main
+          path: nalarostore
+          persist-credentials: false
+      - name: Package complete committed Android and web sources
+        run: |
+          mkdir bundle
+          git -C seller-center archive --format=tar --prefix=seller-center/ HEAD | tar -xf - -C bundle
+          git -C nalarostore archive --format=tar --prefix=nalarostore/ HEAD | tar -xf - -C bundle
+          python3 - <<'PY'
+          import subprocess,json
+          from pathlib import Path
+          manifest={name:subprocess.check_output(['git','-C',name,'rev-parse','HEAD'],text=True).strip() for name in ['seller-center','nalarostore']}
+          Path('bundle/SOURCE_MANIFEST.json').write_text(json.dumps(manifest,indent=2))
+          Path('bundle/README.txt').write_text('NALARO ANDROID + WEB SOURCE\nComplete committed sources; see SOURCE_MANIFEST.json. No private signing keys are included.\nRead seller-center/docs/OTA.md for Shorebird activation. Use tool/import_release_signing.py with the private backup to configure the four Android signing secrets, then run Sign Android release.\n')
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Nalaro-Android-Web-Source-1.2.0
+          path: bundle/
+          if-no-files-found: error
