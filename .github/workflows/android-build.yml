@@ -22,8 +22,11 @@ jobs:
       - name: Generate native Android project
         run: |
           cp android/app/src/main/AndroidManifest.xml /tmp/nalaro-AndroidManifest.xml
+          cp pubspec.lock "$RUNNER_TEMP/seller-pubspec.lock"
           flutter create --no-pub --platforms=android --org digital.nalaro --project-name nalaro_seller_center .
           cp /tmp/nalaro-AndroidManifest.xml android/app/src/main/AndroidManifest.xml
+          # Flutter create rewrites the lockfile even with --no-pub.
+          cp "$RUNNER_TEMP/seller-pubspec.lock" pubspec.lock
       - name: Remove generated Flutter demo test
         run: rm -f test/widget_test.dart
       - run: flutter pub get --enforce-lockfile

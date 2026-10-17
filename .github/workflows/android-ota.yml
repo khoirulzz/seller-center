@@ -67,8 +67,11 @@ jobs:
       - name: Generate native Android project
         run: |
           cp android/app/src/main/AndroidManifest.xml "$RUNNER_TEMP/seller-manifest.xml"
+          cp pubspec.lock "$RUNNER_TEMP/seller-pubspec.lock"
           flutter create --no-pub --platforms=android --org digital.nalaro --project-name nalaro_seller_center .
           cp "$RUNNER_TEMP/seller-manifest.xml" android/app/src/main/AndroidManifest.xml
+          # Flutter create rewrites the lockfile even with --no-pub.
+          cp "$RUNNER_TEMP/seller-pubspec.lock" pubspec.lock
           rm -f test/widget_test.dart
           python3 tool/prepare_ota.py
       - run: flutter pub get --enforce-lockfile

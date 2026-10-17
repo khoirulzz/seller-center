@@ -98,6 +98,9 @@ Jangan mengganti aset atau versi toolchain di antara baseline dan patch. Workflo
 menyiapkan native project dan ikon dengan versi Flutter yang dipin; Shorebird
 memakai versi engine baseline saat menyusun patch. Saat mengubah versi Flutter di
 workflow, buat baseline baru dan audit template signing yang dihasilkan.
+`pubspec.lock` disimpan sebelum `flutter create` dan dipulihkan setelahnya karena
+perintah tersebut menulis ulang lockfile meski memakai `--no-pub`. Resolusi paket
+berikutnya wajib lulus `--enforce-lockfile`.
 
 ## Build lokal
 
