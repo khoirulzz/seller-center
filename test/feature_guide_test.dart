@@ -212,7 +212,13 @@ void main() {
       expect(await FeatureGuideService().hasSeen('user'), isTrue);
       router.go('/toko');
       await tester.pumpAndSettle();
-      await tester.scrollUntilVisible(find.text('Panduan fitur'), 300);
+      await tester.scrollUntilVisible(
+        find.text('Panduan fitur'), 300,
+        scrollable: find.descendant(
+          of: find.byKey(const PageStorageKey('store-hub')),
+          matching: find.byType(Scrollable),
+        ).first,
+      );
       await tester.tap(find.text('Panduan fitur'));
       await tester.pumpAndSettle();
       expect(find.text('Kenali ruang tokomu'), findsOneWidget);
