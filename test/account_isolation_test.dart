@@ -50,6 +50,10 @@ class FakeAuth extends FirebaseAuthService {
   Future<FirebaseSession> refreshSession(FirebaseSession current) async =>
       refresh == null ? session() : refresh!.future;
 }
+class RejectingAuth extends FakeAuth {
+  @override
+  Future<FirebaseSession> signInWithPassword({required String email,required String password}) async => throw const ApiException(message:'Login ditolak.',statusCode:401);
+}
 
 class FakeAPI extends SellerApiService {
   UserIdentity identity = admin;
@@ -70,6 +74,12 @@ class FakeAPI extends SellerApiService {
 }
 
 void main() {
+  test('failed login removes an older persisted session',() async {
+    final drafts=MemoryDrafts()..saved=session().toJson();
+    final repo=SellerRepository(authService:RejectingAuth(),apiService:FakeAPI(),draftService:drafts);
+    await expectLater(repo.signIn(email:admin.email,password:'wrong'),throwsA(isA<ApiException>()));
+    expect(drafts.saved,isNull);expect(repo.currentUser,isNull);
+  });
   test('a late login cannot restore a signed-out session', () async {
     final auth = FakeAuth()..login = Completer<FirebaseSession>(),
         drafts = MemoryDrafts();

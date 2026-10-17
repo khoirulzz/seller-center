@@ -63,6 +63,11 @@ class SellerRepository {
     _sessionWrites = next.catchError((Object _) {});
     return next;
   }
+  Future<void> _clearPersistedSession() {
+    final next = _sessionWrites.then((_) => _drafts.clearSession());
+    _sessionWrites = next.catchError((Object _) {});
+    return next;
+  }
 
   void _checkSession(int epoch) {
     if (epoch != _sessionEpoch)
@@ -120,6 +125,9 @@ class SellerRepository {
     _session = null;
     _currentUser = null;
     clearMediaCache();
+    clearNotifications();
+    await _clearPersistedSession();
+    _checkSession(epoch);
     final session = await _auth.signInWithPassword(
       email: email.trim().toLowerCase(),
       password: password,
@@ -146,6 +154,8 @@ class SellerRepository {
     required String password,
   }) async {
     final epoch = ++_sessionEpoch;
+    _session=null;_currentUser=null;clearMediaCache();clearNotifications();
+    await _clearPersistedSession();_checkSession(epoch);
     final session = await _auth.signUpWithPassword(
       email: email.trim().toLowerCase(),
       password: password,
@@ -222,9 +232,7 @@ class SellerRepository {
     _currentUser = null;
     _notifications = const [];
     _notificationStore = null;
-    final next = _sessionWrites.then((_) => _drafts.clearSession());
-    _sessionWrites = next.catchError((Object _) {});
-    await next;
+    await _clearPersistedSession();
   }
 
   Future<String> _validBearerToken() async {
@@ -693,6 +701,7 @@ class SellerRepository {
   }
 
   Future<void> markNotificationRead(String notificationId) async {
+    final epoch=_sessionEpoch;
     final sid = _notificationStore;
     if (sid == null) return;
     await _api.workspaceResource(
@@ -704,13 +713,15 @@ class SellerRepository {
         'keys': [notificationId],
       },
     );
-    if (_notificationStore == sid)
+    if (_notificationStore == sid && epoch==_sessionEpoch)
       _notifications = _notifications
           .map((n) => n.id == notificationId ? n.copyWith(isRead: true) : n)
           .toList();
   }
 
   Future<void> markAllNotificationsRead() async {
+    final epoch=_sessionEpoch;
+    final keys=_notifications.map((n)=>n.id).toSet();
     final sid = _notificationStore;
     if (sid == null) return;
     await _api.workspaceResource(
@@ -718,11 +729,11 @@ class SellerRepository {
       storeId: sid,
       resource: 'notifications/read',
       method: 'POST',
-      body: {'keys': _notifications.map((n) => n.id).toList()},
+      body: {'keys': keys.toList()},
     );
-    if (_notificationStore == sid)
+    if (_notificationStore == sid && epoch==_sessionEpoch)
       _notifications =
-          _notifications.map((n) => n.copyWith(isRead: true)).toList();
+          _notifications.map((n) => keys.contains(n.id)?n.copyWith(isRead: true):n).toList();
   }
 
   Future<ResponsibleProfile> fetchResponsibleProfile(String sid) async {
