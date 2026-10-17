@@ -29,6 +29,17 @@ jobs:
       - uses: shorebirdtech/setup-shorebird@v1
         with:
           cache: true
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Generate Android Gradle wrapper for initialization
+        run: |
+          cp android/app/src/main/AndroidManifest.xml "$RUNNER_TEMP/AndroidManifest.xml"
+          cp pubspec.lock "$RUNNER_TEMP/pubspec.lock"
+          flutter create --no-pub --platforms=android --org digital.nalaro --project-name nalaro_seller_center .
+          cp "$RUNNER_TEMP/AndroidManifest.xml" android/app/src/main/AndroidManifest.xml
+          cp "$RUNNER_TEMP/pubspec.lock" pubspec.lock
       - name: Register or reuse the app without exposing credentials
         run: python3 tool/shorebird_bootstrap.py
       - name: Persist the registered public app configuration
