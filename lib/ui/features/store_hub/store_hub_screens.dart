@@ -9,6 +9,7 @@ import '../../../core/widgets/ns_form_exit_guard.dart';
 import '../../../core/widgets/ns_widgets.dart';
 import '../../../core/theme/ns_colors.dart';
 import '../../../core/errors/ns_error_mapper.dart';
+import '../../../core/errors/api_exception.dart';
 import '../../../core/config/status_dictionary.dart';
 import '../../../domain/models/seller_models.dart';
 import '../../state/seller_app_state.dart';
@@ -655,10 +656,19 @@ class _StoreReadinessScreenState extends State<StoreReadinessScreen> {
         );
       }
     } catch (e) {
-      if (mounted)
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Server menolak perubahan: $e')));
+      if (mounted) {
+        if (e is ApiException && e.isLockedEntitlement &&
+            widget.appState.activeStore?.status != 'suspended') {
+          context.push('/toko/billing');
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Aktifkan paket sebelum menerbitkan toko. Pengaturan tetap tersimpan.')),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Server menolak perubahan: $e')),
+          );
+        }
+      }
     } finally {
       if (mounted) setState(() => busy = false);
     }
@@ -953,18 +963,28 @@ class _BillingScreenState extends State<BillingScreen> {
     );
   }
 
+  String quotaLabel(PlanEntitlement feature) {
+    if (!feature.allowed) return 'Tidak tersedia';
+    if (feature.featureCode == 'storefront') return 'Tersedia';
+    final value = feature.limitValue;
+    if (value == null) return 'Tanpa batas';
+    if (feature.featureCode == 'media_bytes')
+      return '${(value / 1000000).toStringAsFixed(1)} MB / bulan';
+    return '$value${feature.featureCode == 'orders' ? ' / bulan' : ' produk'}';
+  }
+
   Future<void> choosePlan(PlanPrice price, String name) async {
     if (!widget.appState.activeRole.canChooseBillingPlan ||
         price.id == null ||
         choosing ||
-        widget.appState.isOffline)
-      return;
+        widget.appState.isOffline) return;
     final consent = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text('Pilih paket $name?'),
+        scrollable: true,
         content: Text(
-          'Harga ${NsFormatters.rupiah(price.amountIdr)} / ${NsStatusDictionary.label(price.billingInterval)}. Aktivasi dan pembayaran mengikuti aturan server Nalaro Store.',
+          'Harga ${NsFormatters.rupiah(price.amountIdr)} / ${NsStatusDictionary.label(price.billingInterval)}. Paket aktif setelah pembayaran diverifikasi admin. Jika ada paket atau akses pilot aktif, paket baru akan menggantikannya beserta seluruh fitur dan batas lama. Pemakaian bulan berjalan tetap tercatat. Biaya paket baru dibayar penuh, tanpa pengembalian otomatis sisa masa paket lama.',
         ),
         actions: [
           TextButton(
@@ -984,13 +1004,16 @@ class _BillingScreenState extends State<BillingScreen> {
       await widget.appState.repository.selectSubscriptionPlan(
         storeId: widget.appState.activeStore!.id,
         planPriceId: price.id!,
+        confirmReplace: true,
         role: widget.appState.activeRole,
       );
       if (mounted) {
         setState(load);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Permintaan paket diterima. Periksa status tagihan.'),
+            content: Text(
+              'Tagihan dibuat. Bayar sesuai instruksi; paket aktif setelah admin memverifikasi pembayaran.',
+            ),
           ),
         );
       }
@@ -1006,122 +1029,187 @@ class _BillingScreenState extends State<BillingScreen> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(
-      title: const Text('Langganan & tagihan'),
-      actions: [
-        IconButton(
-          tooltip: 'Segarkan',
-          icon: const Icon(Icons.refresh),
-          onPressed: () => setState(load),
-        ),
-      ],
-    ),
-    body: FutureBuilder<BillingBundle>(
-      future: future,
-      builder: (context, snap) {
-        if (snap.connectionState != ConnectionState.done)
-          return const Center(child: CircularProgressIndicator());
-        if (snap.hasError)
-          return Center(
-            child: Text('Tagihan belum dapat dibuka: ${snap.error}'),
-          );
-        final d = snap.data!;
-        return ListView(
-          padding: const EdgeInsets.all(20),
-          children: [
-            Text(
-              'Langganan aktif',
-              style: Theme.of(context).textTheme.titleLarge,
+        appBar: AppBar(
+          title: const Text('Langganan & tagihan'),
+          actions: [
+            IconButton(
+              tooltip: 'Segarkan',
+              icon: const Icon(Icons.refresh),
+              onPressed: () => setState(load),
             ),
-            if (d.subscriptions.isEmpty)
-              const ListTile(title: Text('Belum ada langganan aktif.')),
-            for (final sub in d.subscriptions)
-              ListTile(
-                title: Text(sub.name),
-                subtitle: Text(
-                  '${NsStatusDictionary.label(sub.status)} • ${NsStatusDictionary.label(sub.billingInterval)}',
-                ),
-                trailing: Text(NsFormatters.shortDate(sub.currentPeriodEnd)),
-              ),
-            const SizedBox(height: 16),
-            Text('Tagihan', style: Theme.of(context).textTheme.titleLarge),
-            if (d.invoices.isEmpty)
-              const ListTile(title: Text('Belum ada tagihan.')),
-            for (final invoice in d.invoices)
-              ListTile(
-                title: Text(invoice.invoiceNumber),
-                subtitle: Text(NsStatusDictionary.label(invoice.status)),
-                trailing: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(NsFormatters.rupiah(invoice.amountIdr)),
-                    Text(
-                      NsFormatters.shortDate(invoice.periodEnd),
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                  ],
-                ),
-                onTap: () async {
-                  await Clipboard.setData(
-                    ClipboardData(text: invoice.invoiceNumber),
-                  );
-                  if (context.mounted)
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Nomor tagihan disalin.')),
-                    );
-                },
-              ),
-            const SizedBox(height: 16),
-            Text(
-              'Paket tersedia',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            if (d.publicPlans.isEmpty)
-              const ListTile(title: Text('Pilihan paket belum tersedia.')),
-            for (final plan in d.publicPlans)
-              ExpansionTile(
-                title: Text(plan.name),
-                subtitle: Text(plan.description),
-                children: [
-                  for (final price in plan.prices)
-                    ListTile(
-                      title: Text(NsFormatters.rupiah(price.amountIdr)),
-                      subtitle: Text(
-                        NsStatusDictionary.label(price.billingInterval),
-                      ),
-                      trailing: widget.appState.activeRole.canChooseBillingPlan
-                          ? const Icon(Icons.chevron_right)
-                          : null,
-                      onTap: choosing
-                          ? null
-                          : () => choosePlan(price, plan.name),
-                    ),
-                ],
-              ),
-            const SizedBox(height: 16),
-            Text('Penggunaan', style: Theme.of(context).textTheme.titleLarge),
-            if (d.usage.isEmpty)
-              const ListTile(title: Text('Belum ada catatan penggunaan.')),
-            for (final usage in d.usage)
-              ListTile(
-                title: Text(usage.featureCode),
-                subtitle: Text(usage.periodKey),
-                trailing: Text(NsFormatters.number(usage.value)),
-              ),
-            if (d.paymentInstructions.trim().isNotEmpty) ...[
-              const SizedBox(height: 16),
-              Text(
-                'Cara pembayaran',
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-              SelectableText(d.paymentInstructions),
-            ],
           ],
-        );
-      },
-    ),
-  );
+        ),
+        body: FutureBuilder<BillingBundle>(
+          future: future,
+          builder: (context, snap) {
+            if (snap.connectionState != ConnectionState.done)
+              return const Center(child: CircularProgressIndicator());
+            if (snap.hasError)
+              return Center(
+                child: Text('Tagihan belum dapat dibuka: ${snap.error}'),
+              );
+            final d = snap.data!;
+            final activeSubscriptions = d.subscriptions
+                .where((sub) => sub.id == d.currentSubscriptionId)
+                .toList();
+            final pendingSubscriptions = d.subscriptions
+                .where((sub) => sub.status == 'pending')
+                .toList();
+            return ListView(
+              padding: const EdgeInsets.all(20),
+              children: [
+                Text(
+                  'Langganan aktif',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                if (!d.accessAvailable)
+                  const Card(
+                    child: Padding(
+                      padding: EdgeInsets.all(16),
+                      child: Text(
+                        'Siapkan produk dan pengaturan toko terlebih dahulu. Untuk menerbitkan toko, pilih paket dan selesaikan pembayaran.',
+                      ),
+                    ),
+                  ),
+                if (d.pilotUntil != null && d.accessAvailable)
+                  ListTile(
+                    title: const Text('Akses pilot disetujui admin'),
+                    subtitle: Text(
+                      'Hingga ${NsFormatters.shortDate(d.pilotUntil!)}',
+                    ),
+                  ),
+                if (activeSubscriptions.isEmpty && !d.accessAvailable)
+                  const ListTile(title: Text('Belum ada langganan aktif.')),
+                for (final sub in activeSubscriptions)
+                  ListTile(
+                    title: Text(sub.name),
+                    subtitle: Text(
+                      '${NsStatusDictionary.label(sub.status)} • ${NsStatusDictionary.label(sub.billingInterval)}',
+                    ),
+                    trailing:
+                        Text(NsFormatters.shortDate(sub.currentPeriodEnd)),
+                  ),
+                for (final sub in pendingSubscriptions)
+                  ListTile(
+                    leading: const Icon(Icons.hourglass_top),
+                    title: Text('Menunggu pembayaran: ${sub.name}'),
+                    subtitle: const Text(
+                      'Pilihan ini belum mengganti paket aktif. Ikuti instruksi pembayaran di bawah.',
+                    ),
+                  ),
+                const SizedBox(height: 16),
+                Text('Tagihan', style: Theme.of(context).textTheme.titleLarge),
+                if (d.invoices.isEmpty)
+                  const ListTile(title: Text('Belum ada tagihan.')),
+                for (final invoice in d.invoices)
+                  ListTile(
+                    title: Text(invoice.invoiceNumber),
+                    subtitle: Text(NsStatusDictionary.label(invoice.status)),
+                    trailing: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(NsFormatters.rupiah(invoice.amountIdr)),
+                        Text(
+                          NsFormatters.shortDate(invoice.periodEnd),
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                      ],
+                    ),
+                    onTap: () async {
+                      await Clipboard.setData(
+                        ClipboardData(text: invoice.invoiceNumber),
+                      );
+                      if (context.mounted)
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                              content: Text('Nomor tagihan disalin.')),
+                        );
+                    },
+                  ),
+                const SizedBox(height: 16),
+                Text(
+                  'Paket tersedia',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                if (d.publicPlans.isEmpty)
+                  const ListTile(title: Text('Pilihan paket belum tersedia.')),
+                for (final plan in d.publicPlans)
+                  ExpansionTile(
+                    title: Text(plan.name),
+                    subtitle: Text(plan.description),
+                    children: [
+                      for (final feature in plan.entitlements)
+                        ListTile(
+                          dense: true,
+                          title: Text(
+                            NsStatusDictionary.label(feature.featureCode),
+                          ),
+                          subtitle: Text(quotaLabel(feature)),
+                        ),
+                      for (final price in plan.prices)
+                        ListTile(
+                          title: Text(NsFormatters.rupiah(price.amountIdr)),
+                          subtitle: Text(
+                            NsStatusDictionary.label(price.billingInterval),
+                          ),
+                          trailing:
+                              widget.appState.activeRole.canChooseBillingPlan
+                                  ? const Icon(Icons.chevron_right)
+                                  : null,
+                          enabled: !choosing &&
+                              widget.appState.activeRole.canChooseBillingPlan &&
+                              ![
+                                ...activeSubscriptions,
+                                ...pendingSubscriptions,
+                              ].any((sub) => sub.planPriceId == price.id),
+                          onTap: choosing ||
+                                  [
+                                    ...activeSubscriptions,
+                                    ...pendingSubscriptions,
+                                  ].any((sub) => sub.planPriceId == price.id)
+                              ? null
+                              : () => choosePlan(price, plan.name),
+                        ),
+                    ],
+                  ),
+                const SizedBox(height: 16),
+                if (d.entitlements.isNotEmpty) ...[
+                  Text(
+                    'Batas paket aktif',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                  for (final feature in d.entitlements)
+                    ListTile(
+                      title:
+                          Text(NsStatusDictionary.label(feature.featureCode)),
+                      subtitle: Text(quotaLabel(feature)),
+                    ),
+                  const SizedBox(height: 16),
+                ],
+                Text('Penggunaan',
+                    style: Theme.of(context).textTheme.titleLarge),
+                if (d.usage.isEmpty)
+                  const ListTile(title: Text('Belum ada catatan penggunaan.')),
+                for (final usage in d.usage)
+                  ListTile(
+                    title: Text(NsStatusDictionary.label(usage.featureCode)),
+                    subtitle: Text(usage.periodKey),
+                    trailing: Text(NsFormatters.number(usage.value)),
+                  ),
+                if (d.paymentInstructions.trim().isNotEmpty) ...[
+                  const SizedBox(height: 16),
+                  Text(
+                    'Cara pembayaran',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                  SelectableText(d.paymentInstructions),
+                ],
+              ],
+            );
+          },
+        ),
+      );
 }
 
 class AccountSecurityScreen extends StatefulWidget {

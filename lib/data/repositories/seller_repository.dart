@@ -526,6 +526,7 @@ class SellerRepository {
     required String storeId,
     required String planPriceId,
     required StoreRole role,
+    bool confirmReplace = false,
   }) async {
     if (!role.canChooseBillingPlan) {
       throw const ApiException(
@@ -537,6 +538,7 @@ class SellerRepository {
       bearerToken: await _validBearerToken(),
       storeId: storeId,
       planPriceId: planPriceId,
+      confirmReplace: confirmReplace,
     );
   }
 

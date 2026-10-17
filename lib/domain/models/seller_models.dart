@@ -904,6 +904,25 @@ class PlanPrice {
   }
 }
 
+class PlanEntitlement {
+  const PlanEntitlement({
+    required this.featureCode,
+    required this.allowed,
+    this.limitValue,
+  });
+  final String featureCode;
+  final bool allowed;
+  final int? limitValue;
+  factory PlanEntitlement.fromJson(Map<String, dynamic> json) =>
+      PlanEntitlement(
+        featureCode: (json['feature_code'] ?? '').toString(),
+        allowed: json['allowed'] != false,
+        limitValue: json['limit_value'] == null
+            ? null
+            : int.tryParse(json['limit_value'].toString()),
+      );
+}
+
 class SubscriptionPlan {
   const SubscriptionPlan({
     required this.id,
@@ -911,6 +930,7 @@ class SubscriptionPlan {
     required this.name,
     required this.description,
     required this.prices,
+    this.entitlements = const [],
   });
 
   final String id;
@@ -918,6 +938,7 @@ class SubscriptionPlan {
   final String name;
   final String description;
   final List<PlanPrice> prices;
+  final List<PlanEntitlement> entitlements;
 
   factory SubscriptionPlan.fromJson(Map<String, dynamic> json) {
     final rawPrices = (json['prices'] as List<dynamic>?) ?? const [];
@@ -926,6 +947,10 @@ class SubscriptionPlan {
       code: (json['code'] ?? '').toString(),
       name: (json['name'] ?? '').toString(),
       description: (json['description'] ?? '').toString(),
+      entitlements: ((json['entitlements'] as List<dynamic>?) ?? const [])
+          .whereType<Map<String, dynamic>>()
+          .map(PlanEntitlement.fromJson)
+          .toList(),
       prices: rawPrices
           .whereType<Map<String, dynamic>>()
           .map(PlanPrice.fromJson)
@@ -941,6 +966,7 @@ class StoreSubscription {
     required this.status,
     required this.billingInterval,
     required this.currentPeriodEnd,
+    this.planPriceId,
   });
 
   final String id;
@@ -948,10 +974,12 @@ class StoreSubscription {
   final String status;
   final String billingInterval;
   final String currentPeriodEnd;
+  final String? planPriceId;
 
   factory StoreSubscription.fromJson(Map<String, dynamic> json) {
     return StoreSubscription(
       id: (json['id'] ?? '').toString(),
+      planPriceId: json['plan_price_id']?.toString(),
       name: (json['name'] ?? '').toString(),
       status: (json['status'] ?? 'trial').toString(),
       billingInterval: (json['billing_interval'] ?? 'monthly').toString(),
@@ -1016,6 +1044,10 @@ class BillingBundle {
     required this.usage,
     required this.publicPlans,
     required this.paymentInstructions,
+    this.entitlements = const [],
+    this.accessAvailable = false,
+    this.currentSubscriptionId,
+    this.pilotUntil,
   });
 
   final List<StoreSubscription> subscriptions;
@@ -1023,6 +1055,10 @@ class BillingBundle {
   final List<UsageCounter> usage;
   final List<SubscriptionPlan> publicPlans;
   final String paymentInstructions;
+  final List<PlanEntitlement> entitlements;
+  final bool accessAvailable;
+  final String? currentSubscriptionId;
+  final String? pilotUntil;
 }
 
 /// Item pusat notifikasi (`PRD` Bab 8.1 & `desain.md` Bab 5.3 / 8.15).

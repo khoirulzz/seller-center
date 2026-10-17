@@ -537,6 +537,13 @@ class SellerApiService {
     final plans = (plansJson['plans'] as List<dynamic>?) ?? const [];
 
     return BillingBundle(
+      entitlements: ((billingJson['entitlements'] as List<dynamic>?) ?? const [])
+          .whereType<Map<String, dynamic>>()
+          .map(PlanEntitlement.fromJson)
+          .toList(),
+      accessAvailable: billingJson['accessAvailable'] == true,
+      currentSubscriptionId: billingJson['currentSubscriptionId']?.toString(),
+      pilotUntil: billingJson['pilotUntil']?.toString(),
       subscriptions: subs
           .whereType<Map<String, dynamic>>()
           .map(StoreSubscription.fromJson)
@@ -564,12 +571,13 @@ class SellerApiService {
     required String bearerToken,
     required String storeId,
     required String planPriceId,
+    bool confirmReplace = false,
   }) async {
     await _requestJson(
       method: 'POST',
       path: '/api/merchant/stores/$storeId/billing',
       bearerToken: bearerToken,
-      body: {'plan_price_id': planPriceId},
+      body: {'plan_price_id': planPriceId, 'confirm_replace': confirmReplace},
     );
   }
 
