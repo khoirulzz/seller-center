@@ -10,6 +10,7 @@ permissions:
 jobs:
   android:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
       - name: Test OTA build configuration
@@ -63,9 +64,17 @@ jobs:
           if text.count(marker)!=1: raise SystemExit('Expected generated signing configuration')
           path.write_text(text.replace(marker,'signingConfig = null'))
           PY
-      - run: flutter build apk --release --split-per-abi
+      - name: Build one ABI per APK with a stable package version code
+        run: |
+          mkdir -p build/release-apks
+          for specification in android-arm64:arm64-v8a android-arm:armeabi-v7a android-x64:x86_64; do
+            target="${specification%%:*}"
+            abi="${specification#*:}"
+            flutter build apk --release --target-platform "$target"
+            cp build/app/outputs/flutter-apk/app-release.apk "build/release-apks/app-$abi-release.apk"
+          done
       - name: Upload unsigned release APKs
         uses: actions/upload-artifact@v4
         with:
           name: nalaro-seller-center-unsigned-release-apks
-          path: build/app/outputs/flutter-apk/*-release.apk
+          path: build/release-apks/*-release.apk

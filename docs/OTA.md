@@ -56,6 +56,12 @@ belum tersedia. Ia tidak diam-diam mengganti build OTA dengan APK Flutter biasa.
 Keystore hanya ditulis ke direktori sementara runner dengan izin 0600, tidak
 di-upload sebagai artifact, dan dibersihkan sesudah job.
 
+Android CI membangun satu target ABI setiap kali, sehingga setiap APK memakai
+versionCode yang sama dengan build number pubspec. Jangan mengganti proses ini
+dengan `--split-per-abi` tanpa mengelola versionCode: Flutter menambahkan offset
+ABI (misalnya ARM64 menjadi 2004 untuk build 4), yang dapat membuat baseline OTA
+dengan build number berikutnya dianggap downgrade oleh Android.
+
 APK debug lama dapat memiliki sertifikat berbeda dari keystore rilis. Android
 dapat menolak instalasi di atas APK lama. Simpan pekerjaan/draft lokal sebelum
 mengganti instalasi; penghapusan aplikasi menghapus data lokal. Data toko yang
