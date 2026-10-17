@@ -9,6 +9,7 @@ import '../../../core/widgets/ns_widgets.dart';
 import '../../../core/widgets/ns_root_back_guard.dart';
 import '../../state/seller_app_state.dart';
 import '../stores/store_screens.dart';
+import '../onboarding/seller_feature_guide.dart';
 import '../updates/app_update_screen.dart';
 
 /// AppShell 5 tab tetap (`desain.md` Bab 5.1 & `PRD` Bab 6.1):
@@ -44,7 +45,14 @@ class SellerAppShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListenableBuilder(
+    return SellerFeatureGuide(
+      userId: appState.user?.id,
+      eligible: appState.lifecycle == AuthLifecycleState.authenticatedReady &&
+          appState.activeStore != null &&
+          const ['/beranda', '/pesanan', '/produk', '/analitik', '/toko']
+              .contains(location),
+      showAnalytics: appState.activeRole.canViewCustomersAndAnalytics,
+      builder: (context, guide) => ListenableBuilder(
       listenable: appState,
       builder: (context, _) {
         final activeStore = appState.activeStore;
@@ -82,6 +90,7 @@ class SellerAppShell extends StatelessWidget {
                               label:
                                   'Toko aktif ${activeStore?.name ?? "Pilih toko"}, ketuk untuk mengganti toko',
                               child: InkWell(
+                                key: guide.store,
                                 borderRadius: BorderRadius.circular(10),
                                 onTap: () => showNsStoreSwitcherSheet(
                                   context: context,
@@ -145,12 +154,14 @@ class SellerAppShell extends StatelessWidget {
                           ? Row(
                               children: [
                                 NavigationRail(
+                                  scrollable: true,
                                   backgroundColor: NsColors.surfaceCanvas,
                                   selectedIndex: navigationShell.currentIndex,
                                   onDestinationSelected: _onSelectTab,
                                   labelType: NavigationRailLabelType.all,
                                   indicatorColor: NsColors.surfacePressed,
-                                  destinations: _tabs.map((tab) {
+                                  destinations: _tabs.indexed.map((entry) {
+                                    final (index, tab) = entry;
                                     return NavigationRailDestination(
                                       icon: NsIcon(
                                         tab.icon,
@@ -162,7 +173,7 @@ class SellerAppShell extends StatelessWidget {
                                         size: 22,
                                         color: NsColors.brandAction,
                                       ),
-                                      label: Text(tab.label),
+                                      label: Text(tab.label, key: guide.tabs[index]),
                                     );
                                   }).toList(),
                                 ),
@@ -197,8 +208,10 @@ class SellerAppShell extends StatelessWidget {
                             indicatorColor: NsColors.surfacePressed,
                             selectedIndex: navigationShell.currentIndex,
                             onDestinationSelected: _onSelectTab,
-                            destinations: _tabs.map((tab) {
+                            destinations: _tabs.indexed.map((entry) {
+                                    final (index, tab) = entry;
                               return NavigationDestination(
+                                key: guide.tabs[index],
                                 icon: NsIcon(
                                   tab.icon,
                                   size: 22,
@@ -220,6 +233,7 @@ class SellerAppShell extends StatelessWidget {
           },
         );
       },
+      ),
     );
   }
 }

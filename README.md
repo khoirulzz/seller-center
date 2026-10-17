@@ -29,6 +29,21 @@ konfigurasi akun/signing dan pemasangan APK baseline Shorebird.
 
 Lihat [audit UI/UX dan Android](docs/UI_UX_ANDROID_AUDIT_2026-10-17.md) untuk temuan, perubahan, dan batas verifikasi. Foto toko draft dimuat terautentikasi, editor memiliki preview besar/zoom/retry/putar/crop tengah, draft dan kembali Android dilindungi, detail tidak bertumpuk dengan tab global, serta font Manrope/DM Sans dibundel. Tes regresi dan capture layout berjalan di CI.
 
+## Pembuka dan panduan fitur
+
+Splash memakai latar gelap, cahaya pink, pola vektor halus, logo resmi, dan
+“Kelola toko dari genggaman tanganmu.”. Saat startup, komposisi tampil minimal
+900 ms sambil sesi dipulihkan; koneksi yang lebih lambat tidak mendapat tambahan
+waktu tunggu.
+
+Pada akses pertama setelah login dan penyiapan toko, panduan mengambang menyorot
+pemilih toko dan menu utama dengan latar redup serta garis penunjuk putus-putus.
+Gunakan **Lanjut**, **Kembali**, **Lewati**, atau tombol kembali Android.
+Panduan Analitik mengikuti hak akses akun. Pengakuan selesai/dilewati disimpan
+lokal per akun pada perangkat, sehingga tidak terulang ketika berpindah toko.
+Buka ulang melalui **Toko → Bantuan → Panduan fitur**. Penghapusan data aplikasi
+atau pemasangan ulang mereset penanda lokal tersebut.
+
 ## Konfigurasi
 
 - Flutter stable; Dart SDK sesuai `pubspec.yaml`.

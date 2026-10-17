@@ -113,7 +113,7 @@ class UiRepository extends SellerRepository {
 }
 
 Future<({SellerAppState state, UiRepository repository})> setup() async {
-  SharedPreferences.setMockInitialValues({});
+  SharedPreferences.setMockInitialValues({'ns_feature_guide_v1_user': true});
   final repository = UiRepository();
   final state = SellerAppState(repository: repository);
   await state.initializeApp();
