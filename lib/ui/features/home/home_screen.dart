@@ -79,38 +79,11 @@ class _HomeScreenState extends State<HomeScreen> {
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
         children: [
-          Wrap(
-            alignment: WrapAlignment.spaceBetween,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            spacing: 12,
-            runSpacing: 8,
-            children: [
-              Text(
-                'Beranda',
-                style: Theme.of(context).textTheme.headlineMedium,
-              ),
-              NsStatusLabel(statusCode: store?.status ?? 'draft'),
-            ],
-          ),
-          const SizedBox(height: 6),
-          Text(
-            'Pantau penjualan dan pekerjaan tokomu.',
-            style: Theme.of(context)
-                .textTheme
-                .bodyMedium
-                ?.copyWith(color: NsColors.textSecondary),
-          ),
-          if (widget.appState.user != null)
-            Padding(
-                padding: const EdgeInsets.only(top: 6),
-                child: Text('Masuk sebagai ${widget.appState.user!.email}',
-                    style: Theme.of(context).textTheme.bodySmall)),
           if (store != null &&
               (widget.appState.activeRole.canManageCatalog ||
                   widget.appState.activeRole.canViewCustomersAndAnalytics ||
                   widget.appState.activeRole.canManageSettings ||
                   widget.appState.activeRole.canChooseBillingPlan)) ...[
-            const SizedBox(height: 18),
             SellerQuickActions(role: widget.appState.activeRole),
           ],
           if (store != null &&
