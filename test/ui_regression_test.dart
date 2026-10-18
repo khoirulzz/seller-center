@@ -406,7 +406,7 @@ void main() {
     expect(find.byKey(const Key('seller-notification-action')), findsOneWidget);
     expect(find.byKey(const Key('seller-chat-action')), findsOneWidget);
     await tester.tap(find.byKey(const Key('seller-chat-action')));
-    await tester.pump();
+    await tester.pumpAndSettle();
     expect(find.byType(CustomerChatScreen), findsOneWidget);
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());
