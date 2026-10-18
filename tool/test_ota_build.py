@@ -68,6 +68,8 @@ class OtaBuildTest(unittest.TestCase):
             self.assertNotIn("private-test-value", gradle.read_text())
             self.assertNotIn('getByName("debug")', gradle.read_text())
             self.assertIn('getByName("release")', gradle.read_text())
+            self.assertIn('isMinifyEnabled = false', gradle.read_text())
+            self.assertIn('isShrinkResources = false', gradle.read_text())
 
     def test_changed_gradle_template_fails_without_leaking_a_key(self):
         with tempfile.TemporaryDirectory() as directory:
