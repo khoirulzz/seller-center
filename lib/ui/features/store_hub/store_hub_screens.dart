@@ -41,13 +41,25 @@ class StoreHubScreen extends StatelessWidget {
         key: const PageStorageKey('store-hub'),
         padding: const EdgeInsets.all(20),
         children: [
-          Text('Toko', style: Theme.of(context).textTheme.headlineMedium),
-          const SizedBox(height: 6),
           Text(
             appState.activeStore?.name ?? 'Pilih toko',
-            style: Theme.of(context).textTheme.titleMedium,
+            key: const Key('store-hub-shop-name'),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.headlineMedium,
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 6),
+          if (appState.user != null)
+            Text(
+              appState.user!.email,
+              key: const Key('store-hub-account-email'),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: NsColors.textSecondary,
+                  ),
+            ),
+          const SizedBox(height: 24),
           Text('Pengelolaan toko',
               style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 12),
