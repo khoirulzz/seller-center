@@ -16,6 +16,8 @@ import 'package:nalaro_seller_center/data/repositories/seller_repository.dart';
 import 'package:nalaro_seller_center/domain/models/seller_models.dart';
 import 'package:nalaro_seller_center/ui/features/products/product_variant_dialog.dart';
 import 'package:nalaro_seller_center/ui/features/home/seller_quick_actions.dart';
+import 'package:nalaro_seller_center/ui/features/engagement/engagement_screens.dart';
+import 'package:nalaro_seller_center/ui/features/products/products_screens.dart';
 import 'package:nalaro_seller_center/ui/state/seller_app_state.dart';
 
 const store = MerchantStore(
@@ -405,7 +407,7 @@ void main() {
     expect(find.byKey(const Key('seller-chat-action')), findsOneWidget);
     await tester.tap(find.byKey(const Key('seller-chat-action')));
     await tester.pump();
-    expect(router.routeInformationProvider.value.uri.path, '/chat');
+    expect(find.byType(CustomerChatScreen), findsOneWidget);
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());
     router.dispose();
@@ -430,7 +432,7 @@ void main() {
     expect(find.byKey(const Key('seller-shortcut-plus')), findsOneWidget);
     await tester.tap(find.byKey(const Key('seller-shortcut-plus')));
     await tester.pumpAndSettle();
-    expect(router.routeInformationProvider.value.uri.path, '/produk/editor');
+    expect(find.byType(ProductEditorScreen), findsOneWidget);
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());
     router.dispose();
