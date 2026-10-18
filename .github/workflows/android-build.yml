@@ -62,7 +62,7 @@ jobs:
           text=path.read_text()
           marker='signingConfig = signingConfigs.getByName("debug")'
           if text.count(marker)!=1: raise SystemExit('Expected generated signing configuration')
-          path.write_text(text.replace(marker,'signingConfig = null'))
+          path.write_text(text.replace(marker, '''signingConfig = null\n            isMinifyEnabled = false\n            isShrinkResources = false'''))
           PY
       - name: Build one ABI per APK with a stable package version code
         run: |
@@ -73,6 +73,8 @@ jobs:
             flutter build apk --release --target-platform "$target"
             cp build/app/outputs/flutter-apk/app-release.apk "build/release-apks/app-$abi-release.apk"
           done
+      - name: Verify Pigeon native ABI in compiled release APKs
+        run: python3 tool/verify_release_abi.py build/release-apks/*-release.apk
       - name: Upload unsigned release APKs
         uses: actions/upload-artifact@v4
         with:

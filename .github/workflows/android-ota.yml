@@ -95,6 +95,9 @@ jobs:
           args=(android --release-version "$RELEASE_VERSION" --track stable --no-confirm)
           if [ "$DRY_RUN" = true ]; then args+=(--dry-run); fi
           shorebird patch "${args[@]}"
+      - name: Verify Pigeon native ABI in OTA release APK
+        if: inputs.operation == 'release'
+        run: python3 tool/verify_release_abi.py build/app/outputs/flutter-apk/app-release.apk
       - name: Upload OTA-enabled release APK
         if: inputs.operation == 'release'
         uses: actions/upload-artifact@v4
