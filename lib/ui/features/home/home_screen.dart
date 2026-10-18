@@ -6,6 +6,7 @@ import '../../../core/theme/ns_colors.dart';
 import '../../../core/widgets/ns_widgets.dart';
 import '../../../domain/models/seller_models.dart';
 import '../../state/seller_app_state.dart';
+import 'seller_quick_actions.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key, required this.appState});
@@ -104,6 +105,14 @@ class _HomeScreenState extends State<HomeScreen> {
                 padding: const EdgeInsets.only(top: 6),
                 child: Text('Masuk sebagai ${widget.appState.user!.email}',
                     style: Theme.of(context).textTheme.bodySmall)),
+          if (store != null &&
+              (widget.appState.activeRole.canManageCatalog ||
+                  widget.appState.activeRole.canViewCustomersAndAnalytics ||
+                  widget.appState.activeRole.canManageSettings ||
+                  widget.appState.activeRole.canChooseBillingPlan)) ...[
+            const SizedBox(height: 18),
+            SellerQuickActions(role: widget.appState.activeRole),
+          ],
           if (store != null &&
               !store.isPublished &&
               widget.appState.activeRole.canManageSettings) ...[
