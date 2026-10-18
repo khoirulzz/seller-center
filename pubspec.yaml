@@ -39,6 +39,7 @@ flutter:
       fonts:
         - asset: assets/fonts/DMSans.ttf
   assets:
+    - shorebird.yaml
     - assets/icons/
     - assets/brand/
     - assets/fonts/
