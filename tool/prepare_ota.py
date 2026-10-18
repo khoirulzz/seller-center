@@ -7,9 +7,18 @@ import re
 
 
 def prepare(root: Path, app_id: str) -> None:
-    if not app_id and (root / "shorebird.yaml").exists():
-        match = re.search(r"^app_id:\s*([a-fA-F0-9-]+)\s*$", (root / "shorebird.yaml").read_text(), re.MULTILINE)
-        app_id = match.group(1) if match else ""
+    registered_id = ""
+    if (root / "shorebird.yaml").exists():
+        match = re.search(
+            r"^app_id:\s*([a-fA-F0-9-]+)\s*$",
+            (root / "shorebird.yaml").read_text(),
+            re.MULTILINE,
+        )
+        registered_id = match.group(1) if match else ""
+    if not app_id:
+        app_id = registered_id
+    if registered_id and app_id and registered_id.lower() != app_id.lower():
+        raise ValueError("SHOREBIRD_APP_ID conflicts with the registered app in shorebird.yaml.")
     try:
         parsed = uuid.UUID(app_id)
     except (ValueError, AttributeError) as error:
