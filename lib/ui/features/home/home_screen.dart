@@ -339,7 +339,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget panel({required Widget child, Color color = NsColors.surfaceCanvas}) =>
+  Widget panel({required Widget child, Color color = NsColors.surfaceCard}) =>
       Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
@@ -391,8 +391,12 @@ class _HomeScreenState extends State<HomeScreen> {
       Padding(
         padding: const EdgeInsets.only(bottom: 10),
         child: Material(
-          color: NsColors.surfaceSubtle,
-          borderRadius: BorderRadius.circular(14),
+          color: NsColors.surfaceCard,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: const BorderSide(color: NsColors.borderDefault),
+          ),
+          clipBehavior: Clip.antiAlias,
           child: ListTile(
             shape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
