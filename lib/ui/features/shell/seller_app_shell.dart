@@ -3,15 +3,13 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/motion/ns_haptics.dart';
 import '../../../core/theme/ns_colors.dart';
-import '../../../core/theme/ns_spacing.dart';
-import '../../../core/theme/ns_typography.dart';
 import '../../../core/widgets/ns_widgets.dart';
 import '../../../core/widgets/ns_root_back_guard.dart';
 import '../../state/seller_app_state.dart';
-import '../stores/store_screens.dart';
 import '../onboarding/seller_feature_guide.dart';
 import '../updates/app_update_screen.dart';
 import '../engagement/engagement_screens.dart';
+import 'seller_top_bar.dart';
 
 /// AppShell 5 tab tetap (`desain.md` Bab 5.1 & `PRD` Bab 6.1):
 /// Beranda, Pesanan, Produk, Analitik, Toko.
@@ -63,7 +61,6 @@ class SellerAppShell extends StatelessWidget {
         builder: (context, guide) => ListenableBuilder(
           listenable: appState,
           builder: (context, _) {
-            final activeStore = appState.activeStore;
             return LayoutBuilder(
               builder: (context, constraints) {
                 final isTablet = constraints.maxWidth >= 600;
@@ -71,86 +68,10 @@ class SellerAppShell extends StatelessWidget {
                   isHome: navigationShell.currentIndex == 0,
                   goHome: () => navigationShell.goBranch(0),
                   child: Scaffold(
-                    appBar: PreferredSize(
-                      preferredSize: const Size.fromHeight(60),
-                      child: SafeArea(
-                        bottom: false,
-                        child: Container(
-                          height: 60,
-                          padding: EdgeInsets.symmetric(
-                            horizontal: NsSpacing.horizontalPaddingForWidth(
-                              constraints.maxWidth,
-                            ),
-                          ),
-                          decoration: const BoxDecoration(
-                            color: NsColors.brandAction,
-                            border: Border(
-                              bottom: BorderSide(color: NsColors.borderDefault),
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-                              const NsBrandMark(size: 30, color: Colors.white),
-                              const SizedBox(width: NsSpacing.sm),
-                              Expanded(
-                                child: Semantics(
-                                  button: true,
-                                  label:
-                                      'Toko aktif ${activeStore?.name ?? "Pilih toko"}, ketuk untuk mengganti toko',
-                                  child: InkWell(
-                                    key: guide.store,
-                                    borderRadius: BorderRadius.circular(10),
-                                    onTap: () => showNsStoreSwitcherSheet(
-                                      context: context,
-                                      appState: appState,
-                                    ),
-                                    child: ConstrainedBox(
-                                      constraints: const BoxConstraints(
-                                        minHeight: 48,
-                                      ),
-                                      child: Padding(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 6,
-                                          vertical: 6,
-                                        ),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Flexible(
-                                              child: Text(
-                                                activeStore?.name ??
-                                                    'Pilih toko',
-                                                overflow: TextOverflow.ellipsis,
-                                                style: NsTypography.titleSm
-                                                    .copyWith(
-                                                  color: Colors.white,
-                                                ),
-                                              ),
-                                            ),
-                                            const SizedBox(width: 4),
-                                            const NsIcon(
-                                              'chevron-down',
-                                              size: 16,
-                                              color: Colors.white,
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              NsIconButton(
-                                color: Colors.white,
-                                iconName: 'bell',
-                                semanticLabel: 'Notifikasi',
-                                badgeCount: appState.unreadNotificationCount,
-                                onPressed: () => context.push('/notifications'),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
+                    appBar: SellerTopBar(
+                      appState: appState,
+                      storeTargetKey: guide.store,
+                      availableWidth: constraints.maxWidth,
                     ),
                     body: Column(
                       children: [

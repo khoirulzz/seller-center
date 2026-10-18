@@ -1,7 +1,7 @@
 name: nalaro_seller_center
 description: Nalaro Seller Center — Aplikasi operasional toko multi-tenant untuk seller Nalaro Store (Android-first, iOS-ready).
 publish_to: 'none'
-version: 1.2.1+5
+version: 1.2.2+6
 
 environment:
   sdk: '>=3.5.4 <4.0.0'
