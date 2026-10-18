@@ -51,7 +51,7 @@ def configure(root: Path, data: bytes) -> None:
 
     buildTypes {''',
         1,
-    ).replace(debug_signing, 'signingConfig = signingConfigs.getByName("release")')
+    ).replace(debug_signing, 'signingConfig = signingConfigs.getByName("release")\n            isMinifyEnabled = false\n            isShrinkResources = false')
     target.parent.mkdir(parents=True, exist_ok=True)
     target.touch(mode=0o600, exist_ok=True)
     target.chmod(0o600)
