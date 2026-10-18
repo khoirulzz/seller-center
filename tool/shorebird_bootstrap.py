@@ -36,11 +36,27 @@ if not config.exists():
             check=True,
         )
 text = config.read_text()
-if 'auto_update:' not in text:
-    text += '\nauto_update: false\n'
+import re
+# `shorebird init` generates a commented example (`# auto_update: false`).
+# Treat only a real YAML key as configured, or the runtime updater would run twice.
+if re.search(r'(?m)^auto_update:\s*(?:true|false)\s*config.write_text(text)
+pubspec = root / 'pubspec.yaml'
+text = pubspec.read_text()
+if '    - shorebird.yaml\n' not in text:
+    text = text.replace('  assets:\n', '  assets:\n    - shorebird.yaml\n', 1)
+pubspec.write_text(text)
+print('Registered public Shorebird configuration is ready.')
+, text):
+    text = re.sub(r'(?m)^auto_update:\s*(?:true|false)\s*config.write_text(text)
+pubspec = root / 'pubspec.yaml'
+text = pubspec.read_text()
+if '    - shorebird.yaml\n' not in text:
+    text = text.replace('  assets:\n', '  assets:\n    - shorebird.yaml\n', 1)
+pubspec.write_text(text)
+print('Registered public Shorebird configuration is ready.')
+, 'auto_update: false', text)
 else:
-    import re
-    text = re.sub(r'(?m)^auto_update:.*$', 'auto_update: false', text)
+    text += '\nauto_update: false\n'
 config.write_text(text)
 pubspec = root / 'pubspec.yaml'
 text = pubspec.read_text()
