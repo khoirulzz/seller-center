@@ -53,10 +53,10 @@ class SellerQuickActions extends StatelessWidget {
           LayoutBuilder(
             builder: (context, constraints) {
               final scale = MediaQuery.textScalerOf(context).scale(1);
-              final columns = scale > 1.3
-                  ? 2
-                  : constraints.maxWidth >= 640
-                      ? 6
+              final columns = constraints.maxWidth >= 640
+                  ? 6
+                  : scale > 1.3 && constraints.maxWidth < 400
+                      ? 2
                       : constraints.maxWidth >= 280
                           ? 3
                           : 2;
@@ -106,7 +106,9 @@ class SellerQuickActions extends StatelessWidget {
                                 ),
                                 const SizedBox(height: 8),
                                 Text(
-                                  action.label,
+                                  scale > 1.3 && action.label == 'Penanggung jawab'
+                                      ? 'Profil pengelola'
+                                      : action.label,
                                   textAlign: TextAlign.center,
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
