@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:flutter/services.dart';
+
 import 'api_exception.dart';
 
 /// Penerjemah pesan teknis/error internal menjadi copy produksi ramah pengguna
@@ -46,6 +48,9 @@ abstract final class NsErrorMapper {
       );
     }
 
+    if (error is PlatformException) {
+      return 'Komponen perangkat sedang bermasalah. Perbarui aplikasi Nalaro Seller Center lalu coba lagi.';
+    }
     if (error is TimeoutException)
       return 'Koneksi terlalu lama. Periksa jaringan lalu coba lagi.';
     final raw = error
