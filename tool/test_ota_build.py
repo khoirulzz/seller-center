@@ -30,6 +30,17 @@ class OtaBuildTest(unittest.TestCase):
             self.assertEqual((root / "shorebird.yaml").read_text().count(app_id), 1)
             self.assertIn("auto_update: false", (root / "shorebird.yaml").read_text())
 
+    def test_registered_app_id_cannot_be_replaced_by_environment(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "pubspec.yaml").write_text("flutter:\n  assets:\n")
+            app_id = "b55111ea-0b37-4b7a-9322-322cd09351f1"
+            different_id = "c66111ea-0b37-4b7a-9322-322cd09351f1"
+            prepare(root, app_id)
+            with self.assertRaisesRegex(ValueError, "conflicts"):
+                prepare(root, different_id)
+            self.assertIn(app_id, (root / "shorebird.yaml").read_text())
+
     def test_missing_signing_secret_is_rejected(self):
         with patch.dict("os.environ", {}, clear=True), self.assertRaises(ValueError):
             signing.validate_environment()
