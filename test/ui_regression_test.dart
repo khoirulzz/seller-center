@@ -15,6 +15,7 @@ import 'package:nalaro_seller_center/core/widgets/ns_product_image.dart';
 import 'package:nalaro_seller_center/data/repositories/seller_repository.dart';
 import 'package:nalaro_seller_center/domain/models/seller_models.dart';
 import 'package:nalaro_seller_center/ui/features/products/product_variant_dialog.dart';
+import 'package:nalaro_seller_center/ui/features/home/seller_quick_actions.dart';
 import 'package:nalaro_seller_center/ui/state/seller_app_state.dart';
 
 const store = MerchantStore(
@@ -372,6 +373,95 @@ void main() {
     router.dispose();
     fixture.state.dispose();
   });
+  testWidgets('seller header paints behind status bar and opens chat', (
+    tester,
+  ) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(360, 820);
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final fixture = await setup();
+    final router = createSellerRouter(fixture.state);
+    await tester.pumpWidget(
+      MaterialApp.router(theme: NsTheme.light, routerConfig: router),
+    );
+    await tester.pumpAndSettle();
+    final header = find.byKey(const Key('seller-header-surface'));
+    expect(header, findsOneWidget);
+    final surface = tester.widget<ColoredBox>(header);
+    expect(surface.color, const Color(0xFFD30C3F));
+    expect(
+      find.descendant(of: header, matching: find.byType(SafeArea)),
+      findsOneWidget,
+    );
+    final overlay = tester.widget<AnnotatedRegion<SystemUiOverlayStyle>>(
+      find.ancestor(
+        of: header,
+        matching: find.byType(AnnotatedRegion<SystemUiOverlayStyle>),
+      ).first,
+    );
+    expect(overlay.value.statusBarIconBrightness, Brightness.light);
+    expect(find.byKey(const Key('seller-notification-action')), findsOneWidget);
+    expect(find.byKey(const Key('seller-chat-action')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('seller-chat-action')));
+    await tester.pump();
+    expect(router.routeInformationProvider.value.uri.path, '/chat');
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+    router.dispose();
+    fixture.state.dispose();
+  });
+
+  testWidgets('home shortcuts retain sales summary and navigate to editor', (
+    tester,
+  ) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(390, 920);
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final fixture = await setup();
+    final router = createSellerRouter(fixture.state);
+    await tester.pumpWidget(
+      MaterialApp.router(theme: NsTheme.light, routerConfig: router),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('seller-quick-actions')), findsOneWidget);
+    expect(find.text('Ringkasan penjualan'), findsOneWidget);
+    expect(find.byKey(const Key('seller-shortcut-plus')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('seller-shortcut-plus')));
+    await tester.pumpAndSettle();
+    expect(router.routeInformationProvider.value.uri.path, '/produk/editor');
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+    router.dispose();
+    fixture.state.dispose();
+  });
+
+  testWidgets('quick actions respect owner, manager and fulfillment roles', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(body: SellerQuickActions(role: StoreRole.owner)),
+      ),
+    );
+    expect(find.byKey(const Key('seller-shortcut-credit-card')), findsOneWidget);
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(body: SellerQuickActions(role: StoreRole.manager)),
+      ),
+    );
+    expect(find.byKey(const Key('seller-shortcut-plus')), findsOneWidget);
+    expect(find.byKey(const Key('seller-shortcut-credit-card')), findsNothing);
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(body: SellerQuickActions(role: StoreRole.fulfillment)),
+      ),
+    );
+    expect(find.byKey(const Key('seller-quick-actions')), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
   for (final width in [320.0, 360.0, 390.0, 430.0, 600.0]) {
     for (final scale in [1.0, 1.6]) {
       testWidgets('home and editor layout at $width dp / text $scale', (
