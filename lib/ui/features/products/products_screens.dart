@@ -379,31 +379,73 @@ class _ProductsAndInventoryScreenState
               const SizedBox(height: 24),
               Text('Riwayat stok',
                   style: Theme.of(context).textTheme.titleLarge),
-              FutureBuilder<List<InventoryMovement>>(
-                future: ledger,
-                builder: (context, snap) {
-                  if (snap.connectionState != ConnectionState.done)
-                    return const LinearProgressIndicator();
-                  if (snap.hasError)
-                    return const Text('Riwayat belum dapat dimuat.');
-                  return Column(
-                    children: [
-                      if ((snap.data ?? []).isEmpty)
-                        const ListTile(
-                            title: Text('Belum ada perubahan stok.')),
-                      for (final movement in (snap.data ?? []).take(50))
-                        ListTile(
-                          title: Text(movement.productName),
-                          subtitle: Text(
-                            '${NsStatusDictionary.label(movement.kind)} • ${NsFormatters.dateTime(movement.createdAt)}',
-                          ),
-                          trailing: Text(
-                            '${movement.quantityDelta > 0 ? '+' : ''}${movement.quantityDelta}',
-                          ),
+              const SizedBox(height: 12),
+              Container(
+                key: const Key('inventory-history-card'),
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  color: NsColors.surfaceCard,
+                  border: Border.all(color: NsColors.borderDefault),
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: FutureBuilder<List<InventoryMovement>>(
+                  future: ledger,
+                  builder: (context, snap) {
+                    if (snap.connectionState != ConnectionState.done)
+                      return const Padding(
+                        padding: EdgeInsets.all(16),
+                        child: Center(child: CircularProgressIndicator()),
+                      );
+                    if (snap.hasError)
+                      return const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 16),
+                        child: Text('Riwayat belum dapat dimuat. Tarik ke bawah untuk mencoba lagi.'),
+                      );
+                    final movements = (snap.data ?? []).take(50).toList();
+                    if (movements.isEmpty)
+                      return const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 22),
+                        child: Row(
+                          children: [
+                            Icon(Icons.history, color: NsColors.textMuted),
+                            SizedBox(width: 12),
+                            Expanded(
+                              child: Text('Belum ada perubahan stok.',
+                                style: TextStyle(color: NsColors.textSecondary)),
+                            ),
+                          ],
                         ),
-                    ],
-                  );
-                },
+                      );
+                    return Column(
+                      children: [
+                        for (var i = 0; i < movements.length; i++) ...[
+                          if (i > 0) const Divider(height: 1),
+                          ListTile(
+                            contentPadding: EdgeInsets.zero,
+                            title: Text(movements[i].productName,
+                                maxLines: 2, overflow: TextOverflow.ellipsis),
+                            subtitle: Text(
+                              '${NsStatusDictionary.label(movements[i].kind)} • ${NsFormatters.dateTime(movements[i].createdAt)}',
+                            ),
+                            trailing: Text(
+                              '${movements[i].quantityDelta > 0 ? '+' : ''}${movements[i].quantityDelta}',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w800,
+                                color: movements[i].quantityDelta > 0
+                                    ? NsColors.statusSuccessText
+                                    : movements[i].quantityDelta < 0
+                                        ? NsColors.statusDangerText
+                                        : NsColors.textSecondary,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
+                    );
+                  },
+                ),
               ),
             ],
           ],
