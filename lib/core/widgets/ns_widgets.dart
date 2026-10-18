@@ -289,6 +289,8 @@ class NsIconButton extends StatelessWidget {
     required this.onPressed,
     this.badgeCount = 0,
     this.color = NsColors.textPrimary,
+    this.badgeBackgroundColor = NsColors.brandAction,
+    this.badgeForegroundColor = Colors.white,
   });
 
   final String iconName;
@@ -296,6 +298,8 @@ class NsIconButton extends StatelessWidget {
   final VoidCallback? onPressed;
   final int badgeCount;
   final Color color;
+  final Color badgeBackgroundColor;
+  final Color badgeForegroundColor;
 
   @override
   Widget build(BuildContext context) {
@@ -326,13 +330,13 @@ class NsIconButton extends StatelessWidget {
                         vertical: 1,
                       ),
                       decoration: BoxDecoration(
-                        color: NsColors.brandAction,
+                        color: badgeBackgroundColor,
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Text(
                         badgeCount > 9 ? '9+' : '$badgeCount',
                         style: const TextStyle(
-                          color: Colors.white,
+                          color: badgeForegroundColor,
                           fontSize: 10,
                           fontWeight: FontWeight.w800,
                         ),
