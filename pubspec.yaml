@@ -42,6 +42,7 @@ flutter:
     - assets/icons/
     - assets/brand/
     - assets/fonts/
+    - shorebird.yaml
 
 flutter_launcher_icons:
   android: true
