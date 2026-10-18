@@ -5,7 +5,8 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../core/config/formatters.dart';
-import '../../../core/widgets/ns_metric_chart.dart';
+import '../../../core/theme/ns_colors.dart';
+import 'seller_analytics_report.dart';
 import '../../../domain/models/seller_models.dart';
 import '../../state/seller_app_state.dart';
 
@@ -118,210 +119,198 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           } catch (_) {}
         },
         child: ListView(
-          padding: const EdgeInsets.all(20),
+          key: const PageStorageKey('analytics'),
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.fromLTRB(16, 20, 16, 32),
           children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    'Analitik',
-                    style: Theme.of(context).textTheme.headlineSmall,
-                  ),
-                ),
-                if (widget.appState.activeRole.canViewCustomersAndAnalytics)
-                  PopupMenuButton<String>(
-                    tooltip: 'Ekspor CSV',
-                    enabled: !exporting,
-                    onSelected: export,
-                    itemBuilder: (_) => const [
-                      PopupMenuItem(
-                          value: 'orders', child: Text('Ekspor pesanan')),
-                      PopupMenuItem(
-                        value: 'products',
-                        child: Text('Ekspor produk'),
-                      ),
-                      PopupMenuItem(
-                        value: 'customers',
-                        child: Text('Ekspor pelanggan'),
-                      ),
-                    ],
-                    icon: const Icon(Icons.file_download_outlined),
-                  ),
-              ],
-            ),
-            const Text('Lihat penjualan dari pesanan yang sudah dibayar.'),
-            const SizedBox(height: 12),
-            if (!widget.appState.activeRole.canViewCustomersAndAnalytics)
-              const ListTile(
-                title: Text('Akses analitik tidak tersedia untuk peran ini.'),
-              ),
-            if (widget.appState.activeRole.canViewCustomersAndAnalytics) ...[
-              DropdownButtonFormField<String>(
-                  initialValue: timezone,
-                  decoration:
-                      const InputDecoration(labelText: 'Zona waktu laporan'),
-                  items: const [
-                    DropdownMenuItem(value: 'Asia/Jakarta', child: Text('WIB')),
-                    DropdownMenuItem(
-                        value: 'Asia/Makassar', child: Text('WITA')),
-                    DropdownMenuItem(
-                        value: 'Asia/Jayapura', child: Text('WIT')),
-                    DropdownMenuItem(value: 'UTC', child: Text('UTC'))
-                  ],
-                  onChanged: (value) {
-                    if (value != null)
-                      setState(() {
-                        timezone = value;
-                        load();
-                      });
-                  }),
-              Wrap(
-                spacing: 8,
-                children: [
-                  for (final value in [7, 30])
-                    ChoiceChip(
-                      label: Text('$value hari'),
-                      selected: custom == null && days == value,
-                      onSelected: (_) => setState(() {
-                        custom = null;
-                        days = value;
-                        load();
-                      }),
+            Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 900),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text('Analitik',
+                              style: Theme.of(context).textTheme.headlineMedium),
+                        ),
+                        if (widget.appState.activeRole.canViewCustomersAndAnalytics)
+                          PopupMenuButton<String>(
+                            tooltip: 'Ekspor CSV',
+                            enabled: !exporting,
+                            onSelected: export,
+                            itemBuilder: (_) => const [
+                              PopupMenuItem(
+                                  value: 'orders', child: Text('Ekspor pesanan')),
+                              PopupMenuItem(
+                                  value: 'products', child: Text('Ekspor produk')),
+                              PopupMenuItem(
+                                  value: 'customers',
+                                  child: Text('Ekspor pelanggan')),
+                            ],
+                            icon: const Icon(Icons.file_download_outlined),
+                          ),
+                      ],
                     ),
-                  ActionChip(
-                    label: Text(
-                      custom == null
-                          ? 'Rentang khusus'
-                          : '${NsFormatters.calendarDate(range.start)} – ${NsFormatters.calendarDate(range.end)}',
+                    Text(
+                      'Pantau performa penjualan dan pelanggan tokomu.',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: NsColors.textSecondary,
+                          ),
                     ),
-                    onPressed: () async {
-                      final selected = await showDateRangePicker(
-                        context: context,
-                        firstDate: DateTime(2020),
-                        lastDate: DateTime.now(),
-                      );
-                      if (selected != null && mounted)
-                        setState(() {
-                          custom = selected;
-                          load();
-                        });
-                    },
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Laporan: ${NsFormatters.calendarDate(range.start)} s.d. ${NsFormatters.calendarDate(range.end)} • $timezone.',
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-              FutureBuilder<SalesAnalyticsBundle>(
-                future: future,
-                builder: (context, snap) {
-                  if (snap.connectionState != ConnectionState.done)
-                    return const Padding(
-                      padding: EdgeInsets.all(32),
-                      child: Center(child: CircularProgressIndicator()),
-                    );
-                  if (snap.hasError)
-                    return ListTile(
-                      title: const Text('Analitik belum dapat dimuat'),
-                      subtitle: Text('${snap.error}'),
-                      trailing: IconButton(
-                        icon: const Icon(Icons.refresh),
-                        onPressed: () => setState(load),
-                      ),
-                    );
-                  final d = snap.data!;
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(height: 16),
-                      Text(
-                        'Penjualan produk terverifikasi (tanpa ongkir)',
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
-                      Text(
-                        NsFormatters.rupiah(d.verifiedRevenueIdr),
-                        style: Theme.of(context).textTheme.headlineMedium,
-                      ),
-                      const SizedBox(height: 12),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: [
-                          Chip(label: Text('${d.totalOrders} pesanan')),
-                          Chip(label: Text('${d.paidOrders} dibayar')),
-                          Chip(label: Text('${d.canceledOrders} dibatalkan')),
-                          Chip(label: Text('${d.unitsSold} unit terjual')),
-                        ],
+                    const SizedBox(height: 18),
+                    if (!widget.appState.activeRole.canViewCustomersAndAnalytics)
+                      _card(
+                        child: const Text(
+                          'Akses analitik tidak tersedia untuk peran ini.',
+                        ),
+                      )
+                    else ...[
+                      _card(
+                        key: const Key('analytics-filter-card'),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Periode laporan',
+                                style: Theme.of(context).textTheme.titleMedium),
+                            const SizedBox(height: 12),
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              crossAxisAlignment: WrapCrossAlignment.center,
+                              children: [
+                                for (final count in [7, 30])
+                                  ChoiceChip(
+                                    label: Text('$count hari'),
+                                    selected: custom == null && days == count,
+                                    onSelected: (_) => setState(() {
+                                      custom = null;
+                                      days = count;
+                                      load();
+                                    }),
+                                  ),
+                                ActionChip(
+                                  avatar: const Icon(
+                                      Icons.calendar_today_outlined, size: 16),
+                                  label: const Text('Pilih tanggal'),
+                                  onPressed: () async {
+                                    final selected = await showDateRangePicker(
+                                      context: context,
+                                      firstDate: DateTime(2020),
+                                      lastDate: DateTime.now(),
+                                      initialDateRange: custom,
+                                    );
+                                    if (selected != null && mounted) {
+                                      setState(() {
+                                        custom = selected;
+                                        load();
+                                      });
+                                    }
+                                  },
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            Text('Zona waktu',
+                                style: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(color: NsColors.textSecondary)),
+                            const SizedBox(height: 6),
+                            DropdownButtonFormField<String>(
+                              initialValue: timezone,
+                              isExpanded: true,
+                              decoration: const InputDecoration(
+                                contentPadding: EdgeInsets.symmetric(
+                                    horizontal: 12, vertical: 10),
+                              ),
+                              items: const [
+                                DropdownMenuItem(
+                                    value: 'Asia/Jakarta',
+                                    child: Text('WIB (Jakarta)')),
+                                DropdownMenuItem(
+                                    value: 'Asia/Makassar',
+                                    child: Text('WITA (Makassar)')),
+                                DropdownMenuItem(
+                                    value: 'Asia/Jayapura',
+                                    child: Text('WIT (Jayapura)')),
+                                DropdownMenuItem(
+                                    value: 'UTC', child: Text('UTC')),
+                              ],
+                              onChanged: (value) {
+                                if (value == null) return;
+                                setState(() {
+                                  timezone = value;
+                                  load();
+                                });
+                              },
+                            ),
+                            const SizedBox(height: 10),
+                            Text(
+                              '${NsFormatters.shortDate(NsFormatters.calendarDate(range.start))} – ${NsFormatters.shortDate(NsFormatters.calendarDate(range.end))} · $timezone',
+                              key: const Key('analytics-active-period'),
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(color: NsColors.textSecondary),
+                            ),
+                          ],
+                        ),
                       ),
                       const SizedBox(height: 20),
-                      Card(
-                          child: Padding(
-                              padding: const EdgeInsets.all(16),
+                      FutureBuilder<SalesAnalyticsBundle>(
+                        future: future,
+                        builder: (context, snap) {
+                          if (snap.connectionState != ConnectionState.done) {
+                            return _card(
+                              child: const SizedBox(
+                                height: 120,
+                                child: Center(
+                                  child: CircularProgressIndicator(),
+                                ),
+                              ),
+                            );
+                          }
+                          if (snap.hasError || snap.data == null) {
+                            return _card(
                               child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                        'Rata-rata pesanan: ${NsFormatters.rupiah(d.averagePaidOrderIdr)}'),
-                                    Text(
-                                        'Ongkir dibayar: ${NsFormatters.rupiah(d.shippingRevenueIdr)}'),
-                                    Text(
-                                        'Total pembayaran: ${NsFormatters.rupiah(d.totalCollectedIdr)}'),
-                                    Text(
-                                        'Pelanggan kembali: ${d.returningCustomers} dari ${d.purchasingCustomers} pembeli'),
-                                    const SizedBox(height: 12),
-                                    Text(
-                                        'Periode sebelumnya: ${NsFormatters.rupiah(d.previousRevenueIdr)}'),
-                                    if (d.previousRevenueIdr > 0)
-                                      Text(
-                                          'Perubahan: ${((d.verifiedRevenueIdr / d.previousRevenueIdr - 1) * 100).toStringAsFixed(1)}%'),
-                                  ]))),
-                      const SizedBox(height: 16),
-                      Text('Produk terlaris',
-                          style: Theme.of(context).textTheme.titleLarge),
-                      if (d.topProducts.isEmpty)
-                        const ListTile(
-                            title: Text(
-                                'Belum ada produk terjual pada periode ini.')),
-                      for (final p in d.topProducts)
-                        Card(
-                            child: ListTile(
-                                title: Text(p.name),
-                                subtitle: Text('${p.units} unit'),
-                                trailing:
-                                    Text(NsFormatters.rupiah(p.revenueIdr)))),
-                      const SizedBox(height: 16),
-                      Text('Varian terlaris',
-                          style: Theme.of(context).textTheme.titleLarge),
-                      for (final p in d.topVariants)
-                        Card(
-                            child: ListTile(
-                                title: Text(p.name),
-                                subtitle:
-                                    Text('${p.variant} · ${p.units} unit'),
-                                trailing:
-                                    Text(NsFormatters.rupiah(p.revenueIdr)))),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Penjualan harian',
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                      const SizedBox(height: 12),
-                      NsMetricChart(points: d.dailyPoints),
-                      const SizedBox(height: 8),
-                      Text(
-                        '${d.dailyPoints.length} hari dalam rentang laporan. Berdasarkan pesanan dibayar yang tidak dibatalkan atau kedaluwarsa, menurut tanggal pesanan. Pelanggan tamu dikenali dari telepon; laba dan konversi belum dihitung.',
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text('Analitik belum dapat dimuat.'),
+                                  const SizedBox(height: 8),
+                                  TextButton.icon(
+                                    onPressed: () => setState(load),
+                                    icon: const Icon(Icons.refresh),
+                                    label: const Text('Coba lagi'),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }
+                          return SellerAnalyticsReport(data: snap.data!);
+                        },
                       ),
                     ],
-                  );
-                },
+                    if (error != null) ...[
+                      const SizedBox(height: 12),
+                      Text(error!,
+                          style: const TextStyle(
+                              color: NsColors.statusDangerText)),
+                    ],
+                    if (exporting) const LinearProgressIndicator(),
+                  ],
+                ),
               ),
-              if (error != null)
-                Text(error!, style: const TextStyle(color: Colors.red)),
-              if (exporting) const LinearProgressIndicator(),
-            ],
+            ),
           ],
         ),
+      );
+
+  Widget _card({required Widget child, Key? key}) => Container(
+        key: key,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: NsColors.surfaceCard,
+          border: Border.all(color: NsColors.borderDefault),
+          borderRadius: BorderRadius.circular(18),
+        ),
+        child: child,
       );
 }
