@@ -335,7 +335,7 @@ class NsIconButton extends StatelessWidget {
                       ),
                       child: Text(
                         badgeCount > 9 ? '9+' : '$badgeCount',
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: badgeForegroundColor,
                           fontSize: 10,
                           fontWeight: FontWeight.w800,
