@@ -23,7 +23,7 @@ EXPECTED_PARAMETERS = (
 
 
 def has_compatible_registrar(data: bytes) -> bool:
-    if data[:4] != b"dex\\n":
+    if data[:4] != b"dex\n":
         raise ValueError("Invalid DEX header")
 
     def u16(offset: int) -> int:
@@ -68,7 +68,7 @@ def verify_apk(path: Path) -> None:
     with ZipFile(path) as archive:
         dex_names = [
             name for name in archive.namelist()
-            if re.fullmatch(r"classes(?:[0-9]+)?\\.dex", name)
+            if re.fullmatch(r"classes(?:[0-9]+)?\.dex", name)
         ]
         if not dex_names:
             raise ValueError("APK contains no Android DEX bytecode")
