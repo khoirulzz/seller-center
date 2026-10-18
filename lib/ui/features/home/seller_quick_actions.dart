@@ -17,7 +17,7 @@ class SellerQuickActions extends StatelessWidget {
       if (role.canManageCatalog)
         (label: 'Tambah produk', icon: 'plus', path: '/produk/editor', tab: false),
       if (role.canManageCatalog)
-        (label: 'Stok menipis', icon: 'alert', path: '/produk?tab=stock', tab: true),
+        (label: 'Stok', icon: 'box', path: '/produk?tab=stock', tab: true),
       if (role.canViewCustomersAndAnalytics)
         (label: 'Pelanggan', icon: 'users', path: '/toko/customers', tab: false),
       if (role.canManageSettings)
