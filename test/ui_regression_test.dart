@@ -439,6 +439,40 @@ void main() {
     fixture.state.dispose();
   });
 
+  testWidgets('home has no redundant title; store tab owns shop name and email', (
+    tester,
+  ) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(390, 920);
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final fixture = await setup();
+    final router = createSellerRouter(fixture.state);
+    await tester.pumpWidget(
+      MaterialApp.router(theme: NsTheme.light, routerConfig: router),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Pantau penjualan dan pekerjaan tokomu.'), findsNothing);
+    expect(find.textContaining('Masuk sebagai'), findsNothing);
+    expect(find.byKey(const Key('seller-quick-actions')), findsOneWidget);
+    expect(find.text('Stok'), findsOneWidget);
+    expect(find.text('Ringkasan penjualan'), findsOneWidget);
+    router.go('/toko');
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('store-hub-shop-name')), findsOneWidget);
+    expect(find.text('Nalaro Batik'), findsWidgets);
+    expect(
+      find.byKey(const Key('store-hub-account-email')),
+      findsOneWidget,
+    );
+    expect(find.text('seller@example.test'), findsOneWidget);
+    expect(find.text('Masuk sebagai seller@example.test'), findsNothing);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+    router.dispose();
+    fixture.state.dispose();
+  });
+
   testWidgets('quick actions respect owner, manager and fulfillment roles', (
     tester,
   ) async {
